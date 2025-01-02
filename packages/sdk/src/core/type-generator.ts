@@ -63,6 +63,7 @@ import type { IBaseModel } from '@contentrain/sdk'
 ${models.map(generateModelInterface).join('\n\n')}
 
 export interface ContentrainTypeMap {
+  [key: string]: IBaseModel
 ${models.map(m => `  '${m.modelId}': I${toPascalCase(m.modelId)}`).join('\n')}
 }
 
