@@ -6,7 +6,7 @@ export interface IBlogPosts extends IBaseModel {
   content: string
   slug: string
   categoryId?: string
-  categoryIdData?: ICategories
+  categoryIdData?: IBlogCategories
 }
 
 export interface IPostAuthors extends IBaseModel {
@@ -614,6 +614,7 @@ export interface IAutocompleteTypes extends IBaseModel {
 }
 
 export interface ContentrainTypeMap {
+  [key: string]: IBaseModel
   'blog-posts': IBlogPosts
   'post-authors': IPostAuthors
   'blog-categories': IBlogCategories

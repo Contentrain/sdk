@@ -23,10 +23,28 @@ export type RelationData<T extends IBaseModel> = {
     : never
 }
 
-// Model tipi ile relation datayı birleştir
-export type WithRelations<T extends IBaseModel> = T & RelationData<T> 
+// İlişkisel alan tiplerini belirlemek için
+export type RelationalFields<T> = {
+  [K in keyof T]: K extends `${string}Id` ? K : never
+}[keyof T]
 
+// With sorgusu için kullanılacak tip
+export type WithRelation<T extends IBaseModel, K extends RelationalFields<T>> = T & {
+  [P in K as `${string & P}Data`]: P extends `${infer R}Id` 
+    ? R extends keyof ContentrainTypeMap
+      ? T[P] extends string[]
+        ? ContentrainTypeMap[R][]
+        : ContentrainTypeMap[R]
+      : never
+    : never
+}
 
+// Mevcut WithRelations tipini güncelle
+export type WithRelations<T extends IBaseModel> = T & {
+  [K in RelationalFields<T> as `${string & K}Data`]?: K extends `${infer R}Id` 
+    ? ContentrainTypeMap[R] 
+    : never
+}
 
 // Type map interface
 export interface IContentrainTypeMap {

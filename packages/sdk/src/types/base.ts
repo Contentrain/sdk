@@ -6,7 +6,6 @@ export interface IBaseModel {
   createdAt: string
   updatedAt: string
   status: string
-  [key: string]: any // İndex signature ekledik
 }
 
 export interface IContentrainConfig {
@@ -48,4 +47,41 @@ export interface IGenerateTypesOptions {
 export interface IGenerateTypesResult {
   success: boolean
   error?: string
-} 
+}
+
+export interface IContentrainField {
+  fieldId: string
+  fieldType: string
+  componentId: string
+  validations?: Record<string, any>
+  options?: {
+    reference?: {
+      form?: {
+        reference?: {
+          value?: string
+        }
+      }
+    }
+  }
+}
+
+export interface IRelation {
+  field: string
+  targetModel: string
+  type: 'one' | 'many'
+}
+
+export interface IModelRelation {
+  model: string
+  type: 'one-to-one' | 'one-to-many'
+}
+
+// Kullanıcının generate edeceği tip dosyasından gelecek
+export interface ModelRelations {
+  [modelId: string]: {
+    [fieldName: string]: IModelRelation
+  }
+}
+
+// SDK'nın kullanacağı tip yardımcıları
+export type RelationalFields<T, M extends keyof ModelRelations> = keyof ModelRelations[M] 
