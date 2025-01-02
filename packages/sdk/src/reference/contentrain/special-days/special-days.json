@@ -1,0 +1,14 @@
+[
+  {
+    "ID": "f48abec0114d",
+    "createdAt": "Fri Nov 15 2024 16:01:21 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Nov 15 2024 16:01:21 GMT+0300 (GMT+03:00)",
+    "date": "2024-11-24T13:01:00.000Z",
+    "name": "Öğretmenler Günü",
+    "theme": "ca6d0a7bfd10",
+    "icon": "i-ri-pencil-ruler-line",
+    "active-icon": "i-ri-pencil-ruler-line",
+    "status": "publish",
+    "scheduled": false
+  }
+]

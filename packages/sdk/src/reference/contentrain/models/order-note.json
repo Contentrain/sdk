@@ -1,0 +1,98 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "order-note"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "order-note"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "order-note"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "order-note"
+  },
+  {
+    "name": "category",
+    "fieldId": "category",
+    "modelId": "order-note",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      },
+      "unique-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "messages",
+    "fieldId": "messages",
+    "modelId": "order-note",
+    "componentId": "multi-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      },
+      "unique-field": {
+        "value": true
+      }
+    },
+    "fieldType": "array"
+  }
+]

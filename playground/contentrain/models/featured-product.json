@@ -1,0 +1,146 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "featured-product"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "featured-product"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "featured-product"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "featured-product"
+  },
+  {
+    "name": "title",
+    "fieldId": "title",
+    "modelId": "featured-product",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "image-alt",
+    "fieldId": "image-alt",
+    "modelId": "featured-product",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "submit-text",
+    "fieldId": "submit-text",
+    "modelId": "featured-product",
+    "componentId": "single-line-text",
+    "options": {
+      "default-value": {
+        "value": true,
+        "form": {
+          "single-line-text": {
+            "value": "Ürünü gör"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "FriendlyURL",
+    "fieldId": "friendlyurl",
+    "modelId": "featured-product",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      },
+      "unique-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "image",
+    "description": "Görsel URL",
+    "fieldId": "image",
+    "modelId": "featured-product",
+    "componentId": "url",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Kategori Friendly URL",
+    "description": "Linki doğru yönlendirmek için ürünün bir üst kategori friendly url'i buraya ekliyoruz.",
+    "fieldId": "kategori-friendly-url",
+    "modelId": "featured-product",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  }
+]

@@ -1,0 +1,120 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "blog-categories"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "blog-categories"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "blog-categories"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "blog-categories"
+  },
+  {
+    "name": "Name",
+    "description": "Category name",
+    "fieldId": "name",
+    "modelId": "blog-categories",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      },
+      "unique-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Description",
+    "description": "Category description",
+    "fieldId": "description",
+    "modelId": "blog-categories",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Sub Categories",
+    "fieldId": "sub-categories",
+    "modelId": "blog-categories",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "blog-categories"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation"
+  },
+  {
+    "name": "Tip",
+    "fieldId": "tip",
+    "modelId": "blog-categories",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  }
+]

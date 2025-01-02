@@ -1,0 +1,178 @@
+[
+  {
+    "ID": "2de0c2fbc3e6",
+    "createdAt": "2024-05-24T07:41:39.000Z",
+    "updatedAt": "2024-09-26T13:15:58.650Z",
+    "status": "publish",
+    "order": 3,
+    "image": "apps/web/public/1721998506330_premium orkide - 750x360.webp",
+    "link": "https://bloomandfresh.com/orkide",
+    "image-alt": "Premium Orkide Koleksiyonu",
+    "scheduled": false
+  },
+  {
+    "ID": "5a9e5c629392",
+    "createdAt": "2024-12-02T13:43:58.000Z",
+    "updatedAt": "2024-12-09T10:37:12.688Z",
+    "status": "publish",
+    "order": 5,
+    "image": "apps/web/public/1733300727100_Yeni_Yil_Yan_Banner_2025.png",
+    "link": "https://bloomandfresh.com/kurumsal-siparis",
+    "image-alt": "Yeni Yıl 2025 - Kurumsal Sipariş",
+    "scheduled": false
+  },
+  {
+    "ID": "5b87a3d293fd",
+    "createdAt": "2024-05-23T07:36:51.000Z",
+    "updatedAt": "2024-09-23T12:48:39.599Z",
+    "status": "publish",
+    "order": 1,
+    "image": "apps/web/public/1727095686471_Yeni_uye_75TL.png",
+    "link": "https://bloomandfresh.com/cicek",
+    "image-alt": "75 TL indirim",
+    "scheduled": false
+  },
+  {
+    "ID": "5ec0b780d28d",
+    "createdAt": "Thu Aug 29 2024 14:41:27 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-09-16T06:04:02.481Z",
+    "order": 5,
+    "image": "apps/web/public/1724931710857_Back to school (1).png",
+    "link": "https://bloomandfresh.com/okula-donus-haftasi",
+    "image-alt": "Back to School",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "60c0bd17577e",
+    "createdAt": "2024-12-09T10:29:25.000Z",
+    "updatedAt": "2024-12-09T12:22:23.669Z",
+    "status": "publish",
+    "order": 1,
+    "image": "apps/web/public/1733746927921_75_TL_indirim_yeni_banner_1000.png",
+    "link": "https://bloomandfresh.com/kampanya/yeni-uye",
+    "image-alt": "Yeni Üye İndirimi - Yeni Banner",
+    "scheduled": false
+  },
+  {
+    "ID": "7f6282479148",
+    "createdAt": "2024-12-09T10:33:03.000Z",
+    "updatedAt": "2024-12-09T11:06:17.255Z",
+    "status": "publish",
+    "order": 4,
+    "image": "apps/web/public/1733742337148_Yeni_Yil_Yeni_Banner.png",
+    "link": "https://bloomandfresh.com/yeni-yil-hediye",
+    "image-alt": "Yeni Yıl - Yeni Banner",
+    "scheduled": false
+  },
+  {
+    "ID": "863d051dbb7a",
+    "createdAt": "2024-12-13T10:31:54.000Z",
+    "updatedAt": "2024-12-13T10:46:07.229Z",
+    "status": "publish",
+    "order": 4,
+    "image": "apps/web/public/1734085934590_Yeni_yil_hediye_kutulari.png",
+    "link": "https://bloomandfresh.com/yeni-yil-hediye",
+    "image-alt": "Yeni Yıl Hediye Kutuları",
+    "scheduled": false
+  },
+  {
+    "ID": "93ce3d0f01c0",
+    "createdAt": "2024-12-09T10:31:02.000Z",
+    "updatedAt": "2024-12-09T11:04:42.094Z",
+    "status": "publish",
+    "order": 2,
+    "image": "apps/web/public/1733742264885_Orkideler_Yeni_Banner.png",
+    "link": "https://bloomandfresh.com/orkide",
+    "image-alt": "Orkideler - Yeni Banner",
+    "scheduled": false
+  },
+  {
+    "ID": "957c1c2ca79c",
+    "createdAt": "Thu Jun 06 2024 11:37:19 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-07-26T12:55:35.140Z",
+    "order": 4,
+    "image": "apps/web/public/1717663230247_kurumsal_bayram_katalogu_banner_2024.webp",
+    "link": "https://bloomandfresh.com/files/fileupload/campaign/kurumsal-bayram-katalogu-2024-kurban.pdf",
+    "image-alt": "Kurumsal Bayram Kataloğu Banner - 2024",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "97b79e3d169d",
+    "createdAt": "2024-09-06T12:12:50.000Z",
+    "updatedAt": "2024-09-26T13:16:11.266Z",
+    "status": "publish",
+    "order": 10,
+    "image": "apps/web/public/1725624720062_orkide banner.webp",
+    "link": "https://bloomandfresh.com/orkide",
+    "image-alt": "Premium Orkide Koleksiyonu",
+    "scheduled": false
+  },
+  {
+    "ID": "98ba58c7a359",
+    "createdAt": "Fri Nov 15 2024 16:12:42 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-11-15T13:15:14.443Z",
+    "order": 1,
+    "image": "apps/web/public/1731676386534_Ogretmenler_gunu_yan_banner_2024.png",
+    "link": "https://bloomandfresh.com/ogretmenler-gunu-hediyeleri",
+    "image-alt": "Öğretmenler Günü Yan Banner - 2024",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "ba1f286c0602",
+    "createdAt": "2024-05-24T07:41:05.000Z",
+    "updatedAt": "2024-09-26T13:16:25.020Z",
+    "status": "publish",
+    "order": 6,
+    "image": "apps/web/public/1721998462602_premium buket - 750x360.webp",
+    "link": "https://bloomandfresh.com/cicek-buketi",
+    "image-alt": "Premium Buket Koleksiyonu",
+    "scheduled": false
+  },
+  {
+    "ID": "bf413b0b37c6",
+    "createdAt": "2024-11-15T13:04:39.000Z",
+    "updatedAt": "2024-11-21T13:45:59.164Z",
+    "status": "publish",
+    "order": 24,
+    "image": "apps/web/public/1732196741981_Ogremenler_gunu_indirim_v3.png",
+    "link": "https://bloomandfresh.com/ogretmenler-gunu-hediyeleri",
+    "image-alt": "Öğretmenler Günü 100 TL İndirim - Ana Banner",
+    "scheduled": false
+  },
+  {
+    "ID": "c46934cb6a94",
+    "createdAt": "2024-09-06T10:36:22.000Z",
+    "updatedAt": "2024-09-26T12:53:40.990Z",
+    "status": "publish",
+    "order": 11,
+    "image": "apps/web/public/1725618999145_Bromelia Banner.webp",
+    "link": "https://bloomandfresh.com/bromelia-ailesi-koleksiyonu",
+    "image-alt": "Bromelia Ailesi Koleksiyonu",
+    "scheduled": false
+  },
+  {
+    "ID": "d6d04b2df661",
+    "createdAt": "2024-12-09T10:31:56.000Z",
+    "updatedAt": "2024-12-09T11:05:20.031Z",
+    "status": "publish",
+    "order": 3,
+    "image": "apps/web/public/1733742304299_Premium_Vazoda_Yeni_Banner.png",
+    "link": "https://bloomandfresh.com/vazoda-cicek",
+    "image-alt": "Premium Vazoda - Yeni Banner",
+    "scheduled": false
+  },
+  {
+    "ID": "faea40367a15",
+    "createdAt": "Wed Nov 27 2024 13:20:27 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Nov 27 2024 13:20:27 GMT+0300 (GMT+03:00)",
+    "order": 30,
+    "image": "apps/web/public/1732702855896_renkli_cuma_2024.png",
+    "link": "https://bloomandfresh.com/cicek",
+    "image-alt": "Renkli Cuma - 150 TL İndirim",
+    "status": "publish",
+    "scheduled": false
+  }
+]

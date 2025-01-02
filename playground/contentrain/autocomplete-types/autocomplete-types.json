@@ -1,0 +1,66 @@
+[
+  {
+    "ID": "a1b2c3d4e5f6",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Off",
+    "value": "off"
+  },
+  {
+    "ID": "b2c3d4e5f6a1",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Email",
+    "value": "email"
+  },
+  {
+    "ID": "c3d4e5f6a1b2",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Username",
+    "value": "username"
+  },
+  {
+    "ID": "d4e5f6a1b2c3",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "New Password",
+    "value": "new-password"
+  },
+  {
+    "ID": "e5f6a1b2c3d4",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Current Password",
+    "value": "current-password"
+  },
+  {
+    "ID": "f6a1b2c3d4e5",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Tel",
+    "value": "tel"
+  },
+  {
+    "ID": "g7b2c3d4e5f6",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Given Name",
+    "value": "given-name"
+  },
+  {
+    "ID": "h8c3d4e5f6a1",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "name": "Family Name",
+    "value": "family-name"
+  }
+] 

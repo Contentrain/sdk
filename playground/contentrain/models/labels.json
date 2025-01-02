@@ -1,0 +1,79 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "labels"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "labels"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "labels"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "labels"
+  },
+  {
+    "name": "Label Text",
+    "fieldId": "text",
+    "modelId": "labels",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  }
+]

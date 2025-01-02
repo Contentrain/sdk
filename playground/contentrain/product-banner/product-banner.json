@@ -1,0 +1,38 @@
+[
+  {
+    "ID": "43d3acd82cf4",
+    "createdAt": "Thu May 09 2024 18:35:27 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu May 09 2024 18:35:27 GMT+0300 (GMT+03:00)",
+    "text": "Kolay ödeme seçenekleri",
+    "icon": "i-ri-wallet-3-line",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "95fa5da20ca0",
+    "createdAt": "Thu May 09 2024 18:36:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu May 09 2024 18:36:28 GMT+0300 (GMT+03:00)",
+    "text": "Aynı gün teslimat",
+    "icon": "i-ri-truck-line",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c54fc77f2ace",
+    "createdAt": "Thu May 09 2024 18:36:53 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu May 09 2024 18:36:53 GMT+0300 (GMT+03:00)",
+    "text": "Ücretsiz teslimat",
+    "icon": "i-ri-checkbox-circle-line",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "77d09edfefad",
+    "createdAt": "Thu May 09 2024 18:37:08 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu May 09 2024 18:37:08 GMT+0300 (GMT+03:00)",
+    "text": "Gönderim zamanı seçebilme",
+    "icon": "i-ri-time-line",
+    "status": "publish",
+    "scheduled": false
+  }
+]

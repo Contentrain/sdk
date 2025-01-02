@@ -1,0 +1,275 @@
+[
+  {
+    "ID": "a1b2c3d4e5f6",
+    "createdAt": "2024-04-23T15:02:53.000Z",
+    "updatedAt": "2024-04-26T14:54:06.294Z",
+    "status": "publish",
+    "text": "Sipariş Numarası"
+  },
+  {
+    "ID": "b2c3d4e5f6a1",
+    "createdAt": "2024-04-26T12:12:35.000Z",
+    "updatedAt": "2024-04-26T12:13:40.375Z",
+    "status": "publish",
+    "text": "Geçerli Şifre (Değişmesini istemiyorsanız boş bırakınız.)"
+  },
+  {
+    "ID": "c3d4e5f6a1b2",
+    "createdAt": "2024-04-26T13:42:20.000Z",
+    "updatedAt": "2024-04-26T13:42:20.000Z",
+    "status": "publish",
+    "text": "Açıklama"
+  },
+  {
+    "ID": "d4e5f6a1b2c3",
+    "createdAt": "2024-04-26T17:20:21.000Z",
+    "updatedAt": "2024-04-26T17:20:21.000Z",
+    "status": "publish",
+    "text": "Bireysel Fatura"
+  },
+  {
+    "ID": "e5f6a1b2c3d4",
+    "createdAt": "2024-04-26T15:12:53.000Z",
+    "updatedAt": "2024-04-26T15:12:53.000Z",
+    "status": "publish",
+    "text": "Yeni Şifre (Değişmesini istemiyorsanız boş bırakınız.)"
+  },
+  {
+    "ID": "f6a1b2c3d4e5",
+    "createdAt": "2024-04-24T12:41:11.000Z",
+    "updatedAt": "2024-04-24T09:43:16.670Z",
+    "status": "publish",
+    "text": "İndirim ve duyurulardan e-posta ve diğer yollarla haberdar olmak istiyorum."
+  },
+  {
+    "ID": "g7b2c3d4e5f6",
+    "createdAt": "2024-04-29T13:12:54.000Z",
+    "updatedAt": "2024-04-29T14:38:01.190Z",
+    "status": "publish",
+    "text": "Alıcı Telefon Numarası"
+  },
+  {
+    "ID": "h8c3d4e5f6a1",
+    "createdAt": "2024-04-26T13:42:12.000Z",
+    "updatedAt": "2024-04-26T13:42:12.000Z",
+    "status": "publish",
+    "text": "İsim"
+  },
+  {
+    "ID": "i9d4e5f6a1b2",
+    "createdAt": "2024-04-24T12:39:50.000Z",
+    "updatedAt": "2024-04-24T09:43:16.685Z",
+    "status": "publish",
+    "text": "Şifremi unuttum"
+  },
+  {
+    "ID": "j0e5f6a1b2c3",
+    "createdAt": "2024-04-24T12:39:28.000Z",
+    "updatedAt": "2024-04-24T09:43:16.694Z",
+    "status": "publish",
+    "text": "Beni hatırla"
+  },
+  {
+    "ID": "k1f6a1b2c3d4",
+    "createdAt": "2024-04-26T14:52:06.000Z",
+    "updatedAt": "2024-04-29T08:30:52.198Z",
+    "status": "publish",
+    "text": "TC Kimlik Numarası"
+  },
+  {
+    "ID": "l2a1b2c3d4e5",
+    "createdAt": "2024-04-29T12:37:55.000Z",
+    "updatedAt": "2024-04-29T12:37:55.000Z",
+    "status": "publish",
+    "text": "Kart Numarası"
+  },
+  {
+    "ID": "m3b2c3d4e5f6",
+    "createdAt": "2024-04-29T14:14:52.000Z",
+    "updatedAt": "2024-04-29T14:14:52.000Z",
+    "status": "publish",
+    "text": "Gönderen İsmi"
+  },
+  {
+    "ID": "n4c3d4e5f6a1",
+    "createdAt": "2024-04-26T17:58:32.000Z",
+    "updatedAt": "2024-04-26T17:58:32.000Z",
+    "status": "publish",
+    "text": "Vergi Dairesi"
+  },
+  {
+    "ID": "o5d4e5f6a1b2",
+    "createdAt": "2024-04-25T12:53:22.000Z",
+    "updatedAt": "2024-04-26T14:54:23.711Z",
+    "status": "publish",
+    "text": "Adres Adı"
+  },
+  {
+    "ID": "p6e5f6a1b2c3",
+    "createdAt": "2024-04-23T12:18:49.000Z",
+    "updatedAt": "2024-04-26T14:54:35.662Z",
+    "status": "publish",
+    "text": "Ad, Soyad"
+  },
+  {
+    "ID": "q7f6a1b2c3d4",
+    "createdAt": "2024-04-26T13:42:34.000Z",
+    "updatedAt": "2024-04-26T13:42:34.000Z",
+    "status": "publish",
+    "text": "Ne zaman?"
+  },
+  {
+    "ID": "r8a1b2c3d4e5",
+    "createdAt": "2024-04-26T17:58:04.000Z",
+    "updatedAt": "2024-04-26T17:58:04.000Z",
+    "status": "publish",
+    "text": "Firma Ünvanı"
+  },
+  {
+    "ID": "s9b2c3d4e5f6",
+    "createdAt": "2024-04-29T12:41:58.000Z",
+    "updatedAt": "2024-04-29T12:41:58.000Z",
+    "status": "publish",
+    "text": "3D ile ödeme yapmak istiyorum."
+  },
+  {
+    "ID": "t0c3d4e5f6a1",
+    "createdAt": "2024-04-29T11:29:21.000Z",
+    "updatedAt": "2024-04-29T14:38:25.389Z",
+    "status": "publish",
+    "text": "Gönderen E-Posta Adresi"
+  },
+  {
+    "ID": "u1d4e5f6a1b2",
+    "createdAt": "2024-04-29T16:38:49.000Z",
+    "updatedAt": "2024-04-29T16:38:49.000Z",
+    "status": "publish",
+    "text": "Bu adresi gelecek siparişlerim için kaydet."
+  },
+  {
+    "ID": "v2e5f6a1b2c3",
+    "createdAt": "2024-04-24T12:41:01.000Z",
+    "updatedAt": "2024-04-24T09:43:16.705Z",
+    "status": "publish",
+    "text": "Şifre Tekrar"
+  },
+  {
+    "ID": "v2e5f6a1bdas3",
+    "createdAt": "2024-04-24T12:41:01.000Z",
+    "updatedAt": "2024-04-24T09:43:16.705Z",
+    "status": "publish",
+    "text": "Şifre"
+  },
+  {
+    "ID": "w3f6a1b2c3d4",
+    "createdAt": "2024-04-29T16:46:54.000Z",
+    "updatedAt": "2024-04-29T16:46:54.000Z",
+    "status": "publish",
+    "text": "Kayıtlı bir adresiniz bulunmamaktadır."
+  },
+  {
+    "ID": "x4a1b2c3d4e5",
+    "createdAt": "2024-04-29T14:11:57.000Z",
+    "updatedAt": "2024-04-29T14:11:57.000Z",
+    "status": "publish",
+    "text": "Ona Ne Söylemek İstersin?"
+  },
+  {
+    "ID": "y5b2c3d4e5f6",
+    "createdAt": "2024-04-29T12:48:42.000Z",
+    "updatedAt": "2024-04-29T12:48:42.000Z",
+    "status": "publish",
+    "text": "Fatura bilgilerini bir sonraki sayfada girebilirsin!"
+  },
+  {
+    "ID": "z6c3d4e5f6a1",
+    "createdAt": "2024-04-29T09:38:21.000Z",
+    "updatedAt": "2024-06-26T13:51:04.719Z",
+    "status": "publish",
+    "text": "Ay / Yıl (aa/yy)"
+  },
+  {
+    "ID": "aa7d4e5f6a1b",
+    "createdAt": "2024-04-29T16:33:03.000Z",
+    "updatedAt": "2024-04-29T16:33:03.000Z",
+    "status": "publish",
+    "text": "Okul veya Şirket Adı"
+  },
+  {
+    "ID": "bb8e5f6a1b2c",
+    "createdAt": "2024-04-29T13:59:03.000Z",
+    "updatedAt": "2024-04-29T13:59:03.000Z",
+    "status": "publish",
+    "text": "Ona Nasıl Hitap Etmek İstersin?"
+  },
+  {
+    "ID": "cc9f6a1b2c3d",
+    "createdAt": "2024-04-29T13:55:51.000Z",
+    "updatedAt": "2024-04-29T13:55:51.000Z",
+    "status": "publish",
+    "text": "Not eklemeyeceğim."
+  },
+  {
+    "ID": "dd0a1b2c3d4e",
+    "createdAt": "2024-04-29T12:39:10.000Z",
+    "updatedAt": "2024-04-29T12:39:10.000Z",
+    "status": "publish",
+    "text": "CVC"
+  },
+  {
+    "ID": "ee1b2c3d4e5f",
+    "createdAt": "2024-04-29T14:08:16.000Z",
+    "updatedAt": "2024-04-29T14:08:16.000Z",
+    "status": "publish",
+    "text": "Hazır bir not seçin."
+  },
+  {
+    "ID": "ff2c3d4e5f6a",
+    "createdAt": "2024-04-29T14:05:52.000Z",
+    "updatedAt": "2024-04-29T14:05:52.000Z",
+    "status": "publish",
+    "text": "Hazır not eklemek istiyorum."
+  },
+  {
+    "ID": "gg3d4e5f6a1",
+    "createdAt": "2024-04-26T16:17:04.000Z",
+    "updatedAt": "2024-04-26T16:17:04.000Z",
+    "status": "publish",
+    "text": "Yeni Blog Yazısı Yayınlandığında E-Posta ile Haberdar Olmak İstiyorum."
+  },
+  {
+    "ID": "hh4e5f6a1b2",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "text": "Konu"
+  },
+  {
+    "ID": "ii5f6a1b2c3",
+    "createdAt": "2024-04-23T12:20:36.000Z",
+    "updatedAt": "2024-04-24T09:43:16.724Z",
+    "status": "publish",
+    "text": "Mesaj"
+  },
+  {
+    "ID": "jj6a1b2c3d4",
+    "createdAt": "2024-04-26T16:17:45.000Z",
+    "updatedAt": "2024-04-26T16:17:45.000Z",
+    "status": "publish",
+    "text": "İndirim ve Duyurulardan SMS ile Haberdar Olmak İstiyorum."
+  },
+  {
+    "ID": "kk7b2c3d4e5",
+    "createdAt": "2024-04-26T16:17:31.000Z",
+    "updatedAt": "2024-04-26T16:17:31.000Z",
+    "status": "publish",
+    "text": "İndirim ve Duyurulardan E-Posta ile Haberdar Olmak İstiyorum."
+  },
+  {
+    "ID": "kk7b2c3d4dsd5",
+    "createdAt": "2024-04-26T16:17:31.000Z",
+    "updatedAt": "2024-04-26T16:17:31.000Z",
+    "status": "publish",
+    "text": "E-Posta Adresi"
+  }
+] 

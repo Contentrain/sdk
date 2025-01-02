@@ -1,0 +1,98 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items-1"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items-1"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items-1"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items-1"
+  },
+  {
+    "name": "Order",
+    "description": "Item order",
+    "fieldId": "order",
+    "modelId": "banner-items-1",
+    "componentId": "integer",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      },
+      "unique-field": {
+        "value": true
+      }
+    },
+    "fieldType": "number"
+  },
+  {
+    "name": "Items",
+    "description": "Banner Slider items.",
+    "fieldId": "items",
+    "modelId": "banner-items-1",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "banner-items"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation"
+  }
+]

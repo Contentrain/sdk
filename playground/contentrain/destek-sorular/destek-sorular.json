@@ -1,0 +1,106 @@
+[
+  {
+    "ID": "1212b885a900",
+    "createdAt": "2024-04-09T07:43:00.000Z",
+    "updatedAt": "2024-05-22T13:55:15.677Z",
+    "status": "changed",
+    "title": "Teslimat",
+    "soru-cevap": [
+      "168b1065aea3",
+      "17ad0ceeb6d4",
+      "1cf06c1843f4",
+      "3e35bc185caf",
+      "90877771fb58",
+      "be002ac3182c",
+      "d9167424c3c6"
+    ],
+    "id": 3,
+    "order": 3,
+    "scheduled": false
+  },
+  {
+    "ID": "2863c3ba26f5",
+    "createdAt": "2024-04-09T07:37:51.000Z",
+    "updatedAt": "2024-05-22T13:55:23.611Z",
+    "status": "changed",
+    "title": "Ödeme",
+    "soru-cevap": [
+      "3236b85950fa",
+      "7679be869120",
+      "92f68c70faa1",
+      "aedce6bda293",
+      "bae2da8ffccb"
+    ],
+    "id": 2,
+    "order": 2,
+    "scheduled": false
+  },
+  {
+    "ID": "3dab8f8df493",
+    "createdAt": "2024-04-09T07:59:36.000Z",
+    "updatedAt": "2024-05-22T13:55:29.176Z",
+    "status": "changed",
+    "title": "İptal ve İade",
+    "soru-cevap": [
+      "5af6a0d2e6f8",
+      "7f8b3c2b8a98"
+    ],
+    "id": 4,
+    "order": 4,
+    "scheduled": false
+  },
+  {
+    "ID": "6ac67b7e14e4",
+    "createdAt": "2024-04-09T07:32:20.000Z",
+    "updatedAt": "2024-05-22T13:55:35.375Z",
+    "status": "changed",
+    "title": "Satış",
+    "soru-cevap": [
+      "01c23a1862c0",
+      "0bf970b5dcc4",
+      "2dfb5909810f",
+      "3fc972276b63",
+      "a3d06a484bcf",
+      "e795cec0346d"
+    ],
+    "id": 1,
+    "order": 1,
+    "scheduled": false
+  },
+  {
+    "ID": "97a0275ff704",
+    "createdAt": "2024-04-09T07:59:10.000Z",
+    "updatedAt": "2024-05-22T13:55:41.976Z",
+    "status": "changed",
+    "title": "Ürünler",
+    "soru-cevap": [
+      "01c23a1862c0",
+      "07a386fd200f",
+      "0bf970b5dcc4",
+      "168b1065aea3",
+      "17ad0ceeb6d4",
+      "1cf06c1843f4",
+      "2dfb5909810f",
+      "3236b85950fa",
+      "3e35bc185caf",
+      "3fc972276b63",
+      "58e968c9eef6",
+      "5af6a0d2e6f8",
+      "7679be869120",
+      "772f23172145",
+      "7f8b3c2b8a98",
+      "90877771fb58",
+      "92f68c70faa1",
+      "a3d06a484bcf",
+      "aedce6bda293",
+      "bae2da8ffccb",
+      "be002ac3182c",
+      "d9167424c3c6",
+      "e795cec0346d",
+      "fa4570794577"
+    ],
+    "id": 5,
+    "order": 5,
+    "scheduled": false
+  }
+]

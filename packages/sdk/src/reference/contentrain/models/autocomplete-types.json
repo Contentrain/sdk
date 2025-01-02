@@ -1,0 +1,86 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "autocomplete-types"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "autocomplete-types"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "autocomplete-types"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "autocomplete-types"
+  },
+  {
+    "name": "Name",
+    "fieldId": "name",
+    "modelId": "autocomplete-types",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": { "value": true }
+    },
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Value",
+    "fieldId": "value",
+    "modelId": "autocomplete-types",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  }
+] 

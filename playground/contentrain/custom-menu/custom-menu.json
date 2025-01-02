@@ -1,0 +1,24 @@
+[
+  {
+    "ID": "0013b2f8f9eb",
+    "createdAt": "2024-11-29T08:24:13.000Z",
+    "updatedAt": "2024-11-29T12:47:47.732Z",
+    "status": "publish",
+    "title": "Kurumsal Hediye",
+    "title-bold": true,
+    "title-icon": "i-ri-gift-fill",
+    "link": "/kurumsal-siparis",
+    "order": 2,
+    "scheduled": false
+  },
+  {
+    "ID": "ef7036d47a36",
+    "createdAt": "2024-11-29T09:04:35.000Z",
+    "updatedAt": "2024-11-29T09:08:01.206Z",
+    "status": "changed",
+    "title": "Saksılı Bitki",
+    "link": "/cicek?KategoriGUID=4E01660D-129B-4CEF-870C-50E77C81CCAF%259DB90F90-23D6-491E-81D5-E27F0DFA7029%25DFEDCC1D-A737-4452-832A-6BB3731C74F1",
+    "order": 1,
+    "scheduled": false
+  }
+]

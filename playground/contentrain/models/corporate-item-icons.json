@@ -1,0 +1,110 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "corporate-item-icons"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "corporate-item-icons"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "corporate-item-icons"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "corporate-item-icons"
+  },
+  {
+    "name": "Icon Theme Name",
+    "fieldId": "icon-theme-name",
+    "modelId": "corporate-item-icons",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Icon Name",
+    "fieldId": "icon-name",
+    "modelId": "corporate-item-icons",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Icon Color",
+    "fieldId": "icon-color",
+    "modelId": "corporate-item-icons",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Icon Background Color",
+    "fieldId": "icon-background-color",
+    "modelId": "corporate-item-icons",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  }
+]

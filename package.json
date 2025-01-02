@@ -1,0 +1,26 @@
+{
+  "name": "contentrain-sdk-monorepo",
+  "private": true,
+  "packageManager": "pnpm@8.15.1",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "clean": "rimraf 'packages/*/dist' && rimraf '**/node_modules' && rimraf '.turbo'",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.3",
+    "rimraf": "^5.0.0",
+    "turbo": "^2.3.3",
+    "typescript": "^5.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "playground"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

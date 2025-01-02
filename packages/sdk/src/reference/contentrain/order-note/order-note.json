@@ -1,0 +1,148 @@
+[
+  {
+    "ID": "139fdec973cc",
+    "createdAt": "2024-04-30T12:16:42.000Z",
+    "updatedAt": "2024-06-05T08:43:52.538Z",
+    "status": "publish",
+    "category": "Yıl Dönümü",
+    "messages": [
+      "Birlikte nice mutlu yıllara sevgilim!",
+      "Yıl dönümümüz kutlu olsun! Her anımızı daha da özel kıldığın için teşekkürler.",
+      "Yıl dönümümüz kutlu olsun, sevgilim. Seninle her şey daha güzel.",
+      "Birlikte bir yılı daha geride bıraktık, nice mutlu yıllarımız olsun!",
+      "Birlikte geçirdiğimiz bu güzel yılın ardından daha nice mutlu yıllara! Seni seviyorum."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "193d0c70fde4",
+    "createdAt": "2024-04-30T12:06:08.000Z",
+    "updatedAt": "2024-06-05T08:44:59.082Z",
+    "status": "publish",
+    "category": "Anneler Günü",
+    "messages": [
+      "Anneler Günü'n kutlu olsun, canım annem! Sen benim kahramanımsın.",
+      "Sana olan sevgimi kelimelerle anlatmak zor ama Anneler Günü'n kutlu olsun!",
+      "Anneler Günü'n kutlu olsun, dünyanın en harika annesine sahip olduğum için çok şanslıyım.",
+      "Senin gibi bir anneye sahip olduğum için her gün şükrediyorum. Anneler Günü'n kutlu olsun!",
+      "Anneler Günü'n kutlu olsun, seni çok seviyorum ve her şey için teşekkür ederim."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "3be9fe7322b5",
+    "createdAt": "2024-04-30T12:13:43.000Z",
+    "updatedAt": "2024-06-05T08:47:00.019Z",
+    "status": "publish",
+    "category": "Sevgililer Günü",
+    "messages": [
+      "Sevgililer Günü'müz kutlu olsun, aşkım! Her günüm seninle güzel.",
+      "Seni seviyorum! Bu Sevgililer Günü'nde de yanımda olduğun için çok mutluyum.",
+      "Seninle her gün Sevgililer Günü gibi. İyi ki varsın, seni çok seviyorum."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "4f6881c407eb",
+    "createdAt": "2024-04-30T12:16:13.000Z",
+    "updatedAt": "2024-06-05T08:49:02.385Z",
+    "status": "publish",
+    "category": "Yeni İş",
+    "messages": [
+      "Yeni işinde başarılar dilerim, harika şeyler yapacağına eminim!",
+      "Yeni işin hayırlı olsun! Eminim burada da harikalar yaratacaksın.",
+      "Yeni işinde bol şans ve başarı dilerim. Tebrikler!",
+      "Yeni işin kutlu olsun! Seninle gurur duyuyorum, harika işlere imza atacağına eminim.",
+      "Çok daha iyi şeyler yapacağına inancım tam!"
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "5e75786c194d",
+    "createdAt": "2024-04-30T12:11:22.000Z",
+    "updatedAt": "2024-06-05T08:57:42.890Z",
+    "status": "publish",
+    "category": "Öğretmenler Günü",
+    "messages": [
+      "Öğretmenler Günü'nüz kutlu olsun, bize kattığınız her şey için minnettarız.",
+      "Öğretmenim, her şey için teşekkürler. Öğretmenler Günü'nüz kutlu olsun!",
+      "Sizden çok şey öğrendik. Öğretmenler Günü'nüz kutlu olsun!",
+      "Eğitime katkılarınız için teşekkürler. Öğretmenler Günü'nüz kutlu olsun!",
+      "Öğretmenler Günü'nüz kutlu olsun, emekleriniz için minnettarım."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "75729187522f",
+    "createdAt": "2024-04-30T12:07:11.000Z",
+    "updatedAt": "2024-06-05T08:59:20.002Z",
+    "status": "publish",
+    "category": "Doğum Günü",
+    "messages": [
+      "Doğum günün kutlu olsun! Nice mutlu yıllara.",
+      "Yeni yaşında mutluluklar dilerim. Doğum günün kutlu olsun!",
+      "Sevdiklerinle birlikte nice mutlu yaşlar diliyorum. Doğum günün kutlu olsun!",
+      "Doğum günün kutlu olsun, tüm dileklerin gerçek olsun.",
+      "Yeni yaşın sağlık, mutluluk, huzur ve başarı getirsin. Doğum günün kutlu olsun!"
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "7681d9226d8a",
+    "createdAt": "2024-04-30T12:15:03.000Z",
+    "updatedAt": "2024-06-05T09:01:14.818Z",
+    "status": "publish",
+    "category": "Yeni Bebek",
+    "messages": [
+      "Minik yavrunuzla birlikte sağlıklı ve mutlu bir ömür dilerim.",
+      "Ailenize katılan minik melek için çok mutluyum, sağlıklı ve mutlu bir ömür dilerim!",
+      "Tebrikler! Bebeğinizle birlikte harika anılar biriktirmenizi dilerim."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "878e461a573c",
+    "createdAt": "2024-04-30T12:14:38.000Z",
+    "updatedAt": "2024-06-05T09:02:03.018Z",
+    "status": "publish",
+    "category": "Teşekkürler",
+    "messages": [
+      "Yardımınız için çok teşekkür ederim. Minnettarım.",
+      "Desteğiniz için teşekkürler. Çok naziksiniz.",
+      "Her şey için teşekkür ederim. Çok sağ olun.",
+      "Yardımlarınız için minnettarım, teşekkür ederim.",
+      "İlginiz ve desteğiniz için çok teşekkürler."
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "94ece8374d0c",
+    "createdAt": "2024-04-30T12:14:08.000Z",
+    "updatedAt": "2024-06-05T09:02:49.618Z",
+    "status": "publish",
+    "category": "Tebrikler",
+    "messages": [
+      "Başarını kutluyorum, tebrikler!",
+      "Harika bir iş çıkardın, tebrik ederim!",
+      "Başarını tebrik ederim, hep böyle devam et!",
+      "Tebrikler, seninle gurur duyuyorum!",
+      "Başarıların daim olsun, tebrik ederim!"
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "ba179a2682a6",
+    "createdAt": "2024-04-30T12:07:44.000Z",
+    "updatedAt": "2024-06-05T09:04:28.770Z",
+    "status": "publish",
+    "category": "Geçmiş Olsun",
+    "messages": [
+      "Geçmiş olsun, en kısa sürede sağlığına kavuşman dileğiyle.",
+      "Çabucak iyileşmen dileğiyle, geçmiş olsun.",
+      "Sağlık ve şifa dileklerimle, geçmiş olsun.",
+      "Umarım yakında toparlanırsın. Geçmiş olsun.",
+      "En kısa sürede sağlığına kavuşup seni aramızda görmeyi sabırsızlıkla bekliyoruz."
+    ],
+    "scheduled": false
+  }
+]

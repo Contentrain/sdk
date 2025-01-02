@@ -1,0 +1,125 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "footer-menus-1",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "footer-menus-1",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "footer-menus-1",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "footer-menus-1",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "title",
+    "fieldId": "title",
+    "modelId": "footer-menus-1",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "justify",
+    "fieldId": "justify",
+    "modelId": "footer-menus-1",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "flex",
+    "fieldId": "flex",
+    "modelId": "footer-menus-1",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "items",
+    "fieldId": "items",
+    "modelId": "footer-menus-1",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "footer-item"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation",
+    "projectId": "kxc5mwk36i"
+  },
+  {
+    "name": "order",
+    "fieldId": "order",
+    "modelId": "footer-menus-1",
+    "componentId": "integer",
+    "options": {},
+    "validations": {},
+    "fieldType": "number",
+    "projectId": "kxc5mwk36i"
+  }
+]

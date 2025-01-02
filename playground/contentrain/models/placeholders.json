@@ -1,0 +1,15 @@
+[
+  {
+    "name": "Placeholder Text",
+    "fieldId": "text",
+    "modelId": "placeholders",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": { "value": true }
+    },
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  }
+] 

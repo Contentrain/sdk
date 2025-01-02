@@ -1,0 +1,194 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "banner-items"
+  },
+  {
+    "name": "Order",
+    "description": "Item order",
+    "fieldId": "order",
+    "modelId": "banner-items",
+    "componentId": "integer",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "number"
+  },
+  {
+    "name": "Image",
+    "description": "Static image",
+    "fieldId": "image",
+    "modelId": "banner-items",
+    "componentId": "media",
+    "options": {},
+    "validations": {},
+    "fieldType": "media"
+  },
+  {
+    "name": "Image Source",
+    "description": "Remote image url",
+    "fieldId": "image-source",
+    "modelId": "banner-items",
+    "componentId": "url",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Link",
+    "description": "Banner item link.",
+    "fieldId": "link",
+    "modelId": "banner-items",
+    "componentId": "url",
+    "options": {
+      "title-field": {
+        "value": true
+      },
+      "default-value": {
+        "value": true,
+        "form": {
+          "url": {}
+        }
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Image Alt",
+    "description": "Image alt attribute",
+    "fieldId": "image-alt",
+    "modelId": "banner-items",
+    "componentId": "multi-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Items",
+    "description": "Banner Slider items.",
+    "fieldId": "items",
+    "modelId": "banner-items",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "banner-items"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation"
+  },
+  {
+    "name": "Promotion ID",
+    "fieldId": "promotion-id",
+    "modelId": "banner-items",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Promotion Name",
+    "fieldId": "promotion-name",
+    "modelId": "banner-items",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Creative Name",
+    "fieldId": "creative-name",
+    "modelId": "banner-items",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Creative Slot",
+    "fieldId": "creative-slot",
+    "modelId": "banner-items",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Location ID",
+    "fieldId": "location-id",
+    "modelId": "banner-items",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  }
+]

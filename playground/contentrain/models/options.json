@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Option Text",
+    "fieldId": "text",
+    "modelId": "options",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": { "value": true }
+    },
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Option Value",
+    "fieldId": "value",
+    "modelId": "options",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Option Group",
+    "fieldId": "group",
+    "modelId": "options",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": { "value": true }
+    },
+    "fieldType": "string"
+  }
+] 

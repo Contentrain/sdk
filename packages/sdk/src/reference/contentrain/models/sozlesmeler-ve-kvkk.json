@@ -1,0 +1,123 @@
+[
+  {
+    "name": "slug",
+    "fieldId": "slug",
+    "componentId": "slug",
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "options": {},
+    "fieldType": "string",
+    "system": false,
+    "defaultField": true,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "content",
+    "fieldId": "content",
+    "componentId": "md-editor",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": false,
+    "defaultField": true,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "type",
+    "fieldId": "type",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": false,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  },
+  {
+    "name": "title",
+    "fieldId": "title",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": false,
+    "defaultField": false,
+    "modelId": "sozlesmeler-ve-kvkk"
+  }
+
+]

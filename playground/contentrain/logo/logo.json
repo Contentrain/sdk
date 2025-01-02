@@ -1,0 +1,62 @@
+[
+  {
+    "ID": "422a8fa4deef",
+    "createdAt": "2024-05-29T15:53:20.000Z",
+    "updatedAt": "2024-05-29T15:56:42.906Z",
+    "status": "publish",
+    "image": "apps/web/public/1716382748539_logos-mastercard.svg",
+    "image-alt": "Mastercard Logo",
+    "order": 2,
+    "scheduled": false
+  },
+  {
+    "ID": "4491e48f92cb",
+    "createdAt": "2024-05-29T15:53:36.000Z",
+    "updatedAt": "2024-05-29T15:56:53.530Z",
+    "status": "publish",
+    "image": "apps/web/public/1716382728730_logos-maestro.svg",
+    "image-alt": "Maestro Logo",
+    "order": 3,
+    "scheduled": false
+  },
+  {
+    "ID": "617de095c7ae",
+    "createdAt": "2024-05-22T13:14:42.000Z",
+    "updatedAt": "2024-05-29T15:57:16.646Z",
+    "status": "publish",
+    "image": "apps/web/public/1715942234664_logo-main.svg",
+    "image-alt": "B & F Logo",
+    "order": 1,
+    "scheduled": false
+  },
+  {
+    "ID": "c4ad63645a42",
+    "createdAt": "2024-05-29T15:53:51.000Z",
+    "updatedAt": "2024-05-29T15:57:08.847Z",
+    "status": "publish",
+    "image": "apps/web/public/1716383022592_logos-secure-payment.svg",
+    "image-alt": "Secure Payment",
+    "order": 5,
+    "scheduled": false
+  },
+  {
+    "ID": "c5b03602613a",
+    "createdAt": "2024-05-29T15:52:26.000Z",
+    "updatedAt": "2024-05-29T15:57:02.729Z",
+    "status": "publish",
+    "image": "apps/web/public/1716382980036_logos-troy.svg",
+    "image-alt": "Troy Logo",
+    "order": 4,
+    "scheduled": false
+  },
+  {
+    "ID": "f97817901658",
+    "createdAt": "2024-05-29T15:52:52.000Z",
+    "updatedAt": "2024-05-29T15:56:19.815Z",
+    "status": "publish",
+    "image": "apps/web/public/1716383038053_logos-visa.svg",
+    "image-alt": "Visa Logo",
+    "order": 1,
+    "scheduled": false
+  }
+]

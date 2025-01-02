@@ -1,0 +1,12 @@
+[
+  {
+    "ID": "aaf68404c2a4",
+    "createdAt": "Wed May 08 2024 09:25:56 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed May 08 2024 09:25:56 GMT+0300 (GMT+03:00)",
+    "title": "Haberdar Ol",
+    "description": "Bloom and Fresh ile ilgili hiçbir haberi kaçırma!",
+    "image": "apps/web/public/1715093314676_newsletter-banner.webp",
+    "status": "publish",
+    "scheduled": false
+  }
+]

@@ -1,0 +1,181 @@
+[
+  {
+    "name": "slug",
+    "fieldId": "slug",
+    "componentId": "slug",
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "options": {},
+    "fieldType": "string",
+    "system": false,
+    "defaultField": true,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "content",
+    "fieldId": "content",
+    "componentId": "md-editor",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": false,
+    "defaultField": true,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "campaigns"
+  },
+  {
+    "name": "title",
+    "fieldId": "title",
+    "modelId": "campaigns",
+    "componentId": "single-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "description",
+    "fieldId": "description",
+    "modelId": "campaigns",
+    "componentId": "multi-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "image",
+    "fieldId": "image",
+    "modelId": "campaigns",
+    "componentId": "media",
+    "options": {},
+    "validations": {},
+    "fieldType": "media"
+  },
+  {
+    "name": "Image Alt",
+    "fieldId": "image-alt",
+    "modelId": "campaigns",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Image Source",
+    "fieldId": "image-source",
+    "modelId": "campaigns",
+    "componentId": "url",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Campaign Card Text",
+    "fieldId": "campaign-card-text",
+    "modelId": "campaigns",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Button Text",
+    "description": "Bu alan cart üzerindeki buton yazısını değiştirir",
+    "fieldId": "button-text",
+    "modelId": "campaigns",
+    "componentId": "single-line-text",
+    "options": {
+      "default-value": {
+        "value": true,
+        "form": {
+          "single-line-text": {
+            "value": "Indirimi Gör"
+          }
+        }
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  }
+]

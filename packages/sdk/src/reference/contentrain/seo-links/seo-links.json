@@ -1,0 +1,578 @@
+[
+  {
+    "ID": "01de2d51bd1c",
+    "createdAt": "Fri May 31 2024 10:16:56 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:16:56 GMT+0300 (GMT+03:00)",
+    "text": "Çiçek Sepeti Siparişi (Tasarım Çiçekler)",
+    "link": "/cicek-sepeti",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "08215899c1eb",
+    "createdAt": "Fri May 31 2024 10:20:17 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:20:17 GMT+0300 (GMT+03:00)",
+    "text": "Mecidiyeköy Çiçek Siparişi (Çiçekçi)",
+    "link": "/mecidiyekoy-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "0850d0428db7",
+    "createdAt": "Fri May 31 2024 10:21:59 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:21:59 GMT+0300 (GMT+03:00)",
+    "text": "Nişantaşı Çiçek Siparişi (Çiçekçi)",
+    "link": "/nisantasi-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "11e5028f2cc8",
+    "updatedAt": "2024-08-26T09:58:42.711Z",
+    "status": "publish",
+    "createdAt": "2024-05-23T09:34:05.000Z",
+    "text": "Bursa Çiçek Siparişi Ver",
+    "link": "/bursa-cicek-siparisi",
+    "scheduled": false
+  },
+  {
+    "ID": "158e4f1b67be",
+    "createdAt": "2024-05-31T07:17:17.000Z",
+    "updatedAt": "2024-06-03T11:28:22.321Z",
+    "status": "publish",
+    "text": "Taze Çiçek Siparişi",
+    "link": "/taze-cicek",
+    "scheduled": false
+  },
+  {
+    "ID": "1a618f38eba2",
+    "createdAt": "2024-05-31T07:23:33.000Z",
+    "updatedAt": "2024-08-23T06:02:18.286Z",
+    "status": "draft",
+    "text": "Bayram Hediyeleri",
+    "link": "/bayram-cicekleri-ve-hediyeler",
+    "scheduled": false
+  },
+  {
+    "ID": "1c1406af8cf6",
+    "createdAt": "Fri May 31 2024 10:34:09 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:34:09 GMT+0300 (GMT+03:00)",
+    "text": "Kadınlara Özel Çiçekler ve Hediyeler",
+    "link": "/kadina-cicek-hediyesi",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "2bd0a6fa6e68",
+    "createdAt": "2024-05-31T07:21:00.000Z",
+    "updatedAt": "2024-11-26T11:36:44.332Z",
+    "status": "draft",
+    "text": "Beşiktaş-Arnavutköy Çiçek Siparişi (Çiçekçi)",
+    "link": "/arnavutkoy-cicekci",
+    "scheduled": false
+  },
+  {
+    "ID": "319a7a716b85",
+    "createdAt": "Fri May 31 2024 10:19:41 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:19:41 GMT+0300 (GMT+03:00)",
+    "text": "Pembe Çiçekler",
+    "link": "/pembe-cicekler",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "3cd338650809",
+    "createdAt": "Fri May 31 2024 10:25:35 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:25:35 GMT+0300 (GMT+03:00)",
+    "text": "Etiler Çiçek Siparişi (Çiçekçi)",
+    "link": "/etiler-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "4939253e20f3",
+    "createdAt": "Fri May 31 2024 10:20:00 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:20:00 GMT+0300 (GMT+03:00)",
+    "text": "Renk Patlaması",
+    "link": "/rengarenk-cicekler",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "4ca7eb32e52b",
+    "createdAt": "Wed Dec 04 2024 14:48:46 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Dec 04 2024 14:48:46 GMT+0300 (GMT+03:00)",
+    "text": " Gazeteciler Günü Hediyeleri",
+    "link": "/gazeteciler-gunu-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "50c9c998c084",
+    "createdAt": "Fri May 31 2024 10:26:37 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:26:37 GMT+0300 (GMT+03:00)",
+    "text": "Bugün Teslimatlı Çiçekler ve Hediyeler",
+    "link": "/ayni-gun-teslim-hizli-cicek-gonder",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "5828734bd468",
+    "createdAt": "Fri May 31 2024 10:21:18 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:21:18 GMT+0300 (GMT+03:00)",
+    "text": "Beyoğlu Çiçek Siparişi (Çiçekçi)",
+    "link": "/beyoglu-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "59e67f1d95d9",
+    "createdAt": "Fri May 31 2024 10:33:52 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:33:52 GMT+0300 (GMT+03:00)",
+    "text": "Anneler Günü Çiçekleri ve Hediyeleri",
+    "link": "/anneler-gunu-cicekleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "5a770401b8aa",
+    "createdAt": "Fri May 31 2024 10:16:30 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:16:30 GMT+0300 (GMT+03:00)",
+    "text": "Üsküdar'da Çiçek Siparişi (Çiçekçi)",
+    "link": "/uskudar-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "5d52f04835c7",
+    "createdAt": "2024-05-31T07:27:30.000Z",
+    "updatedAt": "2024-11-07T09:53:20.779Z",
+    "status": "publish",
+    "text": "Öğretmenler Günü Hediyeleri",
+    "link": "/ogretmenler-gunu-hediyeleri",
+    "scheduled": false
+  },
+  {
+    "ID": "5ddd3f3cdcb8",
+    "createdAt": "Fri May 31 2024 10:29:20 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:29:20 GMT+0300 (GMT+03:00)",
+    "text": "Söz Nişan ve Düğün Çiçekleri",
+    "link": "/soz-nisan-dugun-cicekleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "5e635ff82365",
+    "createdAt": "Fri May 31 2024 10:20:38 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:20:38 GMT+0300 (GMT+03:00)",
+    "text": " Çekmeköy Çiçek Siparişi (Çiçekçi)",
+    "link": "/cekmekoy-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "60854d56ba5c",
+    "createdAt": "Fri May 31 2024 10:15:51 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:15:51 GMT+0300 (GMT+03:00)",
+    "text": "Sancaktepe Çiçek Siparişi (Çiçekçi)",
+    "link": "/sancaktepe-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "6720aae83174",
+    "createdAt": "Fri May 31 2024 10:22:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:22:28 GMT+0300 (GMT+03:00)",
+    "text": " Beykoz Çiçek Siparişi (Çiçekçi)",
+    "link": "/beykoz-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "72a9728428b6",
+    "createdAt": "2024-12-04T11:49:46.000Z",
+    "updatedAt": "2024-12-04T11:51:22.370Z",
+    "status": "changed",
+    "text": "Diş Hekimleri Günü Hediyeleri",
+    "link": " /dis-hekimleri-gunu-hediyeleri",
+    "scheduled": false
+  },
+  {
+    "ID": "734a8aa39480",
+    "createdAt": "Fri May 31 2024 10:22:44 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:22:44 GMT+0300 (GMT+03:00)",
+    "text": "Sarıyer Çiçek Siparişi (Çiçekçi)",
+    "link": "/sariyer-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "73aff18c0841",
+    "createdAt": "Fri May 31 2024 10:24:01 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:24:01 GMT+0300 (GMT+03:00)",
+    "text": " Sevgililer Günü Çiçekleri (14 Şubat)",
+    "link": "/sevgililer-gunu-cicekleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "8d7a6107c5fd",
+    "createdAt": "Fri May 31 2024 10:35:38 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:35:38 GMT+0300 (GMT+03:00)",
+    "text": "Sevgililer Günü Çiçek ve Hediyeleri - 14 Şubat",
+    "link": "/sevgililer-gunu-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "935cd64367b1",
+    "createdAt": "Fri May 31 2024 10:34:52 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:34:52 GMT+0300 (GMT+03:00)",
+    "text": "Sevgiliye Çiçek",
+    "link": "/sevgiliye-cicek",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "93ba6bbe4ddc",
+    "createdAt": "Fri May 31 2024 10:31:04 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:31:04 GMT+0300 (GMT+03:00)",
+    "text": " Uzun Ömürlü Çiçekler",
+    "link": "/dayanikli-cicekler",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "979d4da0ea6b",
+    "createdAt": "Fri May 31 2024 10:30:45 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:30:45 GMT+0300 (GMT+03:00)",
+    "text": "Lale Buketleri",
+    "link": "/lale-gonder",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "9df35f62a0ce",
+    "createdAt": "Fri May 31 2024 10:31:22 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:31:22 GMT+0300 (GMT+03:00)",
+    "text": "Avukatlar için Çiçek ve Hediye",
+    "link": "/avukatlar-gunu-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "a97dc55d5ae3",
+    "createdAt": "Fri May 31 2024 10:17:49 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:17:49 GMT+0300 (GMT+03:00)",
+    "text": "Ataşehir Çiçek Siparişi (Çiçekçi)",
+    "link": "/atasehir-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "aac5f9684c32",
+    "createdAt": "Fri May 31 2024 10:32:33 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:32:33 GMT+0300 (GMT+03:00)",
+    "text": "Yeni İş Hediyesi Gönder",
+    "link": "/yeni-is-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "ace0ee43e829",
+    "createdAt": "Fri May 31 2024 10:18:47 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-12-04T11:19:04.489Z",
+    "text": "Yeni Yıl Hediyeleri",
+    "link": "/yeni-yil-hediye",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "adecb5cc22e8",
+    "createdAt": "Fri May 31 2024 10:21:41 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:21:41 GMT+0300 (GMT+03:00)",
+    "text": "Taksim Çiçek Siparişi (Çiçekçi)",
+    "link": "/taksim-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "b1dcc5dba312",
+    "createdAt": "Fri May 31 2024 10:24:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:24:28 GMT+0300 (GMT+03:00)",
+    "text": "Gurme Hediyeler ve Kahve Seti Hediyeleri",
+    "link": "/gurme-hediyeler-cikolata-makaron-kahve",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "b26df44da23b",
+    "createdAt": "Fri May 31 2024 10:23:16 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:23:16 GMT+0300 (GMT+03:00)",
+    "text": "Beşiktaş Çiçek Siparişi (Çiçekçi)",
+    "link": "/besiktas-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "b75aeb4f8b73",
+    "createdAt": "Fri May 31 2024 10:22:59 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:22:59 GMT+0300 (GMT+03:00)",
+    "text": " Şişli Çiçek Siparişi (Çiçekçi)",
+    "link": "/sisli-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "b9a19641a4e2",
+    "createdAt": "Fri May 31 2024 10:34:35 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:34:35 GMT+0300 (GMT+03:00)",
+    "text": "Doğum Günü Hediyeleri",
+    "link": "/dogum-gunu-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "c0f57bbdf8af",
+    "createdAt": "Fri May 31 2024 10:18:07 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:18:07 GMT+0300 (GMT+03:00)",
+    "text": "Bostancı Çiçek Siparişi (Çiçekçi)",
+    "link": "/bostanci-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "c2955793d29c",
+    "createdAt": "Fri May 31 2024 10:36:25 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:36:25 GMT+0300 (GMT+03:00)",
+    "text": "Çiçek & Hediye Setleri",
+    "link": "/cicek-hediye-setleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "ce735442f80f",
+    "createdAt": "Fri May 31 2024 10:31:41 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:31:41 GMT+0300 (GMT+03:00)",
+    "text": "Tıp Bayramı Hediyelik Ürünler",
+    "link": "/tip-bayrami-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "d03fbc26593b",
+    "createdAt": "2024-12-04T11:49:30.000Z",
+    "updatedAt": "2024-12-04T11:53:27.740Z",
+    "status": "draft",
+    "text": "Eczacılar Günü Hediyeleri",
+    "link": "/eczacilar-gunu-hediyeleri",
+    "scheduled": false
+  },
+  {
+    "ID": "d1e52953fede",
+    "createdAt": "Fri May 31 2024 10:25:17 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:25:17 GMT+0300 (GMT+03:00)",
+    "text": " Kadıköy Çiçek Siparişi (Çiçekçi)",
+    "link": "/kadikoy-cicekci",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "d43a175905fa",
+    "createdAt": "Fri May 31 2024 10:19:15 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:19:15 GMT+0300 (GMT+03:00)",
+    "text": "Okula Dönüş Haftası",
+    "link": "/okula-donus-haftasi",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "d79586adce1b",
+    "createdAt": "Fri Jul 12 2024 14:33:16 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Jul 12 2024 14:33:16 GMT+0300 (GMT+03:00)",
+    "text": "Tüm Ürünler",
+    "link": "/tum-urunler",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "e0fc40958dab",
+    "createdAt": "Fri May 31 2024 10:27:02 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:27:02 GMT+0300 (GMT+03:00)",
+    "text": "Butik Çiçek | Bloom and Fresh",
+    "link": "/ozel-tasarim-cicekler",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "e135666e46ba",
+    "createdAt": "Fri May 31 2024 10:35:12 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:35:12 GMT+0300 (GMT+03:00)",
+    "text": "Kadınlar Günü Hediyeleri",
+    "link": "/kadinlar-gunu-hediyeleri",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "e225d76e380e",
+    "createdAt": "Fri May 31 2024 10:24:42 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:24:42 GMT+0300 (GMT+03:00)",
+    "text": "Kutuda Çiçek",
+    "link": "/kutu-cicek",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "e26e2b039916",
+    "createdAt": "Fri May 31 2024 10:30:29 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:30:29 GMT+0300 (GMT+03:00)",
+    "text": "Erkek için Çiçek Gönder",
+    "link": "/erkege-cicek-hediyesi",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "e55323983683",
+    "createdAt": "2024-12-04T11:50:02.000Z",
+    "updatedAt": "2024-12-04T11:50:54.883Z",
+    "status": "changed",
+    "text": "Hemşireler Günü Hediyeleri",
+    "link": "/hemsireler-gunu-hediyeleri",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d1bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.890Z",
+    "status": "publish",
+    "text": "Aynı Gün Gönderimli Çiçekler",
+    "link": "/ayni-gun-teslim-hizli-cicek-gonder",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d2bde",
+    "createdAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "text": "İstanbul Çiçek Siparişi",
+    "link": "/cicek",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d3bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.894Z",
+    "status": "publish",
+    "text": "İzmir Çiçek Siparişi",
+    "link": "/izmir-cicek-siparisi",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d4bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.915Z",
+    "status": "publish",
+    "text": "Erkeklere Gönderilebilecek Çiçekler",
+    "link": "/erkeklere-gonderilebilecek-cicekler",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d5bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.933Z",
+    "status": "publish",
+    "text": "Doğum Günü Çiçekleri",
+    "link": "/dogum-gunu-cicekleri",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d6bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-07-30T06:22:38.706Z",
+    "status": "publish",
+    "text": "İndirimli Çiçekler",
+    "link": "/kampanya",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d7bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-06T08:50:40.493Z",
+    "status": "publish",
+    "text": "Kurumsal Çiçek Gönderimi",
+    "link": "/kurumsal-siparis",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d8bde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.946Z",
+    "status": "publish",
+    "text": "Yeni İş Çiçekleri",
+    "link": "/yeni-is-cicekleri",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7d9bde",
+    "createdAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "text": "Geçmiş Olsun Çiçekleri",
+    "link": "/gecmis-olsun-cicekleri",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7ddbde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-06T08:51:50.782Z",
+    "status": "publish",
+    "text": "Antalya Çiçek Siparişi",
+    "link": "/antalya-cicek-siparisi",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7dxbde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-06T08:49:48.433Z",
+    "status": "publish",
+    "text": "Saksı Çiçekleri",
+    "link": "/saksi-cicekleri",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7dybde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-06T08:52:40.079Z",
+    "status": "publish",
+    "text": "Dayanıklı Çiçekler",
+    "link": "/dayanikli-cicekler",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7dzbde",
+    "createdAt": "2024-03-29T19:32:23.000Z",
+    "updatedAt": "2024-06-03T11:28:35.960Z",
+    "status": "publish",
+    "text": "Ankara Çiçek Siparişi",
+    "link": "/ankara-cicek-siparisi",
+    "scheduled": false
+  },
+  {
+    "ID": "e75aeb7wqebde",
+    "createdAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Mar 29 2024 22:32:23 GMT+0300 (GMT+03:00)",
+    "text": "Özel tasarım çiçekler",
+    "link": "/ozel-tasarim-cicekler",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "ebb7e5e04a7b",
+    "createdAt": "Fri May 31 2024 10:18:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri May 31 2024 10:18:28 GMT+0300 (GMT+03:00)",
+    "text": " Çiçekli Bitkiler",
+    "link": "/cicekli-bitkiler",
+    "status": "draft",
+    "scheduled": false
+  }
+]

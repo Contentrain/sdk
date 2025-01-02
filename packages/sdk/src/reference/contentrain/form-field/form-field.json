@@ -1,0 +1,522 @@
+[
+  {
+    "ID": "0243115e8df8",
+    "createdAt": "2024-04-23T15:02:53.000Z",
+    "updatedAt": "2024-04-26T14:54:06.294Z",
+    "status": "publish",
+    "label": "Sipariş Numarası",
+    "placeholder": "Sipariş numaranızı giriniz.",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "0881898725d3",
+    "createdAt": "2024-04-26T12:12:35.000Z",
+    "updatedAt": "2024-04-26T12:13:40.375Z",
+    "status": "publish",
+    "label": "Geçerli Şifre (Değişmesini istemiyorsanız boş bırakınız.)",
+    "placeholder": "********",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "10b3263d18f4",
+    "createdAt": "Fri Apr 26 2024 13:42:20 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 13:42:20 GMT+0300 (GMT+03:00)",
+    "label": "Açıklama",
+    "placeholder": "Açıklama",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "136ac258f890",
+    "createdAt": "Fri Apr 26 2024 17:20:21 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 17:20:21 GMT+0300 (GMT+03:00)",
+    "label": "Bireysel Fatura",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "1a2189911cd1",
+    "createdAt": "Fri Apr 26 2024 15:12:53 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 15:12:53 GMT+0300 (GMT+03:00)",
+    "label": "Yeni Şifre (Değişmesini istemiyorsanız boş bırakınız.)",
+    "placeholder": "********",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "1b341529b1e1",
+    "createdAt": "Wed Apr 24 2024 12:41:11 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.670Z",
+    "label": "İndirim ve duyurulardan e-posta ve diğer yollarla haberdar olmak istiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "1b5d07b453df",
+    "createdAt": "2024-04-29T13:12:54.000Z",
+    "updatedAt": "2024-04-29T14:38:01.190Z",
+    "status": "publish",
+    "label": "Alıcı Telefon Numarası",
+    "placeholder": "Alıcı telefon numarası",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "27abd5698607",
+    "createdAt": "Fri Apr 26 2024 13:42:12 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 13:42:12 GMT+0300 (GMT+03:00)",
+    "label": "İsim",
+    "placeholder": "İsim",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "3554b449501f",
+    "createdAt": "Wed Apr 24 2024 12:39:50 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.685Z",
+    "label": "Şifremi unuttum",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "35e02a1b7d2f",
+    "createdAt": "Wed Apr 24 2024 12:39:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.694Z",
+    "label": "Beni hatırla",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "36c2172bf971",
+    "createdAt": "2024-04-26T14:52:06.000Z",
+    "updatedAt": "2024-04-29T08:30:52.198Z",
+    "status": "publish",
+    "label": "TC Kimlik Numarası",
+    "placeholder": "TC kimlik numarası",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "3a871b24c492",
+    "createdAt": "Mon Apr 29 2024 12:37:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 12:37:55 GMT+0300 (GMT+03:00)",
+    "label": "Kart Numarası",
+    "placeholder": "Kart numarasını giriniz.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "3cf2f819fc8b",
+    "createdAt": "Mon Apr 29 2024 14:14:52 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 14:14:52 GMT+0300 (GMT+03:00)",
+    "label": "Gönderen İsmi",
+    "placeholder": "Çocukların Can ve Jale...",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "4468e0ad14a8",
+    "createdAt": "Fri Apr 26 2024 17:58:32 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 17:58:32 GMT+0300 (GMT+03:00)",
+    "label": "Vergi Dairesi",
+    "placeholder": "Vergi dairesi",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "4d5a4861ea73",
+    "createdAt": "2024-04-25T12:53:22.000Z",
+    "updatedAt": "2024-04-26T14:54:23.711Z",
+    "status": "publish",
+    "label": "Adres Adı",
+    "placeholder": "Adres adı",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "4fa64829cdde",
+    "createdAt": "2024-04-23T12:18:49.000Z",
+    "updatedAt": "2024-04-26T14:54:35.662Z",
+    "status": "publish",
+    "label": "Ad, Soyad",
+    "placeholder": "Ad, soyad",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "58be5bc591cc",
+    "createdAt": "Fri Apr 26 2024 13:42:34 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 13:42:34 GMT+0300 (GMT+03:00)",
+    "label": "Ne zaman?",
+    "placeholder": "Tarih",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "5b8947200473",
+    "createdAt": "Fri Apr 26 2024 17:58:04 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 17:58:04 GMT+0300 (GMT+03:00)",
+    "label": "Firma Ünvanı",
+    "placeholder": "Firma ünvanı",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "61de5c44688d",
+    "createdAt": "Mon Apr 29 2024 12:41:58 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 12:41:58 GMT+0300 (GMT+03:00)",
+    "label": "3D ile ödeme yapmak istiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "646292330f07",
+    "createdAt": "2024-04-29T11:29:21.000Z",
+    "updatedAt": "2024-04-29T14:38:25.389Z",
+    "status": "publish",
+    "label": "Gönderen E-Posta Adresi",
+    "placeholder": "Gönderen e-posta adresi",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "6e1f5a504429",
+    "createdAt": "Mon Apr 29 2024 16:38:49 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 16:38:49 GMT+0300 (GMT+03:00)",
+    "label": "Bu adresi gelecek siparişlerim için kaydet.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "705dede52876",
+    "createdAt": "Wed Apr 24 2024 12:41:01 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.705Z",
+    "label": "Şifre Tekrar",
+    "placeholder": "********",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "7153570e1c02",
+    "createdAt": "Mon Apr 29 2024 16:46:54 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 16:46:54 GMT+0300 (GMT+03:00)",
+    "label": "Kayıtlı bir adresiniz bulunmamaktadır.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "72554b34d765",
+    "createdAt": "2024-04-23T12:19:10.000Z",
+    "updatedAt": "2024-04-26T14:54:46.992Z",
+    "status": "publish",
+    "label": "E-posta Adresi",
+    "placeholder": "E-posta adresinizi giriniz.",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "7286adaf5e33",
+    "createdAt": "Fri Apr 26 2024 17:20:35 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 17:20:35 GMT+0300 (GMT+03:00)",
+    "label": "Kurumsal Fatura",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "7360a33e5fa7",
+    "createdAt": "Mon Apr 29 2024 14:11:57 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 14:11:57 GMT+0300 (GMT+03:00)",
+    "label": "Ona Ne Söylemek İstersin?",
+    "placeholder": "Seni çok seviyoruz...",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "7455f321ea72",
+    "createdAt": "Fri Apr 26 2024 15:13:18 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 15:13:18 GMT+0300 (GMT+03:00)",
+    "label": "Yeni Şifre Tekrar",
+    "placeholder": "********",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "76d4bbab15c6",
+    "createdAt": "Mon Apr 29 2024 12:48:42 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 12:48:42 GMT+0300 (GMT+03:00)",
+    "label": "Fatura bilgilerini bir sonraki sayfada girebilirsin!",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "7db689a0864c",
+    "createdAt": "2024-04-29T09:38:21.000Z",
+    "updatedAt": "2024-06-26T13:51:04.719Z",
+    "status": "publish",
+    "label": "Ay / Yıl (aa/yy)",
+    "placeholder": "**/**",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "91ea2cac6332",
+    "createdAt": "Mon Apr 29 2024 16:33:03 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 16:33:03 GMT+0300 (GMT+03:00)",
+    "label": "Okul veya Şirket Adı",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "9445c1c53d69",
+    "createdAt": "Mon Apr 29 2024 14:31:48 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 14:31:48 GMT+0300 (GMT+03:00)",
+    "label": "Gönderen Telefon Numarası",
+    "placeholder": "Telefon numarası",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "96ee3194bf73",
+    "createdAt": "Mon Apr 29 2024 13:59:03 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 13:59:03 GMT+0300 (GMT+03:00)",
+    "label": "Ona Nasıl Hitap Etmek İstersin?",
+    "placeholder": "Bir tanecik annemiz...",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "a2e970d0eac1",
+    "createdAt": "2024-04-26T14:17:58.000Z",
+    "updatedAt": "2024-04-26T16:21:05.995Z",
+    "status": "publish",
+    "label": "Fatura Adı",
+    "placeholder": "Fatura adı",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "a8313c644ec3",
+    "createdAt": "Wed Apr 24 2024 12:39:03 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.716Z",
+    "label": "Kullanıcı Adı ya da E-Posta",
+    "placeholder": "Kullanıcı Adı ya da E-Posta",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "a963ef639f5d",
+    "createdAt": "Fri Apr 26 2024 17:58:40 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 17:58:40 GMT+0300 (GMT+03:00)",
+    "label": "Vergi Numarası",
+    "placeholder": "Vergi numarası",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "abee9ce1d465",
+    "createdAt": "Mon Apr 29 2024 13:55:51 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 13:55:51 GMT+0300 (GMT+03:00)",
+    "label": "Not eklemeyeceğim.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "b6b40c31e3e2",
+    "createdAt": "Mon Apr 29 2024 12:39:10 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 12:39:10 GMT+0300 (GMT+03:00)",
+    "label": "CVC",
+    "placeholder": "***",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "bc7b5c812f02",
+    "createdAt": "Thu Apr 25 2024 15:53:51 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Apr 25 2024 15:53:51 GMT+0300 (GMT+03:00)",
+    "label": "Lokasyon",
+    "placeholder": "Detaylı gönderim yeri belirleyin.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c272b39394b3",
+    "createdAt": "Fri Apr 26 2024 16:17:04 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 16:17:04 GMT+0300 (GMT+03:00)",
+    "label": "Yeni Blog Yazısı Yayınlandığında E-Posta ile Haberdar Olmak İstiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c4722d8149a1",
+    "createdAt": "Mon Apr 29 2024 14:08:16 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 14:08:16 GMT+0300 (GMT+03:00)",
+    "label": "Hazır bir not seçin.",
+    "placeholder": "Bir not seçin",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c5bf3dabd5a9",
+    "createdAt": "2024-04-23T12:19:57.000Z",
+    "updatedAt": "2024-04-24T09:43:16.721Z",
+    "status": "publish",
+    "label": "Konu",
+    "placeholder": "Lütfen bir konu seçiniz.",
+    "options": [
+      "Satış",
+      "Ödeme",
+      "Teslimat",
+      "İptal ve İade",
+      "Ürünler"
+    ],
+    "scheduled": false
+  },
+  {
+    "ID": "c6cd5828e5ed",
+    "createdAt": "2024-04-29T13:08:52.000Z",
+    "updatedAt": "2024-04-29T14:39:04.156Z",
+    "status": "publish",
+    "label": "Alıcı Adı, Soyadı",
+    "placeholder": "Alıcı adı, soyadı",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "c76b451138aa",
+    "createdAt": "2024-04-29T13:14:47.000Z",
+    "updatedAt": "2024-04-29T14:37:43.272Z",
+    "status": "publish",
+    "label": "Alıcı Adresi",
+    "placeholder": "Alıcı adresi",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "c940b065a970",
+    "createdAt": "2024-04-23T12:20:36.000Z",
+    "updatedAt": "2024-04-24T09:43:16.724Z",
+    "status": "publish",
+    "label": "Mesaj",
+    "placeholder": "İletmek istediğiniz mesajı yazınız.",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "cd2f213bcdd6",
+    "createdAt": "2024-04-29T11:25:53.000Z",
+    "updatedAt": "2024-04-29T14:37:31.675Z",
+    "status": "publish",
+    "label": "Gönderen Adı, Soyadı",
+    "placeholder": "Gönderen adı, soyadı",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "d05d7d450ad6",
+    "createdAt": "Mon Apr 29 2024 14:05:52 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Mon Apr 29 2024 14:05:52 GMT+0300 (GMT+03:00)",
+    "label": "Hazır not eklemek istiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "d1b859279466",
+    "createdAt": "Thu Apr 25 2024 15:54:28 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Apr 25 2024 15:54:28 GMT+0300 (GMT+03:00)",
+    "label": "Adres",
+    "placeholder": "Adres",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "d86142b8e6f0",
+    "createdAt": "Fri Apr 26 2024 16:17:45 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 16:17:45 GMT+0300 (GMT+03:00)",
+    "label": "İndirim ve Duyurulardan SMS ile Haberdar Olmak İstiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "dff121b25d4c",
+    "createdAt": "Wed Apr 24 2024 12:39:10 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-24T09:43:16.732Z",
+    "label": "Şifre",
+    "placeholder": "********",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "e4f66676af54",
+    "createdAt": "Fri Apr 26 2024 16:17:31 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 26 2024 16:17:31 GMT+0300 (GMT+03:00)",
+    "label": "İndirim ve Duyurulardan E-Posta ile Haberdar Olmak İstiyorum.",
+    "options": [],
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "ed35627c3459",
+    "createdAt": "2024-04-26T14:53:03.000Z",
+    "updatedAt": "2024-04-26T16:21:38.375Z",
+    "status": "publish",
+    "label": "Fatura Adresi",
+    "placeholder": "Fatura adresi",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "f8417508584a",
+    "createdAt": "2024-04-23T12:19:27.000Z",
+    "updatedAt": "2024-04-26T14:55:17.902Z",
+    "status": "publish",
+    "label": "Telefon Numarası",
+    "placeholder": "Telefon numaranızı giriniz.",
+    "options": [],
+    "scheduled": false
+  },
+  {
+    "ID": "fb3266a43751",
+    "createdAt": "2024-04-29T11:35:53.000Z",
+    "updatedAt": "2024-04-29T11:36:20.987Z",
+    "status": "publish",
+    "label": "Kendime gönderiyorum.",
+    "options": [],
+    "scheduled": false
+  }
+]

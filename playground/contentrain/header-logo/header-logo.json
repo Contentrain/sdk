@@ -1,0 +1,20 @@
+[
+  {
+    "ID": "17366fe5a7bd",
+    "createdAt": "2024-05-29T16:46:26.000Z",
+    "updatedAt": "2024-05-29T16:46:58.082Z",
+    "status": "publish",
+    "type": "light",
+    "image": "apps/web/public/1715942252813_bloom-and-fresh-logo-white.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "e2a4bc06c802",
+    "createdAt": "2024-05-29T16:20:54.000Z",
+    "updatedAt": "2024-05-29T16:46:24.156Z",
+    "status": "publish",
+    "type": "dark",
+    "image": "apps/web/public/1715942234664_logo-main.svg",
+    "scheduled": false
+  }
+]

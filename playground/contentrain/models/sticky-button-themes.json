@@ -1,0 +1,143 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sticky-button-themes"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sticky-button-themes"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sticky-button-themes"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "sticky-button-themes"
+  },
+  {
+    "name": "Background Color",
+    "fieldId": "background-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Active Background Color",
+    "fieldId": "active-background-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Text Color",
+    "fieldId": "text-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Active Text Color",
+    "fieldId": "active-text-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Border Color",
+    "fieldId": "border-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Active Border Color",
+    "fieldId": "active-border-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Icon Color",
+    "fieldId": "icon-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Active Icon Color",
+    "fieldId": "active-icon-color",
+    "modelId": "sticky-button-themes",
+    "componentId": "color",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Name",
+    "fieldId": "name",
+    "modelId": "sticky-button-themes",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  }
+]

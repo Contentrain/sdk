@@ -1,0 +1,340 @@
+[
+  {
+    "ID": "0a16d90e619a",
+    "createdAt": "2024-05-22T12:31:26.000Z",
+    "updatedAt": "2024-05-22T13:57:04.805Z",
+    "status": "publish",
+    "order": 4,
+    "items": [
+      "2101cc4131d2",
+      "230e217b0e2d",
+      "ac1bfb3983bd",
+      "d75284234983"
+    ],
+    "flex": "row",
+    "scheduled": false
+  },
+  {
+    "ID": "1d2bdcef3c74",
+    "createdAt": "Tue Jun 04 2024 10:59:22 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-06-04T08:00:06.206Z",
+    "type": "link",
+    "text": "Telefon: 0 (212) 212 0 282",
+    "link": "+902122120282",
+    "icon": "i-ri-phone-fill",
+    "order": 2,
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "2101cc4131d2",
+    "createdAt": "Wed May 22 2024 15:32:07 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.818Z",
+    "order": 2,
+    "type": "icon",
+    "link": "https://www.instagram.com/bloomandfresh/",
+    "icon": "i-ri-instagram-fill",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "230e217b0e2d",
+    "createdAt": "Wed May 22 2024 15:39:35 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.830Z",
+    "order": 4,
+    "type": "icon",
+    "link": "https://x.com/BloomAndFresh",
+    "icon": "i-ri-twitter-fill",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "3f6ca6fcf1fc",
+    "createdAt": "Tue Jun 04 2024 10:18:41 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Tue Jun 04 2024 10:18:41 GMT+0300 (GMT+03:00)",
+    "text": "IF Girişim ve Teknoloji A.Ş.",
+    "icon": "i-ri-map-pin-2-fill",
+    "order": 1,
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "460e9dec8084",
+    "createdAt": "Wed May 22 2024 15:45:29 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.847Z",
+    "order": 2,
+    "type": "link",
+    "text": "İletişim",
+    "link": "/iletisim",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "4c2619b0de1c",
+    "createdAt": "Wed May 22 2024 15:46:22 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.860Z",
+    "order": 4,
+    "type": "link",
+    "text": "Sözleşmeler",
+    "link": "/sozlesmeler-ve-kvkk/uyelik-sozlesmesi",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "5668a83e9343",
+    "createdAt": "Tue Jun 04 2024 10:19:45 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Tue Jun 04 2024 10:19:45 GMT+0300 (GMT+03:00)",
+    "text": "Sancaktepe / İstanbul",
+    "order": 3,
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "718d261c955f",
+    "createdAt": "Wed May 22 2024 15:27:16 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.869Z",
+    "order": 1,
+    "type": "link",
+    "text": "hello@bloomandfresh.com",
+    "link": "hello@bloomandfresh.com",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "8eb5965e83bd",
+    "createdAt": "Wed May 22 2024 16:31:48 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.900Z",
+    "order": 3,
+    "type": "image",
+    "alt": "Mastercard Logo",
+    "image": "apps/web/public/1716382748539_logos-mastercard.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "8f0a46fd5514",
+    "createdAt": "2024-05-22T12:42:05.000Z",
+    "updatedAt": "2024-05-22T13:57:04.905Z",
+    "status": "publish",
+    "order": 2,
+    "type": "link",
+    "text": "Hakkımızda",
+    "link": "/hakkimizda",
+    "scheduled": false
+  },
+  {
+    "ID": "8f8489847d4c",
+    "createdAt": "Tue Jun 04 2024 11:00:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-06-04T08:01:30.807Z",
+    "text": "Pazartesi - Cuma: 09:00 - 18:00",
+    "icon": "i-ri-time-fill",
+    "order": 1,
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "a8f6416036d5",
+    "createdAt": "2024-05-22T12:45:46.000Z",
+    "updatedAt": "2024-09-05T15:11:22.199Z",
+    "status": "publish",
+    "type": "link",
+    "text": "Gizlilik Politikası ve KVKK",
+    "link": "/sozlesmeler-ve-kvkk/aydinlatma-metni",
+    "order": 3,
+    "scheduled": false
+  },
+  {
+    "ID": "ac1bfb3983bd",
+    "createdAt": "Wed May 22 2024 15:31:50 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.912Z",
+    "order": 1,
+    "type": "icon",
+    "link": "https://www.facebook.com/bloomandfresh",
+    "icon": "i-ri-facebook-fill",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "ac28f0e6745c",
+    "createdAt": "2024-05-22T12:49:42.000Z",
+    "updatedAt": "2024-09-10T06:56:07.367Z",
+    "status": "publish",
+    "type": "text",
+    "text": "© 2024 Bloom and Fresh. Tüm Hakları Saklıdır.",
+    "order": 1,
+    "scheduled": false
+  },
+  {
+    "ID": "b013de312300",
+    "createdAt": "Wed May 22 2024 15:42:27 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.918Z",
+    "order": 3,
+    "type": "link",
+    "text": "Blog",
+    "link": "/blog",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "b0a4e0f817c3",
+    "createdAt": "Wed May 22 2024 15:28:26 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.922Z",
+    "order": 3,
+    "type": "link",
+    "text": "www.bloomandfresh.com",
+    "link": "/",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "b2b3f00bb5a7",
+    "createdAt": "Tue Jun 04 2024 10:58:08 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-06-04T08:00:06.214Z",
+    "type": "link",
+    "text": "E-posta: hello@bloomandfresh.com",
+    "link": "hello@bloomandfresh.com",
+    "icon": "i-ri-mail-fill",
+    "order": 1,
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "bd4da0eaadd5",
+    "createdAt": "Wed May 22 2024 15:51:34 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.926Z",
+    "order": 1,
+    "type": "logo",
+    "image": "apps/web/public/1715942386688_bnf-logo-small.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c05ba33e4521",
+    "createdAt": "Wed May 22 2024 16:29:26 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.929Z",
+    "order": 4,
+    "type": "image",
+    "alt": "Visa Logo",
+    "image": "apps/web/public/1716383038053_logos-visa.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c179fe40d520",
+    "createdAt": "Wed May 22 2024 15:45:12 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.933Z",
+    "order": 1,
+    "type": "link",
+    "text": "Destek",
+    "link": "/destek",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "c29359b7b307",
+    "createdAt": "2024-05-22T12:41:27.000Z",
+    "updatedAt": "2024-08-17T09:59:09.416Z",
+    "status": "publish",
+    "type": "link",
+    "text": "Tüm Ürünler",
+    "link": "/cicek",
+    "order": 1,
+    "scheduled": false
+  },
+  {
+    "ID": "c3ba2fdf8b01",
+    "createdAt": "Wed May 22 2024 15:27:59 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.942Z",
+    "order": 2,
+    "type": "link",
+    "text": "0 (212) 212 02 82",
+    "link": "+902122120282",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "d75284234983",
+    "createdAt": "Wed May 22 2024 15:32:34 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.948Z",
+    "order": 3,
+    "type": "icon",
+    "link": "https://tr.pinterest.com/bloomandfresh/",
+    "icon": "i-ri-pinterest-fill",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "e04bc194c373",
+    "createdAt": "Wed May 22 2024 15:43:22 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.951Z",
+    "order": 5,
+    "type": "link",
+    "text": "Kampanyalar",
+    "link": "/kampanya",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "e4f35e2989a7",
+    "createdAt": "Wed May 22 2024 15:43:00 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-08-15T07:55:13.341Z",
+    "order": 4,
+    "type": "link",
+    "text": "Bitki Bilgi Bankası",
+    "link": "/bitki-bilgi-bankasi",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "f663f2cf49ee",
+    "createdAt": "Wed May 22 2024 16:27:59 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.961Z",
+    "order": 1,
+    "type": "image",
+    "alt": "Maestro Logo",
+    "image": "apps/web/public/1716382728730_logos-maestro.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "fb2a6661f7ad",
+    "createdAt": "Wed May 22 2024 16:28:36 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.965Z",
+    "order": 2,
+    "type": "image",
+    "alt": "Troy Logo",
+    "image": "apps/web/public/1716382980036_logos-troy.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "fba3a3d5f7ff",
+    "createdAt": "Wed May 22 2024 15:43:41 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.968Z",
+    "order": 6,
+    "type": "link",
+    "text": "Kurumsal Sipariş",
+    "link": "/kurumsal-siparis",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "fbf1ed012401",
+    "createdAt": "Wed May 22 2024 16:28:56 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-05-22T13:57:04.972Z",
+    "order": 3,
+    "alt": "Mastercard Logo",
+    "image": "apps/web/public/1716382748539_logos-mastercard.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "fc98cae7f754",
+    "createdAt": "Tue Jun 04 2024 10:19:23 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-06-04T07:20:57.324Z",
+    "text": "Merve Mah. Gazi Cad. No: 11",
+    "order": 2,
+    "status": "publish",
+    "scheduled": false
+  }
+]

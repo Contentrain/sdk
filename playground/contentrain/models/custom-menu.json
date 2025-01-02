@@ -1,0 +1,163 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "Title",
+    "fieldId": "title",
+    "modelId": "custom-menu",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Title bold",
+    "fieldId": "title-bold",
+    "componentId": "checkbox",
+    "options": {},
+    "validations": {},
+    "fieldType": "checkbox",
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "Title italic",
+    "fieldId": "title-italic",
+    "componentId": "checkbox",
+    "options": {},
+    "validations": {},
+    "fieldType": "checkbox",
+    "modelId": "custom-menu"
+  },
+  {
+    "name": "Title Icon",
+    "fieldId": "title-icon",
+    "modelId": "custom-menu",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Items",
+    "description": "Custom menu items",
+    "fieldId": "items",
+    "modelId": "custom-menu",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "custom-menu-items"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation"
+  },
+  {
+    "name": "See all url",
+    "fieldId": "see-all-url",
+    "modelId": "custom-menu",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Image",
+    "description": "Static image",
+    "fieldId": "image",
+    "modelId": "custom-menu",
+    "componentId": "media",
+    "options": {},
+    "validations": {},
+    "fieldType": "media"
+  },
+  {
+    "name": "Image Alt",
+    "fieldId": "image-alt",
+    "modelId": "custom-menu",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Link",
+    "fieldId": "link",
+    "modelId": "custom-menu",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {},
+    "fieldType": "string"
+  },
+  {
+    "name": "Order",
+    "fieldId": "order",
+    "modelId": "custom-menu",
+    "componentId": "integer",
+    "options": {},
+    "validations": {},
+    "fieldType": "number"
+  }
+]

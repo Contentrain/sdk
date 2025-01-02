@@ -1,0 +1,70 @@
+[
+  {
+    "ID": "507157a69d66",
+    "createdAt": "2024-04-19T13:12:37.000Z",
+    "updatedAt": "2024-04-25T13:54:48.169Z",
+    "status": "publish",
+    "icon": "i-ri-shopping-bag-3-line",
+    "title": "Siparişiniz bulunmamaktadır. Alışverişe devam etmek için tıklayın.",
+    "buttontext": "YENİ SİPARİŞ OLUŞTUR",
+    "panel-id": "my-orders",
+    "buttonlink": "/urunler",
+    "scheduled": false
+  },
+  {
+    "ID": "6314daacac38",
+    "createdAt": "Fri Apr 19 2024 16:13:45 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 19 2024 16:13:45 GMT+0300 (GMT+03:00)",
+    "icon": "i-ri-coupon-2-line",
+    "title": "Geçerli bir kuponunuz bulunmuyor, size özel kuponlar oluştuğunda bu ekranda görüntülenecektir.",
+    "buttontext": "ALIŞVERİŞE DEVAM ET",
+    "panel-id": "my-coupons",
+    "status": "published",
+    "scheduled": false
+  },
+  {
+    "ID": "719b002e48e9",
+    "createdAt": "2024-04-19T13:14:59.000Z",
+    "updatedAt": "2024-04-25T13:54:56.050Z",
+    "status": "publish",
+    "icon": "i-ri-heart-line",
+    "title": "Henüz favorilerine eklenmiş ürün bulunmuyor, favori ürünlerini hemen seçmeye başlayabilirsin.",
+    "buttontext": "FAVORİ ÜRÜN SEÇMEYE BAŞLA",
+    "panel-id": "my-favorites",
+    "buttonlink": "/urunler",
+    "scheduled": false
+  },
+  {
+    "ID": "b63861ca31c4",
+    "createdAt": "Fri Apr 19 2024 16:22:34 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 19 2024 16:22:34 GMT+0300 (GMT+03:00)",
+    "icon": "i-ri-file-list-3-line",
+    "title": "Kayıtlı faturanız bulunmuyor, bireysel ve kurumsal faturalarınızı buradan oluşturabilirsiniz.",
+    "buttontext": "YENİ FATURA OLUŞTUR",
+    "panel-id": "my-invoices",
+    "status": "published",
+    "scheduled": false
+  },
+  {
+    "ID": "ea0334971300",
+    "createdAt": "2024-04-19T13:11:47.000Z",
+    "updatedAt": "2024-04-19T13:21:20.945Z",
+    "status": "changed",
+    "icon": "i-ri-team-line",
+    "title": "Daha sonra kolayca ulaşabilmek için kayıtlı kişilerinizi ekleyin.",
+    "buttontext": "YENİ KİŞİ YARAT",
+    "panel-id": "my-contacts",
+    "scheduled": false
+  },
+  {
+    "ID": "f9981031bc2a",
+    "createdAt": "Fri Apr 19 2024 16:21:48 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Apr 19 2024 16:21:48 GMT+0300 (GMT+03:00)",
+    "icon": "i-ri-time-line",
+    "title": "Doğum günleri, evlilik yıl dönümleri gibi önemli günleri bize söyle, seçtiğin tarihten 1 gün önce sana hatırlatalım.",
+    "buttontext": "HATIRLATMA EKLE",
+    "panel-id": "my-reminder",
+    "status": "published",
+    "scheduled": false
+  }
+]
