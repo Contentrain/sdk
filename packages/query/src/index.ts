@@ -1,12 +1,6 @@
-import type { ContentrainCore } from '@contentrain/core';
-import type {
-  ContentrainBaseModel,
-  ContentrainModelMetadata,
-  FilterCondition,
-  SortCondition,
-  SortDirection,
-  WithRelation,
-} from '@contentrain/types';
+import type { IContentrainCore } from '@contentrain/core';
+import type { ContentrainBaseModel, ContentrainModelMetadata, FilterCondition, SortCondition, SortDirection, WithRelation } from '@contentrain/types';
+import { ContentrainCore } from '@contentrain/core';
 
 export class ContentrainQuery<T extends ContentrainBaseModel> {
   private filters: FilterCondition<T>[] = [];
@@ -16,7 +10,7 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
   private skipCount?: number;
 
   constructor(
-    private core: ContentrainCore,
+    private core: IContentrainCore = new ContentrainCore(),
     private collection: string,
   ) {}
 
@@ -51,10 +45,15 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
 
   private async getRelatedData(item: T, relation: string): Promise<ContentrainBaseModel | ContentrainBaseModel[] | null> {
     const metadata = await this.getModelMetadata();
-    const relationConfig = metadata.relations?.[relation];
+    const fields = metadata.fields;
+    const fieldMetadata = fields.find(f => f.id === relation);
 
-    if (!relationConfig) {
-      throw new Error(`Relation ${relation} not found in model ${metadata.modelId}`);
+    if (!fieldMetadata) {
+      throw new Error(`Field ${relation} not found in model ${metadata.modelId}`);
+    }
+
+    if (!fieldMetadata.relation?.model) {
+      throw new Error(`Field ${relation} is not a relation`);
     }
 
     const relatedIds = item[relation as keyof T];
@@ -62,11 +61,18 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
       return null;
     }
 
+    const relatedMetadata = await this.core.getModelMetadata(fieldMetadata.relation.model);
+    const hasLocalization = relatedMetadata.localization ?? false;
+    const locale = this.core.getLocale();
+
     if (Array.isArray(relatedIds)) {
       const relatedItems = await Promise.all(
         relatedIds.map(async (id: string) => {
           try {
-            return await this.core.getContentById(relationConfig.model, id);
+            const data = await this.core.getContentById<ContentrainBaseModel>(fieldMetadata.relation!.model, id);
+            return hasLocalization && locale && typeof data === 'object' && locale in data
+              ? (data as Record<string, ContentrainBaseModel>)[locale]
+              : data;
           }
           catch {
             return null;
@@ -78,7 +84,10 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
     }
 
     try {
-      return await this.core.getContentById(relationConfig.model, relatedIds as string);
+      const data = await this.core.getContentById<ContentrainBaseModel>(fieldMetadata.relation.model, relatedIds as string);
+      return hasLocalization && locale && typeof data === 'object' && locale in data
+        ? (data as Record<string, ContentrainBaseModel>)[locale]
+        : data;
     }
     catch {
       return null;
@@ -154,9 +163,14 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
   }
 
   async get(): Promise<T[]> {
-    const items = await this.core.getContent<T>(this.collection);
+    const metadata = await this.getModelMetadata();
+    const hasLocalization = metadata.localization ?? false;
+    const locale = this.core.getLocale();
 
-    let result = items;
+    const items = await this.core.getContent<Record<string, unknown>>(this.collection);
+    let result = items.map(item => hasLocalization && locale && typeof item === 'object' && locale in item
+      ? (item as Record<string, T>)[locale]
+      : item as T);
 
     if (this.filters.length > 0) {
       result = result.filter(item =>

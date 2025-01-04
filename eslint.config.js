@@ -28,5 +28,7 @@ export default antfu({
     '@typescript-eslint/no-unsafe-call': 'off',
     '@typescript-eslint/no-unnecessary-condition': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
+    'import/order': 'off',
+    'sort-imports': 'off',
   },
 });

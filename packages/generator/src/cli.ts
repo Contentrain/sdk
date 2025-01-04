@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 
-import type { GeneratorConfig } from './index';
+import type { ContentrainModelMetadata } from '@contentrain/types';
 import { promises as fs } from 'node:fs';
 import { dirname, join } from 'node:path';
-
 import process from 'node:process';
-
+import { ContentrainCore } from '@contentrain/core';
 import { program } from 'commander';
 import { ContentrainGenerator } from './index';
 
@@ -29,18 +28,22 @@ async function main() {
     .parse();
 
   const options = program.opts();
-
-  const config: GeneratorConfig = {
-    contentPath: options.content,
-    modelsPath: options.models,
-    output: options.output ?? 'src/types/contentrain.ts',
-  };
+  const outputPath = join(process.cwd(), options.output ?? 'src/types/contentrain.ts');
 
   try {
-    const generator = new ContentrainGenerator(config);
-    const code = await generator.generate();
+    const core = new ContentrainCore({
+      contentPath: options.content,
+      modelsPath: options.models,
+    });
 
-    const outputPath = join(process.cwd(), config.output);
+    const models = await core.getAvailableCollections();
+    const modelMetadata: ContentrainModelMetadata[] = await Promise.all(
+      models.map(async model => core.getModelMetadata(model)),
+    );
+
+    const generator = new ContentrainGenerator();
+    const code = await generator.generate(modelMetadata);
+
     await ensureDirectoryExists(outputPath);
     await fs.writeFile(outputPath, code, 'utf-8');
 

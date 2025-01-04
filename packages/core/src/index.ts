@@ -20,7 +20,15 @@ class ContentrainErrorImpl extends Error implements ContentrainError {
   }
 }
 
-export class ContentrainCore {
+export interface IContentrainCore {
+  getModelMetadata: (collection: string) => Promise<ContentrainModelMetadata>
+  getContent: <T>(collection: string) => Promise<T[]>
+  getContentById: <T>(collection: string, id: string) => Promise<T>
+  getAvailableCollections: () => Promise<string[]>
+  getLocale: () => string | undefined
+}
+
+export class ContentrainCore implements IContentrainCore {
   private config: RequiredConfig;
   private fs: ContentrainFileSystem;
 
@@ -39,7 +47,7 @@ export class ContentrainCore {
           return JSON.parse(content) as T;
         }
         catch {
-          throw new ContentrainErrorImpl(`Failed to read JSON file: ${path}`, {
+          throw new ContentrainErrorImpl('Failed to read JSON file', {
             code: 'CONTENTRAIN_READ_ERROR',
             path,
           });
@@ -68,40 +76,32 @@ export class ContentrainCore {
     };
   }
 
-  private getModelPath(collection: string, locale?: string): string {
-    const modelPath = join(this.config.modelsPath, `${collection}.model.json`);
-    if (locale) {
-      return join(this.config.modelsPath, locale, `${collection}.model.json`);
-    }
-    return modelPath;
+  getLocale(): string | undefined {
+    return this.config.locale;
   }
 
-  private getContentPath(collection: string, locale?: string): string {
-    const contentPath = join(this.config.contentPath, collection);
-    if (locale) {
-      return join(this.config.contentPath, locale, collection);
-    }
-    return contentPath;
+  private getModelPath(collection: string): string {
+    return join(this.config.modelsPath, `${collection}.model.json`);
+  }
+
+  private getContentPath(collection: string): string {
+    return join(this.config.contentPath, collection);
   }
 
   async getModelMetadata(collection: string): Promise<ContentrainModelMetadata> {
-    const modelPath = this.getModelPath(collection, this.config.locale);
+    const modelPath = this.getModelPath(collection);
     return this.fs.readJSON<ContentrainModelMetadata>(modelPath);
   }
 
   async getAvailableCollections(): Promise<string[]> {
-    const modelPath = this.config.locale
-      ? join(this.config.modelsPath, this.config.locale)
-      : this.config.modelsPath;
-
-    const files = await this.fs.readdir(modelPath);
+    const files = await this.fs.readdir(this.config.modelsPath);
     return files
       .filter(file => file.endsWith('.model.json'))
       .map(file => file.replace('.model.json', ''));
   }
 
   async getContent<T>(collection: string): Promise<T[]> {
-    const contentPath = this.getContentPath(collection, this.config.locale);
+    const contentPath = this.getContentPath(collection);
     const exists = await this.fs.exists(contentPath);
 
     if (!exists) {
@@ -114,7 +114,14 @@ export class ContentrainCore {
     const contents = await Promise.all(
       jsonFiles.map(async (file) => {
         const filePath = join(contentPath, file);
-        return this.fs.readJSON<T>(filePath);
+        const content = await this.fs.readJSON<T | Record<string, T>>(filePath);
+        if (this.config.locale && typeof content === 'object' && content !== null && !Array.isArray(content)) {
+          const localizedContent = (content as Record<string, T>)[this.config.locale];
+          if (localizedContent) {
+            return localizedContent;
+          }
+        }
+        return content as T;
       }),
     );
 
@@ -122,9 +129,17 @@ export class ContentrainCore {
   }
 
   async getContentById<T>(collection: string, id: string): Promise<T> {
-    const contentPath = this.getContentPath(collection, this.config.locale);
+    const contentPath = this.getContentPath(collection);
     const filePath = join(contentPath, `${id}.json`);
+    const content = await this.fs.readJSON<T | Record<string, T>>(filePath);
 
-    return this.fs.readJSON<T>(filePath);
+    if (this.config.locale && typeof content === 'object' && content !== null && !Array.isArray(content)) {
+      const localizedContent = (content as Record<string, T>)[this.config.locale];
+      if (localizedContent) {
+        return localizedContent;
+      }
+    }
+
+    return content as T;
   }
 }
