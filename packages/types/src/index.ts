@@ -11,9 +11,13 @@ export interface ContentrainField {
 }
 
 export interface ContentrainModelMetadata {
+  name: string
   modelId: string
   fields: ContentrainField[]
   localization: boolean
+  type: 'JSON' | 'MD' | 'MDX'
+  createdBy: string
+  isServerless: boolean
 }
 
 export interface ContentrainBaseModel {
