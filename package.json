@@ -1,26 +1,31 @@
 {
-  "name": "contentrain-sdk-monorepo",
+  "name": "contentrain-sdk",
+  "type": "module",
+  "version": "0.0.0",
   "private": true,
-  "packageManager": "pnpm@8.15.1",
+  "packageManager": "pnpm@9.15.2",
+  "description": "Contentrain SDK monorepo",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  },
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "clean": "rimraf 'packages/*/dist' && rimraf '**/node_modules' && rimraf '.turbo'",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint"
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "test": "pnpm -r test",
+    "lint": "eslint . --cache",
+    "lint:fix": "eslint . --fix --cache",
+    "clean": "pnpm -r clean",
+    "update-deps": "taze major -w",
+    "typecheck": "tsc --noEmit",
+    "lint:full": "pnpm typecheck && pnpm lint"
   },
   "devDependencies": {
-    "@types/node": "^22.10.3",
-    "rimraf": "^5.0.0",
-    "turbo": "^2.3.3",
-    "typescript": "^5.0.0"
-  },
-  "workspaces": [
-    "packages/*",
-    "playground"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
+    "@antfu/eslint-config": "^3.12.1",
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.17.0",
+    "taze": "^0.18.0",
+    "typescript": "^5.7.2"
   }
 }
