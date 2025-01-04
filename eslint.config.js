@@ -2,21 +2,19 @@
 import antfu from '@antfu/eslint-config';
 
 export default antfu({
-  typescript: {
-    tsconfigPath: 'tsconfig.json',
-    parserOptions: {
-      projectService: true,
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
   ignores: [
     'dist',
     '**/node_modules',
-    '**/.git',
-    '**/temp',
+    'dist',
+    'node_modules',
     'reference/**',
-    '*.json',
+    '**/*.md',
+    '**/*.mdx',
+    '**/*.markdown',
   ],
+  typescript: {
+    tsconfigPath: './tsconfig.json',
+  },
   rules: {
     'no-console': 'off',
     'style/semi': ['error', 'always'],

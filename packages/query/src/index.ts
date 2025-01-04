@@ -12,7 +12,7 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
   constructor(
     private core: IContentrainCore = new ContentrainCore(),
     private collection: string,
-  ) {}
+  ) { }
 
   where(field: keyof T, operator: FilterCondition<T>['operator'], value: T[keyof T]): this {
     this.filters.push({ field, operator, value });
