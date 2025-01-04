@@ -36,9 +36,9 @@ async function main() {
       modelsPath: options.models,
     });
 
-    const models = await core.getAvailableCollections();
+    const files = await core.getAvailableCollections();
     const modelMetadata: ContentrainModelMetadata[] = await Promise.all(
-      models.map(async model => core.getModelMetadata(model)),
+      files.map(async file => core.getModelMetadata(file)),
     );
 
     const generator = new ContentrainGenerator();
