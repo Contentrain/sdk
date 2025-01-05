@@ -14,6 +14,7 @@ describe('contentrain generator', () => {
     const models: ContentrainModelMetadata[] = [
       {
         modelId: 'processes',
+        name: 'ProcessItems',
         fields: [
           {
             id: 'title',
@@ -35,9 +36,13 @@ describe('contentrain generator', () => {
           },
         ],
         localization: true,
+        type: 'JSON',
+        createdBy: '',
+        isServerless: false,
       },
       {
         modelId: 'faq-items',
+        name: 'FaqItems',
         fields: [
           {
             id: 'question',
@@ -59,9 +64,13 @@ describe('contentrain generator', () => {
           },
         ],
         localization: true,
+        type: 'JSON',
+        createdBy: '',
+        isServerless: false,
       },
       {
         modelId: 'work-items',
+        name: 'WorkItems',
         fields: [
           {
             id: 'title',
@@ -93,13 +102,16 @@ describe('contentrain generator', () => {
           },
         ],
         localization: true,
+        type: 'JSON',
+        createdBy: '',
+        isServerless: false,
       },
     ];
 
     const result = await generator.generate(models);
 
     // Base model kontrolleri
-    expect(result).toContain('export interface ContentrainBaseModel');
+    expect(result).toContain('export interface BaseContentrainModel');
     expect(result).toContain('ID: string');
     expect(result).toContain('createdAt: string');
     expect(result).toContain('updatedAt: string');
@@ -107,19 +119,19 @@ describe('contentrain generator', () => {
     expect(result).toContain('scheduled: boolean');
 
     // Processes model kontrolleri
-    expect(result).toContain('export interface Processes extends ContentrainBaseModel');
+    expect(result).toContain('export interface IProcessItems extends BaseContentrainModel');
     expect(result).toContain('title: string');
     expect(result).toContain('description: string');
     expect(result).toContain('icon: string');
 
     // FAQ Items model kontrolleri
-    expect(result).toContain('export interface Faqitems extends ContentrainBaseModel');
+    expect(result).toContain('export interface IFaqItems extends BaseContentrainModel');
     expect(result).toContain('question: string');
     expect(result).toContain('answer: string');
     expect(result).toContain('order: number');
 
     // Work Items model kontrolleri
-    expect(result).toContain('export interface Workitems extends ContentrainBaseModel');
+    expect(result).toContain('export interface IWorkItems extends BaseContentrainModel');
     expect(result).toContain('title: string');
     expect(result).toContain('description: string');
     expect(result).toContain('image?: string');
@@ -127,9 +139,9 @@ describe('contentrain generator', () => {
 
     // Type map kontrolü
     expect(result).toContain('export type ContentrainTypeMap');
-    expect(result).toContain('\'processes\': Processes');
-    expect(result).toContain('\'faq-items\': Faqitems');
-    expect(result).toContain('\'work-items\': Workitems');
+    expect(result).toContain('\'processes\': IProcessItems');
+    expect(result).toContain('\'faq-items\': IFaqItems');
+    expect(result).toContain('\'work-items\': IWorkItems');
   });
 
   it('should handle different field types correctly', async () => {
@@ -138,6 +150,7 @@ describe('contentrain generator', () => {
     const models: ContentrainModelMetadata[] = [
       {
         modelId: 'test-model',
+        name: 'TestModel',
         fields: [
           {
             id: 'stringField',
@@ -191,11 +204,15 @@ describe('contentrain generator', () => {
           },
         ],
         localization: true,
+        type: 'JSON',
+        createdBy: '',
+        isServerless: false,
       },
     ];
 
     const result = await generator.generate(models);
 
+    expect(result).toContain('export interface ITestModel extends BaseContentrainModel');
     expect(result).toContain('stringField: string');
     expect(result).toContain('numberField: number');
     expect(result).toContain('booleanField: boolean');
@@ -211,6 +228,7 @@ describe('contentrain generator', () => {
     const models: ContentrainModelMetadata[] = [
       {
         modelId: 'my-test-model',
+        name: 'MyTestModel',
         fields: [
           {
             id: 'title',
@@ -220,12 +238,15 @@ describe('contentrain generator', () => {
           },
         ],
         localization: true,
+        type: 'JSON',
+        createdBy: '',
+        isServerless: false,
       },
     ];
 
     const result = await generator.generate(models);
 
-    expect(result).toContain('export interface Mytestmodel extends ContentrainBaseModel');
-    expect(result).toContain('\'my-test-model\': Mytestmodel');
+    expect(result).toContain('export interface IMyTestModel extends BaseContentrainModel');
+    expect(result).toContain('\'my-test-model\': IMyTestModel');
   });
 });
