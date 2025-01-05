@@ -1,5 +1,11 @@
 # @contentrain/core
 
+## 4.0.0
+
+### Major Changes
+
+- 10973d9: new browser compability
+
 ## 3.0.0
 
 ### Major Changes

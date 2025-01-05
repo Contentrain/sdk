@@ -1,5 +1,12 @@
 # @contentrain/generator
 
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [10973d9]
+  - @contentrain/core@4.0.0
+
 ## 3.0.0
 
 ### Major Changes
