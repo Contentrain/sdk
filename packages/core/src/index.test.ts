@@ -32,6 +32,10 @@ describe('contentrainCore', () => {
       },
     ],
     localization: true,
+    name: '',
+    type: 'JSON',
+    createdBy: '',
+    isServerless: false,
   };
 
   const mockContent = {

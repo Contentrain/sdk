@@ -41,6 +41,10 @@ describe('contentrain query', () => {
       },
     ],
     localization: true,
+    name: '',
+    type: 'JSON',
+    createdBy: '',
+    isServerless: false,
   };
 
   const mockContent: TestModel = {

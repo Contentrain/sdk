@@ -19,13 +19,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@contentrain/core": "^1.0.0",
-    "@contentrain/types": "^1.0.0",
-    "yargs": "^17.7.2"
+    "@contentrain/core": "workspace:*",
+    "@contentrain/types": "workspace:*",
+    "commander": "^12.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "@types/yargs": "^17.0.32",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
