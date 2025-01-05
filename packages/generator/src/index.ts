@@ -27,6 +27,10 @@ export class ContentrainGenerator {
   }
 
   private formatInterfaceName(metadata: ContentrainModelMetadata): string {
+    if (!metadata.name && !metadata.modelId) {
+      throw new Error('Model must have either name or modelId');
+    }
+
     // Önce name alanını kontrol et, yoksa modelId'yi kullan
     const baseName = metadata.name || metadata.modelId;
     // Boşlukları kaldır ve camelCase'e çevir
