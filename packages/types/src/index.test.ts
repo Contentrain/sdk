@@ -104,6 +104,10 @@ describe('contentrain types', () => {
         },
       ],
       localization: true,
+      name: '',
+      type: 'JSON',
+      createdBy: '',
+      isServerless: false,
     };
 
     expect(typeof metadata.modelId).toBe('string');
