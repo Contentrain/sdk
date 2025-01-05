@@ -5,8 +5,6 @@ import type {
   ContentrainModelMetadata,
   RequiredConfig,
 } from '@contentrain/types';
-import { promises as fs } from 'node:fs';
-import { join } from 'node:path';
 
 class ContentrainErrorImpl extends Error implements ContentrainError {
   code: string;
@@ -41,37 +39,21 @@ export class ContentrainCore implements IContentrainCore {
     } as RequiredConfig;
 
     this.fs = customFs ?? {
-      readJSON: async <T>(path: string) => {
-        try {
-          const content = await fs.readFile(path, 'utf-8');
-          return JSON.parse(content) as T;
-        }
-        catch {
-          throw new ContentrainErrorImpl('Failed to read JSON file', {
-            code: 'CONTENTRAIN_READ_ERROR',
-            path,
-          });
-        }
-      },
+      readJSON: fetchJSON,
       exists: async (path: string) => {
         try {
-          await fs.access(path);
-          return true;
+          const response = await fetch(path, { method: 'HEAD' });
+          return response.ok;
         }
         catch {
           return false;
         }
       },
       readdir: async (path: string) => {
-        try {
-          return await fs.readdir(path);
-        }
-        catch {
-          throw new ContentrainErrorImpl(`Failed to read directory: ${path}`, {
-            code: 'CONTENTRAIN_READ_ERROR',
-            path,
-          });
-        }
+        throw new ContentrainErrorImpl('readdir is not supported in the browser', {
+          code: 'CONTENTRAIN_UNSUPPORTED_OPERATION',
+          path,
+        });
       },
     };
   }
@@ -81,11 +63,11 @@ export class ContentrainCore implements IContentrainCore {
   }
 
   private getModelPath(collection: string): string {
-    return join(this.config.modelsPath, `${collection}.model.json`);
+    return joinPaths(this.config.modelsPath, `${collection}.model.json`);
   }
 
   private getContentPath(collection: string): string {
-    return join(this.config.contentPath, collection);
+    return joinPaths(this.config.contentPath, collection);
   }
 
   async getModelMetadata(collection: string): Promise<ContentrainModelMetadata> {
@@ -113,7 +95,7 @@ export class ContentrainCore implements IContentrainCore {
 
     const contents = await Promise.all(
       jsonFiles.map(async (file) => {
-        const filePath = join(contentPath, file);
+        const filePath = joinPaths(contentPath, file);
         const content = await this.fs.readJSON<T | Record<string, T>>(filePath);
         if (this.config.locale && typeof content === 'object' && content !== null && !Array.isArray(content)) {
           const localizedContent = (content as Record<string, T>)[this.config.locale];
@@ -130,7 +112,7 @@ export class ContentrainCore implements IContentrainCore {
 
   async getContentById<T>(collection: string, id: string): Promise<T> {
     const contentPath = this.getContentPath(collection);
-    const filePath = join(contentPath, `${id}.json`);
+    const filePath = joinPaths(contentPath, `${id}.json`);
     const content = await this.fs.readJSON<T | Record<string, T>>(filePath);
 
     if (this.config.locale && typeof content === 'object' && content !== null && !Array.isArray(content)) {
@@ -142,4 +124,20 @@ export class ContentrainCore implements IContentrainCore {
 
     return content as T;
   }
+}
+
+// Tarayıcı uyumlu dosya okuma fonksiyonu
+async function fetchJSON<T>(path: string): Promise<T> {
+  const response = await fetch(path);
+  if (!response.ok) {
+    throw new ContentrainErrorImpl('Failed to fetch JSON file', {
+      code: 'CONTENTRAIN_FETCH_ERROR',
+      path,
+    });
+  }
+  return response.json() as Promise<T>;
+}
+
+function joinPaths(...paths: string[]): string {
+  return paths.map(path => path.replace(/^\/|\/$/g, '')).join('/');
 }
