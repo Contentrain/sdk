@@ -26,9 +26,15 @@ export class ContentrainGenerator {
     }
   }
 
-  private formatInterfaceName(name: string): string {
+  private formatInterfaceName(metadata: ContentrainModelMetadata): string {
+    if (!metadata.name && !metadata.modelId) {
+      throw new Error('Model must have either name or modelId');
+    }
+
+    // Önce name alanını kontrol et, yoksa modelId'yi kullan
+    const baseName = metadata.name || metadata.modelId;
     // Boşlukları kaldır ve camelCase'e çevir
-    return `I${name.replace(/\s+/g, '').replace(/-./g, x => x[1].toUpperCase())}`;
+    return `I${baseName.replace(/\s+/g, '').replace(/-./g, x => x[1].toUpperCase())}`;
   }
 
   async generate(models: ContentrainModelMetadata[]): Promise<string> {
@@ -45,7 +51,7 @@ export class ContentrainGenerator {
 
     // Generate model types
     for (const model of models) {
-      const interfaceName = this.formatInterfaceName(model.name);
+      const interfaceName = this.formatInterfaceName(model);
       output += `export interface ${interfaceName} extends BaseContentrainModel {\n`;
 
       for (const field of model.fields) {
@@ -61,7 +67,7 @@ export class ContentrainGenerator {
     // Generate model map
     output += 'export type ContentrainTypeMap = {\n';
     for (const model of models) {
-      output += `  '${model.modelId}': ${this.formatInterfaceName(model.name)};\n`;
+      output += `  '${model.modelId}': ${this.formatInterfaceName(model)};\n`;
     }
     output += '};\n';
 
