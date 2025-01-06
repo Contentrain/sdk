@@ -1,8 +1,10 @@
 # @contentrain/generator
 
-Type and schema generator for Contentrain SDK.
+`@contentrain/generator` is a type and schema generator tool for the Contentrain SDK. It generates TypeScript interfaces for your content models and can be used via CLI or programmatically.
 
 ## Installation
+
+You can install the package via npm:
 
 ```bash
 npm install @contentrain/generator
@@ -12,53 +14,60 @@ npm install @contentrain/generator
 
 ### CLI Usage
 
+The CLI tool allows you to generate type definitions for your models.
+
 ```bash
 # Generate types for all models
 contentrain-generate
 
 # Generate types with custom configuration
-contentrain-generate --content ./content --output ./types
+contentrain-generate --models ./content --output ./types
 ```
 
 ### Programmatic Usage
 
-```typescript
-import { ContentrainGenerator } from '@contentrain/generator'
+You can use the `ContentrainGenerator` class to generate type definitions programmatically.
 
-// Initialize generator
+```typescript
+import { ContentrainGenerator } from '@contentrain/generator';
+
+// Initialize the generator
 const generator = new ContentrainGenerator({
-  contentPath: './content',
-  output: './types'
-})
+  modelsDir: './content',
+  outputDir: './types'
+});
 
 // Generate types
-await generator.generate()
+await generator.generateTypes();
 ```
 
 ## Configuration
 
+The `ContentrainGenerator` class supports the following configuration options:
+
 ```typescript
 interface GeneratorConfig {
-  // Path to content directory (default: 'contentrain')
-  contentPath?: string
+  // Path to the models directory (default: 'contentrain/models')
+  modelsDir?: string;
 
   // Output path for generated types (default: 'contentrain/types')
-  output?: string
+  outputDir?: string;
 }
 ```
 
+Additionally, you can provide configuration via a `contentrain-config.json` file in the root directory. This file will be merged with the default configuration.
+
 ## Generated Types
 
-The generator creates TypeScript interfaces for your content models. For example:
+This tool generates TypeScript interfaces for your content models. Example:
 
 ```typescript
 // Base model type that all content models extend
 export interface BaseContentrainModel {
-  ID: string
-  createdAt: string
-  updatedAt: string
-  status: 'draft' | 'changed' | 'publish'
-  scheduled: boolean
+  ID: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'draft' | 'changed' | 'publish';
 }
 
 // Generated from metadata.json
@@ -68,36 +77,26 @@ export interface BaseContentrainModel {
 //   ...
 // }
 interface IBlogPost extends BaseContentrainModel {
-  title: string
-  content: string
-  author: string
-  tags: string[]
-}
-
-// Generated from metadata.json
-// {
-//   "name": "Author",
-//   "modelId": "authors",
-//   ...
-// }
-interface IAuthor extends BaseContentrainModel {
-  name: string
-  bio: string
-  avatar: string
+  title: string;
+  content: string;
+  author: string;
+  tags: string[];
 }
 
 // Type mapping for model IDs to their respective interfaces
 export type ContentrainTypeMap = {
-  'blog-posts': IBlogPost
-  'authors': IAuthor
+  'blog-posts': IBlogPost;
+  'authors': IAuthor;
 }
 ```
 
 ## CLI Options
 
+The CLI tool supports the following options:
+
 ```bash
 Options:
-  --content    Path to content directory     [string] [default: "contentrain"]
+  --models     Path to the models directory  [string] [default: "contentrain/models"]
   --output     Output path for types         [string] [default: "contentrain/types"]
   --help       Show help                     [boolean]
   --version    Show version number           [boolean]

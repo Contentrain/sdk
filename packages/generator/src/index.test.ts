@@ -1,252 +1,296 @@
-import type { ContentrainModelMetadata } from '@contentrain/types';
-import { describe, expect, it } from 'vitest';
+import type { ContentrainModelMetadata } from 'packages/types/dist';
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { ContentrainGenerator } from './index';
 
-describe('contentrain generator', () => {
-  it('should initialize generator', () => {
-    const generator = new ContentrainGenerator();
-    expect(generator).toBeDefined();
+describe('contentrain Tests', () => {
+  const cliPath = path.join(__dirname, '../dist/cli.js');
+  const mockPaths = {
+    models: path.join(__dirname, '__mocks__/contentrain/models'),
+    content: path.join(__dirname, '__mocks__/contentrain'),
+    output: path.join(__dirname, '__mocks__/output'),
+  };
+
+  let generator: ContentrainGenerator;
+  let metadata: ContentrainModelMetadata[];
+  let modelFiles: string[];
+  let modelIds: string[];
+
+  beforeEach(() => {
+    generator = new ContentrainGenerator({
+      modelsDir: mockPaths.models,
+      contentPath: mockPaths.content,
+      outputDir: mockPaths.output,
+    });
+    metadata = JSON.parse(fs.readFileSync(path.join(mockPaths.models, 'metadata.json'), 'utf-8'));
+    modelFiles = (generator as any).getModelFiles(mockPaths.models);
+    modelIds = metadata.map((model: ContentrainModelMetadata) => model.modelId);
   });
 
-  it('should generate types for all models', async () => {
-    const generator = new ContentrainGenerator();
+  describe('cLI Tests', () => {
+    it('should generate type definitions successfully', async () => {
+      const { stdout, stderr } = await new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
+        exec(`node ${cliPath} --models ./src/__mocks__/contentrain/models --output ./src/__mocks__/output/contentrain.ts`, (error, stdout, stderr) => {
+          if (error)
+            reject(new Error(stderr));
+          else resolve({ stdout, stderr });
+        });
+      });
 
-    const models: ContentrainModelMetadata[] = [
-      {
-        modelId: 'processes',
-        name: 'ProcessItems',
-        fields: [
-          {
-            id: 'title',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-          {
-            id: 'description',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-          {
-            id: 'icon',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-        ],
-        localization: true,
-        type: 'JSON',
-        createdBy: '',
-        isServerless: false,
-      },
-      {
-        modelId: 'faq-items',
-        name: 'FaqItems',
-        fields: [
-          {
-            id: 'question',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-          {
-            id: 'answer',
-            type: 'string',
-            required: true,
-            componentId: 'multi-line-text',
-          },
-          {
-            id: 'order',
-            type: 'number',
-            required: true,
-            componentId: 'integer',
-          },
-        ],
-        localization: true,
-        type: 'JSON',
-        createdBy: '',
-        isServerless: false,
-      },
-      {
-        modelId: 'work-items',
-        name: 'WorkItems',
-        fields: [
-          {
-            id: 'title',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-          {
-            id: 'description',
-            type: 'string',
-            required: true,
-            componentId: 'multi-line-text',
-          },
-          {
-            id: 'image',
-            type: 'media',
-            required: false,
-            componentId: 'media',
-          },
-          {
-            id: 'category',
-            type: 'relation',
-            required: true,
-            componentId: 'one-to-one',
-            relation: {
-              model: 'categories',
-              type: 'one-to-one',
-            },
-          },
-        ],
-        localization: true,
-        type: 'JSON',
-        createdBy: '',
-        isServerless: false,
-      },
-    ];
+      expect(stderr).toBe('');
+      expect(stdout).toContain('✨ Tip tanımları başarıyla oluşturuldu');
+    });
 
-    const result = await generator.generate(models);
+    it('should handle missing models directory gracefully', async () => {
+      const { stderr } = await new Promise<{ stderr: string }>((resolve) => {
+        exec(`node ${cliPath} --models ./nonexistent --output ./src/__mocks__/output/contentrain.ts`, (error, stdout, stderr) => {
+          if (error)
+            resolve({ stderr });
+          else resolve({ stderr: '' });
+        });
+      });
 
-    // Base model kontrolleri
-    expect(result).toContain('export interface BaseContentrainModel');
-    expect(result).toContain('ID: string');
-    expect(result).toContain('createdAt: string');
-    expect(result).toContain('updatedAt: string');
-    expect(result).toContain('status: \'draft\' | \'changed\' | \'publish\'');
-    expect(result).toContain('scheduled: boolean');
+      expect(stderr).toContain('❌ Tip tanımları oluşturulurken hata oluştu');
+    });
 
-    // Processes model kontrolleri
-    expect(result).toContain('export interface IProcessItems extends BaseContentrainModel');
-    expect(result).toContain('title: string');
-    expect(result).toContain('description: string');
-    expect(result).toContain('icon: string');
+    it('should handle invalid output path gracefully', async () => {
+      const { stderr } = await new Promise<{ stderr: string }>((resolve) => {
+        exec(`node ${cliPath} --models ./__mocks__/contentrain/models --output /invalid/path/contentrain.ts`, (error, stdout, stderr) => {
+          if (error)
+            resolve({ stderr });
+          else resolve({ stderr: '' });
+        });
+      });
 
-    // FAQ Items model kontrolleri
-    expect(result).toContain('export interface IFaqItems extends BaseContentrainModel');
-    expect(result).toContain('question: string');
-    expect(result).toContain('answer: string');
-    expect(result).toContain('order: number');
-
-    // Work Items model kontrolleri
-    expect(result).toContain('export interface IWorkItems extends BaseContentrainModel');
-    expect(result).toContain('title: string');
-    expect(result).toContain('description: string');
-    expect(result).toContain('image?: string');
-    expect(result).toContain('category: string');
-
-    // Type map kontrolü
-    expect(result).toContain('export type ContentrainTypeMap');
-    expect(result).toContain('\'processes\': IProcessItems');
-    expect(result).toContain('\'faq-items\': IFaqItems');
-    expect(result).toContain('\'work-items\': IWorkItems');
+      expect(stderr).toContain('❌ Tip tanımları oluşturulurken hata oluştu');
+    });
   });
 
-  it('should handle different field types correctly', async () => {
-    const generator = new ContentrainGenerator();
+  describe('generator Core Functions', () => {
+    it('should correctly filter JSON files in a directory', () => {
+      const expectedFiles = [
+        'faqitems.json',
+        'meta-tags.json',
+        'processes.json',
+        'references.json',
+        'sections.json',
+        'services.json',
+        'sociallinks.json',
+        'tabitems.json',
+        'testimonail-items.json',
+        'workcategories.json',
+        'workitems.json',
+      ];
+      expect(modelFiles).toEqual(expectedFiles);
+    });
 
-    const models: ContentrainModelMetadata[] = [
-      {
-        modelId: 'test-model',
-        name: 'TestModel',
-        fields: [
-          {
-            id: 'stringField',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-          {
-            id: 'numberField',
-            type: 'number',
-            required: true,
-            componentId: 'integer',
-          },
-          {
-            id: 'booleanField',
-            type: 'boolean',
-            required: true,
-            componentId: 'checkbox',
-          },
-          {
-            id: 'dateField',
-            type: 'date',
-            required: true,
-            componentId: 'date',
-          },
-          {
-            id: 'mediaField',
-            type: 'media',
-            required: false,
-            componentId: 'media',
-          },
-          {
-            id: 'oneToOneField',
-            type: 'relation',
-            required: true,
-            componentId: 'one-to-one',
-            relation: {
-              model: 'related',
-              type: 'one-to-one',
-            },
-          },
-          {
-            id: 'oneToManyField',
-            type: 'relation',
-            required: true,
-            componentId: 'one-to-many',
-            relation: {
-              model: 'related',
-              type: 'one-to-many',
-            },
-          },
-        ],
-        localization: true,
-        type: 'JSON',
-        createdBy: '',
-        isServerless: false,
-      },
-    ];
+    it('should correctly extract model IDs from file names', () => {
+      const expectedIds = [
+        'faqitems',
+        'meta-tags',
+        'processes',
+        'references',
+        'sections',
+        'services',
+        'sociallinks',
+        'tabitems',
+        'testimonail-items',
+        'workcategories',
+        'workitems',
+      ];
+      const extractedIds = (generator as any).getModelIds(modelFiles);
+      expect(extractedIds).toEqual(expectedIds);
+    });
 
-    const result = await generator.generate(models);
+    it('should correctly read metadata.json file', () => {
+      const readMetadata = (generator as any).getMetaData(mockPaths.models);
+      expect(readMetadata).toEqual(metadata);
+    });
 
-    expect(result).toContain('export interface ITestModel extends BaseContentrainModel');
-    expect(result).toContain('stringField: string');
-    expect(result).toContain('numberField: number');
-    expect(result).toContain('booleanField: boolean');
-    expect(result).toContain('dateField: string');
-    expect(result).toContain('mediaField?: string');
-    expect(result).toContain('oneToOneField: string');
-    expect(result).toContain('oneToManyField: string[]');
-  });
+    it('should correctly initialize type definitions based on model IDs', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
 
-  it('should handle model names with hyphens correctly', async () => {
-    const generator = new ContentrainGenerator();
+      expect(typeDefinitions).toContain('export type ModelId =');
+      expect(typeDefinitions).toContain('export type Status = \'draft\' | \'changed\' | \'publish\'');
+      expect(typeDefinitions).toContain('export interface BaseContentrainType');
+    });
 
-    const models: ContentrainModelMetadata[] = [
-      {
-        modelId: 'my-test-model',
-        name: 'MyTestModel',
-        fields: [
-          {
-            id: 'title',
-            type: 'string',
-            required: true,
-            componentId: 'single-line-text',
-          },
-        ],
-        localization: true,
-        type: 'JSON',
-        createdBy: '',
-        isServerless: false,
-      },
-    ];
+    it('should correctly process model files', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
+      const { generatedCount, skippedCount, errors, interfaceNames, updatedTypeDefinitions }
+        = (generator as any).processModelFiles(modelFiles, mockPaths.models, typeDefinitions, metadata);
 
-    const result = await generator.generate(models);
+      expect(generatedCount).toEqual(11);
+      expect(skippedCount).toEqual(0);
+      expect(errors).toEqual([]);
+      expect(interfaceNames).toBeInstanceOf(Map);
+      expect(updatedTypeDefinitions).toContain('export type ModelId =');
+    });
 
-    expect(result).toContain('export interface IMyTestModel extends BaseContentrainModel');
-    expect(result).toContain('\'my-test-model\': IMyTestModel');
+    it('should correctly finalize type definitions', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
+      const { interfaceNames } = (generator as any).processModelFiles(
+        modelFiles,
+        mockPaths.models,
+        typeDefinitions,
+        metadata,
+      );
+      const finalizedTypeDefinitions = (generator as any).finalizeTypeDefinitions(
+        modelIds,
+        interfaceNames,
+        modelFiles,
+        mockPaths.models,
+        metadata,
+      );
+
+      const expectedInterfaces = [
+        'services',
+        'processes',
+        'tabitems',
+        'workitems',
+        'workcategories',
+        'faqitems',
+        'sections',
+        'sociallinks',
+        'references',
+        'meta-tags',
+        'testimonail-items',
+      ];
+
+      expectedInterfaces.forEach((interfaceName) => {
+        expect(finalizedTypeDefinitions).toContain(`'${interfaceName}':`);
+      });
+    });
+
+    it('should correctly generate relation mappings', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
+      const { interfaceNames } = (generator as any).processModelFiles(
+        modelFiles,
+        mockPaths.models,
+        typeDefinitions,
+        metadata,
+      );
+      const finalizedTypeDefinitions = (generator as any).finalizeTypeDefinitions(
+        modelIds,
+        interfaceNames,
+        modelFiles,
+        mockPaths.models,
+        metadata,
+      );
+
+      const expectedRelations = `export type ModelRelations = {
+  'testimonail-items': {
+      model: 'workitems'
+      type: 'one-to-one'
+  }
+  'workitems': {
+      model: 'workcategories'
+      type: 'one-to-one'
+  }
+}`;
+
+      expect(finalizedTypeDefinitions).toContain(expectedRelations);
+    });
+
+    it('should correctly generate locale content map', () => {
+      const localeContentMap = (generator as any).generateLocaleContentMap(metadata);
+
+      // Genel locale tipi kontrolü
+      expect(localeContentMap).toContain('export type AvailableLocale = \'en\' | \'tr\';');
+
+      // Model bazlı locale tipleri kontrolü
+      const expectedModels = [
+        'services',
+        'processes',
+        'tabitems',
+        'workitems',
+        'workcategories',
+        'faqitems',
+        'sections',
+        'meta-tags',
+        'testimonail-items',
+      ];
+
+      // Her model için locale tip tanımı kontrolü
+      expectedModels.forEach((modelId) => {
+        const typeName = (generator as any).formatTypeName(modelId);
+        expect(localeContentMap).toContain(`export type ${typeName}Locales =`);
+      });
+
+      // LocaleContentMap tip tanımı kontrolü
+      expect(localeContentMap).toContain('export type LocaleContentMap = {');
+      expectedModels.forEach((modelId) => {
+        const typeName = (generator as any).formatTypeName(modelId);
+        expect(localeContentMap).toContain(`  '${modelId}': ${typeName}Locales[];`);
+      });
+
+      // Doğrulama fonksiyonları kontrolü
+      expect(localeContentMap).toContain('export const isValidLocale = (locale: string): locale is AvailableLocale =>');
+      expectedModels.forEach((modelId) => {
+        const typeName = (generator as any).formatTypeName(modelId);
+        expect(localeContentMap).toContain(`export const isValid${typeName}Locale = (locale: string): locale is ${typeName}Locales =>`);
+      });
+    });
+
+    it('should correctly write type definitions to a file', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
+      const { interfaceNames } = (generator as any).processModelFiles(
+        modelFiles,
+        mockPaths.models,
+        typeDefinitions,
+        metadata,
+      );
+      const finalizedTypeDefinitions = (generator as any).finalizeTypeDefinitions(
+        modelIds,
+        interfaceNames,
+        modelFiles,
+        mockPaths.models,
+        metadata,
+      );
+
+      (generator as any).writeTypeDefinitions(mockPaths.output, finalizedTypeDefinitions, 11, 0, []);
+    });
+
+    it('should correctly generate types', () => {
+      (generator as any).generateTypes();
+    });
+
+    it('should correctly generate asset types', () => {
+      const typeDefinitions = (generator as any).initializeTypeDefinitions(modelIds);
+      const { interfaceNames } = (generator as any).processModelFiles(
+        modelFiles,
+        mockPaths.models,
+        typeDefinitions,
+        metadata,
+      );
+      const finalizedTypeDefinitions = (generator as any).finalizeTypeDefinitions(
+        modelIds,
+        interfaceNames,
+        modelFiles,
+        mockPaths.models,
+        metadata,
+      );
+
+      // Asset meta interface kontrolü
+      expect(finalizedTypeDefinitions).toContain('export interface ContentrainAssetMeta {');
+      expect(finalizedTypeDefinitions).toContain('user: {');
+      expect(finalizedTypeDefinitions).toContain('name: string');
+      expect(finalizedTypeDefinitions).toContain('email: string');
+      expect(finalizedTypeDefinitions).toContain('avatar: string');
+      expect(finalizedTypeDefinitions).toContain('createdAt: string');
+
+      // Asset interface kontrolü
+      expect(finalizedTypeDefinitions).toContain('export interface ContentrainAsset {');
+      expect(finalizedTypeDefinitions).toContain('path: string');
+      expect(finalizedTypeDefinitions).toContain('mimetype: string');
+      expect(finalizedTypeDefinitions).toContain('size: number');
+      expect(finalizedTypeDefinitions).toContain('alt: string');
+      expect(finalizedTypeDefinitions).toContain('meta: ContentrainAssetMeta');
+
+      // Assets type kontrolü
+      expect(finalizedTypeDefinitions).toContain('export type ContentrainAssets = ContentrainAsset[]');
+    });
   });
 });

@@ -1,10 +1,7 @@
 #!/usr/bin/env node
-
-import type { ContentrainModelMetadata } from '@contentrain/types';
 import { promises as fs } from 'node:fs';
 import { dirname, join } from 'node:path';
 import process from 'node:process';
-import { ContentrainCore } from '@contentrain/core';
 import { program } from 'commander';
 import { ContentrainGenerator } from './index';
 
@@ -22,30 +19,22 @@ async function main() {
   program
     .name('contentrain-generator')
     .description('Contentrain için TypeScript tip tanımları oluşturur')
-    .option('-o, --output <path>', 'Çıktı dosyası yolu', 'src/types/contentrain.ts')
-    .option('-c, --content <path>', 'İçerik klasörü yolu', 'contentrain')
+    .option('-o, --output <path>', 'Çıktı dosyası yolu', 'types/contentrain.ts')
     .option('-m, --models <path>', 'Model tanımları klasörü yolu', 'contentrain/models')
     .parse();
 
   const options = program.opts();
-  const outputPath = join(process.cwd(), options.output ?? 'src/types/contentrain.ts');
+  const outputPath = join(process.cwd(), options.output ?? 'types/contentrain.ts');
 
   try {
-    const core = new ContentrainCore({
-      contentPath: options.content,
-      modelsPath: options.models,
+    const generator = new ContentrainGenerator({
+      modelsDir: options.models,
+      outputDir: dirname(outputPath),
     });
-
-    const files = await core.getAvailableCollections();
-    const modelMetadata: ContentrainModelMetadata[] = await Promise.all(
-      files.map(async file => core.getModelMetadata(file)),
-    );
-
-    const generator = new ContentrainGenerator();
-    const code = await generator.generate(modelMetadata);
+    await generator.generateTypes();
 
     await ensureDirectoryExists(outputPath);
-    await fs.writeFile(outputPath, code, 'utf-8');
+    await fs.writeFile(outputPath, '', 'utf-8');
 
     console.log(`✨ Tip tanımları başarıyla oluşturuldu: ${outputPath}`);
   }

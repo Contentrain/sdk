@@ -46,7 +46,7 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
   private async getRelatedData(item: T, relation: string): Promise<ContentrainBaseModel | ContentrainBaseModel[] | null> {
     const metadata = await this.getModelMetadata();
     const fields = metadata.fields;
-    const fieldMetadata = fields.find(f => f.id === relation);
+    const fieldMetadata = fields.find(f => f.componentId === relation);
 
     if (!fieldMetadata) {
       throw new Error(`Field ${relation} not found in model ${metadata.modelId}`);

@@ -1,13 +1,90 @@
-export interface ContentrainField {
-  id: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'media' | 'relation'
-  required: boolean
-  componentId: 'single-line-text' | 'multi-line-text' | 'email' | 'url' | 'slug' | 'color' | 'json' | 'md-editor' | 'rich-text-editor' | 'integer' | 'decimal' | 'rating' | 'percent' | 'phone-number' | 'checkbox' | 'switch' | 'date' | 'date-time' | 'media' | 'one-to-one' | 'one-to-many'
-  relation?: {
-    model: string
-    multiple?: boolean
-    type: 'one-to-one' | 'one-to-many'
+export type ContentrainModelType = 'JSON' | 'MD' | 'MDX';
+export type ContentrainContentStatusType = 'draft' | 'changed' | 'publish';
+export interface ContentrainFieldOptions {
+  titleField?: {
+    value: boolean
+    disabled: boolean
   }
+  defaultValue?: {
+    value: boolean
+    form?: {
+      defaultValue: {
+        component: string
+        value: string
+      }
+    }
+  }
+  numberOfStars?: {
+    value: boolean
+    form: {
+      numberOfStars: {
+        component: string
+        value: string
+        props: {
+          min: number
+          max: number
+        }
+      }
+    }
+  }
+  reference?: {
+    value: boolean
+    form: {
+      reference: {
+        value: string
+        props?: {
+          options: any[]
+        }
+        component: string
+      }
+    }
+  }
+}
+export interface ContentrainFieldValidations {
+  'required-field'?: {
+    value: boolean
+    disabled: boolean
+  }
+  'unique-field'?: {
+    value: boolean
+    disabled: boolean
+  }
+  'input-range-field'?: {
+    value: boolean
+    disabled: boolean
+    form?: {
+      numberOfStars: {
+        component: string
+        value: string
+        props: {
+          min: number
+          max: number
+        }
+      }
+    }
+  }
+}
+
+export interface FieldTypeComponentMap {
+  string: 'single-line-text' | 'multi-line-text' | 'email' | 'url' | 'slug' | 'color' | 'json' | 'md-editor' | 'rich-text-editor'
+  number: 'integer' | 'decimal' | 'rating' | 'percent' | 'phone-number'
+  boolean: 'checkbox' | 'switch'
+  array: 'single-line-text' | 'multi-line-text' | 'email' | 'url' | 'slug' | 'color' | 'integer' | 'decimal' | 'rating' | 'percent' | 'phone-number'
+  date: 'date' | 'date-time'
+  media: 'media'
+  relation: 'one-to-one' | 'one-to-many'
+}
+
+export interface ContentrainField {
+  name: string
+  fieldId: string
+  modelId: string
+  fieldType: keyof FieldTypeComponentMap
+  componentId: FieldTypeComponentMap[keyof FieldTypeComponentMap]
+  options: ContentrainFieldOptions
+  validations: ContentrainFieldValidations
+  required: boolean
+  relation?: ContentrainRelation
 }
 
 export interface ContentrainModelMetadata {
@@ -15,7 +92,7 @@ export interface ContentrainModelMetadata {
   modelId: string
   fields: ContentrainField[]
   localization: boolean
-  type: 'JSON' | 'MD' | 'MDX'
+  type: ContentrainModelType
   createdBy: string
   isServerless: boolean
 }
@@ -24,7 +101,7 @@ export interface ContentrainBaseModel {
   ID: string
   createdAt: string
   updatedAt: string
-  status: 'draft' | 'changed' | 'publish'
+  status: ContentrainContentStatusType
   scheduled: boolean
   [key: string]: unknown
 }
@@ -46,7 +123,6 @@ export interface ContentrainRelation {
   type: 'one-to-one' | 'one-to-many'
 }
 
-export type Status = 'draft' | 'changed' | 'publish';
 export type SortDirection = 'asc' | 'desc';
 export type RelationType = 'one-to-one' | 'one-to-many';
 

@@ -19,7 +19,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@contentrain/core": "workspace:*",
     "@contentrain/types": "workspace:*",
     "commander": "^12.0.0"
   },

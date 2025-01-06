@@ -51,9 +51,6 @@ importers:
 
   packages/generator:
     dependencies:
-      '@contentrain/core':
-        specifier: workspace:*
-        version: link:../core
       '@contentrain/types':
         specifier: workspace:*
         version: link:../types
