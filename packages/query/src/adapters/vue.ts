@@ -1,7 +1,7 @@
 import type { ContentrainBaseModel } from '@contentrain/types';
 import type { RuntimeAdapter } from '../runtime/types';
 import type { AdapterOneResult, AdapterOptions, AdapterResult } from './types';
-import { onUnmounted, ref, watch } from 'vue';
+import { computed, onUnmounted, ref, shallowRef } from 'vue';
 import { BaseAdapter } from './base';
 
 export class VueAdapter extends BaseAdapter {
@@ -15,57 +15,54 @@ export function useQuery<T extends ContentrainBaseModel>(
   model: string,
   options?: AdapterOptions,
 ) {
-  const result = ref<AdapterResult<T>>({
-    data: [],
-    total: 0,
-    cached: false,
-    error: null,
-    isLoading: true,
-    isFetching: true,
-    isError: false,
-    refetch: async () => {},
-    invalidate: async () => {},
-  });
+  const data = shallowRef<T[]>([]);
+  const error = shallowRef<Error | null>(null);
+  const isLoading = ref(true);
+  const isFetching = ref(true);
+  const isError = ref(false);
+  const total = ref(0);
+  const cached = ref(false);
 
-  const fetchData = async () => {
-    result.value.isFetching = true;
+  async function fetchData() {
+    isFetching.value = true;
     try {
-      const queryResult = await adapter.query<T>(model, options);
-      result.value = {
-        ...queryResult,
-        error: null,
-        isLoading: false,
-        isFetching: false,
-        isError: false,
-        refetch: fetchData,
-        invalidate: async () => {
-          await adapter.runtime.invalidateCache(model);
-          await fetchData();
-        },
-      };
+      const result = await adapter.query<T>(model, options);
+      data.value = result.data;
+      total.value = result.total;
+      cached.value = result.cached;
+      error.value = null;
+      isError.value = false;
     }
-    catch (error) {
-      result.value = {
-        ...result.value,
-        error: error as Error,
-        isError: true,
-        isLoading: false,
-        isFetching: false,
-      };
+    catch (err) {
+      error.value = err as Error;
+      isError.value = true;
     }
-  };
+    finally {
+      isLoading.value = false;
+      isFetching.value = false;
+    }
+  }
+
+  async function invalidate() {
+    await adapter.runtime.invalidateCache(model);
+    await fetchData();
+  }
 
   // İlk yükleme
   void fetchData();
 
-  // Options değişikliklerini izle
-  watch(
-    () => options,
-    () => {
-      void fetchData();
-    },
-    { deep: true },
-  );
+  // Computed result
+  const result = computed<AdapterResult<T>>(() => ({
+    data: data.value,
+    error: error.value,
+    isLoading: isLoading.value,
+    isFetching: isFetching.value,
+    isError: isError.value,
+    total: total.value,
+    cached: cached.value,
+    refetch: fetchData,
+    invalidate,
+  }));
 
   return result;
 }
@@ -76,59 +73,54 @@ export function useOne<T extends ContentrainBaseModel>(
   id: string,
   options?: AdapterOptions,
 ) {
-  const result = ref<AdapterOneResult<T>>({
-    data: [],
-    total: 0,
-    cached: false,
-    error: null,
-    isLoading: true,
-    isFetching: true,
-    isError: false,
-    refetch: async () => {},
-    invalidate: async () => {},
-  });
+  const data = shallowRef<T | null>(null);
+  const error = shallowRef<Error | null>(null);
+  const isLoading = ref(true);
+  const isFetching = ref(true);
+  const isError = ref(false);
+  const total = ref(0);
+  const cached = ref(false);
 
-  const fetchData = async () => {
-    result.value.isFetching = true;
+  async function fetchData() {
+    isFetching.value = true;
     try {
       const item = await adapter.getOne<T>(model, id, options);
-      result.value = {
-        data: item ? [item] : [],
-        total: item ? 1 : 0,
-        cached: false,
-        error: null,
-        isLoading: false,
-        isFetching: false,
-        isError: false,
-        refetch: fetchData,
-        invalidate: async () => {
-          await adapter.runtime.invalidateCache(model);
-          await fetchData();
-        },
-      };
+      data.value = item;
+      total.value = item ? 1 : 0;
+      cached.value = false;
+      error.value = null;
+      isError.value = false;
     }
-    catch (error) {
-      result.value = {
-        ...result.value,
-        error: error as Error,
-        isError: true,
-        isLoading: false,
-        isFetching: false,
-      };
+    catch (err) {
+      error.value = err as Error;
+      isError.value = true;
     }
-  };
+    finally {
+      isLoading.value = false;
+      isFetching.value = false;
+    }
+  }
+
+  async function invalidate() {
+    await adapter.runtime.invalidateCache(model);
+    await fetchData();
+  }
 
   // İlk yükleme
   void fetchData();
 
-  // Options ve ID değişikliklerini izle
-  watch(
-    [() => options, () => id],
-    () => {
-      void fetchData();
-    },
-    { deep: true },
-  );
+  // Computed result
+  const result = computed<AdapterOneResult<T>>(() => ({
+    data: data.value ? [data.value] : [],
+    error: error.value,
+    isLoading: isLoading.value,
+    isFetching: isFetching.value,
+    isError: isError.value,
+    total: total.value,
+    cached: cached.value,
+    refetch: fetchData,
+    invalidate,
+  }));
 
   return result;
 }

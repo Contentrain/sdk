@@ -37,6 +37,10 @@ export abstract class BaseAdapter implements FrameworkAdapter {
         data: queryResult.data,
         total: queryResult.metadata.total,
         cached: queryResult.metadata.cached,
+        error: null,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
       };
     }
     catch (error) {
@@ -49,7 +53,7 @@ export abstract class BaseAdapter implements FrameworkAdapter {
     model: string,
     id: string,
     options?: AdapterOptions,
-  ): Promise<AdapterResult<T | null>> {
+  ): Promise<T | null> {
     try {
       await this.executeHooks('onBeforeQuery', model);
 
@@ -61,11 +65,7 @@ export abstract class BaseAdapter implements FrameworkAdapter {
 
       await this.executeHooks('onAfterQuery', model, item ? [item] : []);
 
-      return {
-        data: item ? [item] : [],
-        total: item ? 1 : 0,
-        cached: false,
-      };
+      return item;
     }
     catch (error) {
       await this.executeHooks('onError', error as Error);
@@ -111,10 +111,5 @@ export abstract class BaseAdapter implements FrameworkAdapter {
         await (fn as (...args: unknown[]) => Promise<void> | void)(...args);
       }
     }
-  }
-
-  private async invalidateAndRefetch(model: string): Promise<void> {
-    await this.runtime.invalidateCache(model);
-    await this.query(model, this.options || undefined);
   }
 }

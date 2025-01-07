@@ -32,7 +32,7 @@ export interface AdapterHooks {
 export interface FrameworkAdapter {
   initialize: (options: AdapterOptions) => Promise<void>
   query: <T extends ContentrainBaseModel>(model: string, options?: AdapterOptions) => Promise<AdapterResult<T>>
-  getOne: <T extends ContentrainBaseModel>(model: string, id: string, options?: AdapterOptions) => Promise<AdapterResult<T | null>>
+  getOne: <T extends ContentrainBaseModel>(model: string, id: string, options?: AdapterOptions) => Promise<T | null>
   prefetch: (models: string[]) => Promise<void>
   subscribe: (hooks: AdapterHooks) => () => void
   cleanup: () => Promise<void>

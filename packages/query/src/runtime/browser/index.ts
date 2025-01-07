@@ -42,7 +42,7 @@ export class BrowserRuntime implements RuntimeAdapter {
     if (this.indexedDB) {
       const data = await this.indexedDB.get(key);
       if (data) {
-        return data;
+        return data as { data: T[], buildInfo: any };
       }
     }
 
