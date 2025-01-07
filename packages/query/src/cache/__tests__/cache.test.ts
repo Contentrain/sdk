@@ -1,80 +1,229 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { MemoryCacheManager } from '../index';
+import type { ContentrainBaseModel } from '@contentrain/types';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { MemoryCache, SSRCache } from '../index';
 
-describe('memoryCacheManager', () => {
-  let cacheManager: MemoryCacheManager;
+interface FAQ extends ContentrainBaseModel {
+  question: string
+  answer: string
+  order: number
+  categoryId?: string
+  category?: any
+}
 
-  beforeEach(() => {
-    cacheManager = new MemoryCacheManager();
+async function loadMockData(modelId: string, locale?: string): Promise<any[]> {
+  try {
+    const filePath = path.join(process.cwd(), '__mocks__/contentrain', modelId, `${locale || 'en'}.json`);
+    const content = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(content);
+  }
+  catch {
+    return [];
+  }
+}
+
+describe('cache Implementations', () => {
+  describe('memoryCache', () => {
+    const cache = new MemoryCache();
+
+    it('should store and retrieve data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData);
+      const result = await cache.get<FAQ[]>(key);
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(mockData.length);
+      expect(result?.[0].question).toBe(mockData[0].question);
+    });
+
+    it('should handle namespaced keys', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const namespace = 'test';
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData, { namespace });
+      const result = await cache.get<FAQ[]>(key, { namespace });
+
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(mockData.length);
+    });
+
+    it('should handle TTL expiration', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData, { ttl: 1 }); // 1ms TTL
+      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for TTL to expire
+      const result = await cache.get<FAQ[]>(key);
+
+      expect(result).toBeNull();
+    });
+
+    it('should check if key exists', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData);
+      const exists = await cache.has(key);
+      expect(exists).toBe(true);
+
+      await cache.delete(key);
+      const notExists = await cache.has(key);
+      expect(notExists).toBe(false);
+    });
+
+    it('should delete specific keys', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData);
+      await cache.delete(key);
+      const result = await cache.get<FAQ[]>(key);
+
+      expect(result).toBeNull();
+    });
+
+    it('should clear all data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key1 = 'faqitems:en';
+      const key2 = 'faqitems:tr';
+
+      await cache.set(key1, mockData);
+      await cache.set(key2, mockData);
+      await cache.clear();
+
+      const result1 = await cache.get<FAQ[]>(key1);
+      const result2 = await cache.get<FAQ[]>(key2);
+
+      expect(result1).toBeNull();
+      expect(result2).toBeNull();
+    });
+
+    it('should clear namespace data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const namespace = 'test';
+      const key1 = 'faqitems:en';
+      const key2 = 'faqitems:tr';
+
+      await cache.set(key1, mockData, { namespace });
+      await cache.set(key2, mockData, { namespace });
+      await cache.clear(namespace);
+
+      const result1 = await cache.get<FAQ[]>(key1, { namespace });
+      const result2 = await cache.get<FAQ[]>(key2, { namespace });
+
+      expect(result1).toBeNull();
+      expect(result2).toBeNull();
+    });
   });
 
-  it('should store and retrieve values', async () => {
-    const key = 'test-key';
-    const value = { data: 'test-value' };
+  describe('sSRCache', () => {
+    const cache = new SSRCache();
 
-    await cacheManager.set(key, value);
-    const retrieved = await cacheManager.get(key);
+    it('should store and retrieve data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
 
-    expect(retrieved).toEqual(value);
-  });
+      await cache.set(key, mockData);
+      const result = await cache.get<FAQ[]>(key);
 
-  it('should return null for non-existent keys', async () => {
-    const key = 'non-existent-key';
-    const value = await cacheManager.get(key);
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(mockData.length);
+      expect(result?.[0].question).toBe(mockData[0].question);
+    });
 
-    expect(value).toBeNull();
-  });
+    it('should handle namespaced keys', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const namespace = 'test';
+      const key = 'faqitems:en';
 
-  it('should handle expiration of cached values', async () => {
-    const key = 'expiring-key';
-    const value = { data: 'expiring-value' };
-    const ttl = 100; // 100ms
+      await cache.set(key, mockData, { namespace });
+      const result = await cache.get<FAQ[]>(key, { namespace });
 
-    await cacheManager.set(key, value, { ttl });
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(mockData.length);
+    });
 
-    // Value should exist immediately
-    expect(await cacheManager.get(key)).toEqual(value);
+    it('should handle TTL expiration', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
 
-    // Wait for expiration
-    await new Promise(resolve => setTimeout(resolve, ttl + 50));
+      await cache.set(key, mockData, { ttl: 1 }); // 1ms TTL
+      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for TTL to expire
+      const result = await cache.get<FAQ[]>(key);
 
-    // Value should be expired
-    expect(await cacheManager.get(key)).toBeNull();
-  });
+      expect(result).toBeNull();
+    });
 
-  it('should clear all cached values', async () => {
-    const keys = ['key1', 'key2', 'key3'];
-    const value = { data: 'test' };
+    it('should check if key exists', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
 
-    await Promise.all(keys.map(async key => cacheManager.set(key, value)));
-    await Promise.all(keys.map(async (key) => {
-      expect(await cacheManager.get(key)).toEqual(value);
-    }));
+      await cache.set(key, mockData);
+      const exists = await cache.has(key);
+      expect(exists).toBe(true);
 
-    await cacheManager.clear();
+      await cache.delete(key);
+      const notExists = await cache.has(key);
+      expect(notExists).toBe(false);
+    });
 
-    await Promise.all(keys.map(async (key) => {
-      expect(await cacheManager.get(key)).toBeNull();
-    }));
-  });
+    it('should delete specific keys', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
 
-  it('should delete specific cached value', async () => {
-    const key = 'delete-test';
-    const value = { data: 'to-be-deleted' };
+      await cache.set(key, mockData);
+      await cache.delete(key);
+      const result = await cache.get<FAQ[]>(key);
 
-    await cacheManager.set(key, value);
-    expect(await cacheManager.get(key)).toEqual(value);
+      expect(result).toBeNull();
+    });
 
-    await cacheManager.delete(key);
-    expect(await cacheManager.get(key)).toBeNull();
-  });
+    it('should clear all data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key1 = 'faqitems:en';
+      const key2 = 'faqitems:tr';
 
-  it('should check if key exists', async () => {
-    const key = 'exists-test';
-    const value = { data: 'test-value' };
+      await cache.set(key1, mockData);
+      await cache.set(key2, mockData);
+      await cache.clear();
 
-    expect(await cacheManager.has(key)).toBe(false);
-    await cacheManager.set(key, value);
-    expect(await cacheManager.has(key)).toBe(true);
+      const result1 = await cache.get<FAQ[]>(key1);
+      const result2 = await cache.get<FAQ[]>(key2);
+
+      expect(result1).toBeNull();
+      expect(result2).toBeNull();
+    });
+
+    it('should serialize data for SSR', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+
+      await cache.set(key, mockData);
+      const state = cache.getState();
+
+      expect(state).toBeDefined();
+      expect(state[key]).toBeDefined();
+      expect(state[key].value).toHaveLength(mockData.length);
+    });
+
+    it('should hydrate from serialized data', async () => {
+      const mockData = await loadMockData('faqitems', 'en');
+      const key = 'faqitems:en';
+      const originalCache = new SSRCache();
+
+      await originalCache.set(key, mockData);
+      const state = originalCache.getState();
+
+      const newCache = new SSRCache();
+      SSRCache.hydrate(state);
+
+      const result = await newCache.get<FAQ[]>(key);
+      expect(result).toBeDefined();
+      expect(result).toHaveLength(mockData.length);
+    });
   });
 });

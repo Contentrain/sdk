@@ -9,5 +9,17 @@ export default defineConfig({
   treeshake: true,
   sourcemap: true,
   minify: true,
-  external: ['@contentrain/types'],
+  external: [
+    '@contentrain/types',
+    'react',
+    'vue',
+    'node:fs',
+    'node:path',
+    'node:process',
+  ],
+  esbuildOptions(options) {
+    options.banner = {
+      js: '"use strict";',
+    };
+  },
 });

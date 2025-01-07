@@ -1,93 +1,149 @@
 import type { ContentrainBaseModel } from '@contentrain/types';
-import type { DataLoader } from '../../loader/types';
-import { describe, expect, it } from 'vitest';
-import { ContentrainQuery } from '..';
-import { mockData } from '../../__mocks__/data';
+import type { RuntimeAdapter, RuntimeResult } from '../../runtime/types';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { describe, expect, it, vi } from 'vitest';
+import { createQuery } from '../index';
 
-describe('contentrainQuery', () => {
-  const mockLoader: DataLoader = {
-    loadModel: async <T extends ContentrainBaseModel>(modelId: string): Promise<T[]> => {
-      if (modelId === 'posts') {
-        return mockData.posts as unknown as T[];
-      }
-      if (modelId === 'categories') {
-        return mockData.categories as unknown as T[];
-      }
-      throw new Error(`Model ${modelId} not found`);
-    },
-    loadRelation: async <T extends ContentrainBaseModel>(
-      relationId: string,
-      id: string,
-    ): Promise<T | null> => {
-      if (relationId === 'category' && id) {
-        const post = mockData.posts.find(p => p.ID === id);
-        if (post) {
-          return mockData.categories.find(c => c.ID === post.categoryId) as unknown as T;
-        }
-      }
-      return null;
-    },
+interface FAQ extends ContentrainBaseModel {
+  question: string
+  answer: string
+  order: number
+  categoryId?: string
+  category?: any
+}
+
+async function loadMockData(modelId: string, locale?: string): Promise<any[]> {
+  try {
+    const filePath = path.join(process.cwd(), '__mocks__/contentrain', modelId, `${locale || 'en'}.json`);
+    const content = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(content);
+  }
+  catch {
+    return [];
+  }
+}
+
+describe('query Builder', () => {
+  const mockRuntime: RuntimeAdapter = {
+    loadModel: vi.fn().mockImplementation(async (modelId: string, options?: { locale?: string }): Promise<RuntimeResult> => {
+      const data = await loadMockData(modelId, options?.locale);
+      return {
+        data,
+        metadata: {
+          total: data.length,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+          },
+        },
+      };
+    }),
+    loadRelation: vi.fn().mockImplementation(async (modelId: string, id: string, options?: { locale?: string }): Promise<ContentrainBaseModel | null> => {
+      const items = await loadMockData(modelId, options?.locale);
+      return items.find((item: ContentrainBaseModel) => item.ID === id) || null;
+    }),
+    initialize: vi.fn(),
+    cleanup: vi.fn(),
+    invalidateCache: vi.fn(),
   };
 
-  it('should load model data', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.get();
-    expect(result).toEqual(mockData.posts);
+  it('should create a query instance', () => {
+    const query = createQuery(mockRuntime);
+    expect(query).toBeDefined();
   });
 
-  it('should filter with where equals', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.where('title', 'equals', 'Post 1').get();
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('Post 1');
+  it('should fetch all items from a model', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const results = await query.from('faqitems').get();
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0]).toHaveProperty('question');
+    expect(results[0]).toHaveProperty('answer');
   });
 
-  it('should filter with where notEquals', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.where('title', 'notEquals', 'Post 1').get();
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('Post 2');
-  });
-
-  it('should filter with whereLike', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.whereLike('title', 'Post').get();
-    expect(result).toHaveLength(2);
-  });
-
-  it('should filter with whereIn', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.whereIn('title', ['Post 1', 'Post 2']).get();
-    expect(result).toHaveLength(2);
-  });
-
-  it('should sort with orderBy', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.orderBy('title', 'desc').get();
-    expect(result[0].title).toBe('Post 2');
-    expect(result[1].title).toBe('Post 1');
-  });
-
-  it('should paginate with skip and take', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query.skip(1).take(1).get();
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('Post 2');
-  });
-
-  it('should handle multiple where conditions', async () => {
-    const query = new ContentrainQuery('posts', { loader: mockLoader });
-    const result = await query
-      .where('title', 'equals', 'Post 1')
-      .where('status', 'equals', 'publish')
+  it('should filter items using where clause', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const results = await query
+      .from('faqitems')
+      .where('order', 'eq', 1)
       .get();
-    expect(result).toHaveLength(1);
-    expect(result[0].title).toBe('Post 1');
-    expect(result[0].status).toBe('publish');
+
+    expect(results.length).toBeGreaterThan(0);
+    results.forEach((item) => {
+      expect(item.order).toBe(1);
+    });
   });
 
-  it('should throw error for non-existent model', async () => {
-    const query = new ContentrainQuery('invalid-model', { loader: mockLoader });
-    await expect(query.get()).rejects.toThrow('Model invalid-model not found');
+  it('should sort items using orderBy', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const results = await query
+      .from('faqitems')
+      .orderBy('order', 'asc')
+      .get();
+
+    for (let i = 1; i < results.length; i++) {
+      expect(results[i].order).toBeGreaterThanOrEqual(results[i - 1].order);
+    }
+  });
+
+  it('should paginate results', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const pageSize = 2;
+    const results = await query
+      .from('faqitems')
+      .paginate(1, pageSize)
+      .get();
+
+    expect(results.length).toBeLessThanOrEqual(pageSize);
+  });
+
+  it('should load relations', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const results = await query
+      .from('faqitems')
+      .with('category')
+      .get();
+
+    results.forEach((item) => {
+      if (item.categoryId) {
+        expect(item.category).toBeDefined();
+      }
+    });
+  });
+
+  it('should handle locale fallback', async () => {
+    const query = createQuery<FAQ>(mockRuntime, {
+      locale: 'tr',
+      fallbackLocale: 'en',
+      fallbackStrategy: 'loose',
+    });
+
+    const results = await query.from('faqitems').get();
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].question).toBeDefined();
+  });
+
+  it('should count items', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const count = await query.from('faqitems').count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  it('should get first item', async () => {
+    const query = createQuery<FAQ>(mockRuntime);
+    const item = await query.from('faqitems').first();
+    expect(item).toBeDefined();
+    expect(item?.question).toBeDefined();
+  });
+
+  it('should handle errors gracefully', async () => {
+    const errorRuntime: RuntimeAdapter = {
+      ...mockRuntime,
+      loadModel: vi.fn().mockRejectedValue(new Error('Failed to load model')),
+    };
+
+    const query = createQuery(errorRuntime);
+    await expect(query.from('invalid').get()).rejects.toThrow();
   });
 });
