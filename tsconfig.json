@@ -2,15 +2,23 @@
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "preserve",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
@@ -18,6 +26,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["packages/**/*.ts", "packages/**/*.tsx", "packages/**/*.mts"],
-  "exclude": ["**/node_modules", "**/dist", "reference"]
+  "include": [
+    "packages/**/*.ts",
+    "packages/**/*.tsx",
+    "packages/**/*.mts"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist",
+    "__mocks__"
+  ]
 }

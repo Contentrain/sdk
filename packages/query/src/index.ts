@@ -1,99 +1,154 @@
-import type { IContentrainCore } from '@contentrain/core';
-import type { ContentrainBaseModel, ContentrainModelMetadata, FilterCondition, SortCondition, SortDirection, WithRelation } from '@contentrain/types';
-import { ContentrainCore } from '@contentrain/core';
+import type {
+  ContentrainBaseModel,
+  FilterCondition,
+  FilterOperator,
+  SortCondition,
+  SortDirection,
+} from '@contentrain/types';
 
-export class ContentrainQuery<T extends ContentrainBaseModel> {
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface QueryOptions {
+  baseDir?: string
+  defaultLocale?: string
+  fallbackLocale?: string
+}
+
+export class ContentrainQuery<T extends ContentrainBaseModel = ContentrainBaseModel> {
   private filters: FilterCondition<T>[] = [];
   private sorts: SortCondition<T>[] = [];
-  private relations: string[] = [];
-  private limitCount?: number;
-  private skipCount?: number;
+  private limitValue?: number;
+  private skipValue?: number;
+  private data: T[] = [];
+  private locale?: string;
+  private includeRelations: string[] = [];
+  private baseDir: string;
+  private defaultLocale: string;
+  private fallbackLocale: string;
+  private collection: string;
+  private cache = new Map<string, any>();
 
-  constructor(
-    private core: IContentrainCore = new ContentrainCore(),
-    private collection: string,
-  ) { }
+  constructor(collection: string, options: QueryOptions = {}) {
+    this.collection = collection;
+    this.baseDir = options.baseDir || process.cwd();
+    this.defaultLocale = options.defaultLocale || 'en';
+    this.fallbackLocale = options.fallbackLocale || this.defaultLocale;
+    this.loadInitialData();
+  }
 
-  where(field: keyof T, operator: FilterCondition<T>['operator'], value: T[keyof T]): this {
+  /**
+   * Başlangıç verilerini yükler
+   */
+  private loadInitialData(): void {
+    const collectionPath = join(this.baseDir, this.collection);
+    const cacheKey = `${collectionPath}:${this.locale || this.defaultLocale}`;
+
+    if (this.cache.has(cacheKey)) {
+      this.data = this.cache.get(cacheKey);
+      return;
+    }
+
+    try {
+      const data = this.readJsonFile(collectionPath);
+      this.cache.set(cacheKey, data);
+      this.data = data;
+    }
+    catch (error) {
+      console.error(`Error loading data for collection ${this.collection}:`, error);
+      this.data = [];
+    }
+  }
+
+  /**
+   * JSON dosyasını okur
+   */
+  private readJsonFile(filePath: string): T[] {
+    try {
+      const content = readFileSync(filePath, 'utf-8');
+      return JSON.parse(content);
+    }
+    catch (error) {
+      throw new Error(`Failed to read JSON file: ${filePath}`);
+    }
+  }
+
+  /**
+   * Dil seçimi yapar
+   */
+  setLocale(locale: string): this {
+    this.locale = locale;
+    this.loadInitialData();
+    return this;
+  }
+
+  /**
+   * İlişkili içerikleri dahil eder
+   */
+  with(...relations: string[]): this {
+    this.includeRelations.push(...relations);
+    return this;
+  }
+
+  /**
+   * İlişkili içeriği yükler
+   */
+  private async loadRelation(item: T, relation: string): Promise<any> {
+    const relationId = item[relation as keyof T];
+    if (!relationId)
+      return null;
+
+    const [collectionName, field] = relation.split('.');
+    const relationPath = join(this.baseDir, collectionName, `${this.locale || this.defaultLocale}.json`);
+
+    try {
+      const relationData = this.readJsonFile(relationPath);
+      if (Array.isArray(relationId)) {
+        return relationData.filter(r => relationId.includes(r.ID));
+      }
+      return relationData.find(r => r.ID === relationId);
+    }
+    catch (error) {
+      console.error(`Error loading relation ${relation}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Veri setine filtre ekler
+   */
+  where(field: keyof T, operator: FilterOperator, value: any): this {
     this.filters.push({ field, operator, value });
     return this;
   }
 
+  /**
+   * Veri setini sıralar
+   */
   sort(field: keyof T, direction: SortDirection = 'asc'): this {
     this.sorts.push({ field, direction });
     return this;
   }
 
+  /**
+   * Kaç kayıt alınacağını belirler
+   */
   take(limit: number): this {
-    this.limitCount = limit;
+    this.limitValue = limit;
     return this;
   }
 
-  offset(skip: number): this {
-    this.skipCount = skip;
+  /**
+   * Kaç kayıt atlanacağını belirler
+   */
+  skip(offset: number): this {
+    this.skipValue = offset;
     return this;
   }
 
-  with(relation: keyof T): this {
-    this.relations.push(relation as string);
-    return this;
-  }
-
-  private async getModelMetadata(): Promise<ContentrainModelMetadata> {
-    return this.core.getModelMetadata(this.collection);
-  }
-
-  private async getRelatedData(item: T, relation: string): Promise<ContentrainBaseModel | ContentrainBaseModel[] | null> {
-    const metadata = await this.getModelMetadata();
-    const fields = metadata.fields;
-    const fieldMetadata = fields.find(f => f.componentId === relation);
-
-    if (!fieldMetadata) {
-      throw new Error(`Field ${relation} not found in model ${metadata.modelId}`);
-    }
-
-    if (!fieldMetadata.relation?.model) {
-      throw new Error(`Field ${relation} is not a relation`);
-    }
-
-    const relatedIds = item[relation as keyof T];
-    if (!relatedIds) {
-      return null;
-    }
-
-    const relatedMetadata = await this.core.getModelMetadata(fieldMetadata.relation.model);
-    const hasLocalization = relatedMetadata.localization ?? false;
-    const locale = this.core.getLocale();
-
-    if (Array.isArray(relatedIds)) {
-      const relatedItems = await Promise.all(
-        relatedIds.map(async (id: string) => {
-          try {
-            const data = await this.core.getContentById<ContentrainBaseModel>(fieldMetadata.relation!.model, id);
-            return hasLocalization && locale && typeof data === 'object' && locale in data
-              ? (data as Record<string, ContentrainBaseModel>)[locale]
-              : data;
-          }
-          catch {
-            return null;
-          }
-        }),
-      );
-
-      return relatedItems.filter((item): item is ContentrainBaseModel => item !== null);
-    }
-
-    try {
-      const data = await this.core.getContentById<ContentrainBaseModel>(fieldMetadata.relation.model, relatedIds as string);
-      return hasLocalization && locale && typeof data === 'object' && locale in data
-        ? (data as Record<string, ContentrainBaseModel>)[locale]
-        : data;
-    }
-    catch {
-      return null;
-    }
-  }
-
+  /**
+   * Filtreyi değerlendirir
+   */
   private evaluateFilter(item: T, filter: FilterCondition<T>): boolean {
     const { field, operator, value } = filter;
     const itemValue = item[field];
@@ -112,11 +167,11 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
       case 'lte':
         return typeof itemValue === 'number' && typeof value === 'number' && itemValue <= value;
       case 'contains':
-        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.includes(value);
+        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.toLowerCase().includes(value.toLowerCase());
       case 'startsWith':
-        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.startsWith(value);
+        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.toLowerCase().startsWith(value.toLowerCase());
       case 'endsWith':
-        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.endsWith(value);
+        return typeof itemValue === 'string' && typeof value === 'string' && itemValue.toLowerCase().endsWith(value.toLowerCase());
       case 'in':
         return Array.isArray(value) && value.includes(itemValue);
       case 'nin':
@@ -130,6 +185,9 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
     }
   }
 
+  /**
+   * Sıralamayı değerlendirir
+   */
   private evaluateSort(a: T, b: T, sort: SortCondition<T>): number {
     const { field, direction } = sort;
     const aValue = a[field];
@@ -162,22 +220,20 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
     return 0;
   }
 
+  /**
+   * Tüm filtreleri ve sıralamaları uygulayarak sonuç döndürür
+   */
   async get(): Promise<T[]> {
-    const metadata = await this.getModelMetadata();
-    const hasLocalization = metadata.localization ?? false;
-    const locale = this.core.getLocale();
+    let result = [...this.data];
 
-    const items = await this.core.getContent<Record<string, unknown>>(this.collection);
-    let result = items.map(item => hasLocalization && locale && typeof item === 'object' && locale in item
-      ? (item as Record<string, T>)[locale]
-      : item as T);
-
+    // Filtreleme
     if (this.filters.length > 0) {
       result = result.filter(item =>
         this.filters.every(filter => this.evaluateFilter(item, filter)),
       );
     }
 
+    // Sıralama
     if (this.sorts.length > 0) {
       result = result.sort((a, b) => {
         for (const sort of this.sorts) {
@@ -190,44 +246,43 @@ export class ContentrainQuery<T extends ContentrainBaseModel> {
       });
     }
 
-    if (this.skipCount !== undefined) {
-      result = result.slice(this.skipCount);
+    // İlişkili içerikleri yükle
+    if (this.includeRelations.length > 0) {
+      for (const item of result) {
+        for (const relation of this.includeRelations) {
+          const relationData = await this.loadRelation(item, relation);
+          if (relationData) {
+            (item as any)[`${relation}-data`] = relationData;
+          }
+        }
+      }
     }
 
-    if (this.limitCount !== undefined) {
-      result = result.slice(0, this.limitCount);
+    // Sayfalama
+    if (this.skipValue !== undefined) {
+      result = result.slice(this.skipValue);
+    }
+
+    if (this.limitValue !== undefined) {
+      result = result.slice(0, this.limitValue);
     }
 
     return result;
   }
 
-  async getWithRelations<K extends keyof T>(): Promise<WithRelation<T, K>[]> {
-    const items = await this.get();
-
-    return Promise.all(
-      items.map(async (item) => {
-        const result = { ...item } as WithRelation<T, K>;
-
-        await Promise.all(
-          this.relations.map(async (relation) => {
-            const relatedData = await this.getRelatedData(item, relation);
-            const relationKey = `${relation}-data` as keyof WithRelation<T, K>;
-            result[relationKey] = relatedData as any;
-          }),
-        );
-
-        return result;
-      }),
-    );
-  }
-
+  /**
+   * İlk kaydı döndürür
+   */
   async first(): Promise<T | null> {
     const items = await this.get();
     return items[0] ?? null;
   }
 
-  async firstWithRelations<K extends keyof T>(): Promise<WithRelation<T, K> | null> {
-    const items = await this.getWithRelations<K>();
-    return items[0] ?? null;
+  /**
+   * Kayıt sayısını döndürür
+   */
+  async count(): Promise<number> {
+    const items = await this.get();
+    return items.length;
   }
 }

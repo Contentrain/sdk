@@ -7,7 +7,7 @@ export default antfu({
     '**/node_modules',
     'dist',
     'node_modules',
-    'reference/**',
+    '__mocks__',
     '**/*.md',
     '**/*.mdx',
     '**/*.markdown',

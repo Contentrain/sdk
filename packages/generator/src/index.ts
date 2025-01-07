@@ -2,18 +2,7 @@ import type { ContentrainField, ContentrainModelMetadata } from '@contentrain/ty
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { ErrorCode } from '@contentrain/types';
-
-// Constants
-const FieldTypeComponentMap = {
-  string: ['single-line-text', 'multi-line-text', 'email', 'url', 'slug', 'color', 'json', 'md-editor', 'rich-text-editor'] as const,
-  number: ['integer', 'decimal', 'rating', 'percent', 'phone-number'] as const,
-  boolean: ['checkbox', 'switch'] as const,
-  array: ['single-line-text', 'multi-line-text', 'email', 'url', 'slug', 'color', 'integer', 'decimal', 'rating', 'percent', 'phone-number'] as const,
-  date: ['date', 'date-time'] as const,
-  media: ['media'] as const,
-  relation: ['one-to-one', 'one-to-many'] as const,
-} as const;
+import { ErrorCode, FieldTypeComponentMap } from '@contentrain/types';
 
 // Types
 export interface GeneratorConfig {

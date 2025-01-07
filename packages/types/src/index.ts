@@ -162,7 +162,7 @@ export interface ContentrainRelation {
 export type SortDirection = 'asc' | 'desc';
 export type RelationType = 'one-to-one' | 'one-to-many';
 
-// Filter Types
+// Query & Filter Types
 export type FilterOperator =
   | 'eq'
   | 'neq'
@@ -178,13 +178,13 @@ export type FilterOperator =
   | 'exists'
   | 'notExists';
 
-export interface FilterCondition<T> {
+export interface FilterCondition<T = any> {
   field: keyof T
   operator: FilterOperator
   value: any
 }
 
-export interface SortCondition<T> {
+export interface SortCondition<T = any> {
   field: keyof T
   direction: SortDirection
 }

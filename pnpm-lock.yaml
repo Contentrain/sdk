@@ -30,25 +30,6 @@ importers:
         specifier: ^5.7.2
         version: 5.7.2
 
-  packages/core:
-    dependencies:
-      '@contentrain/types':
-        specifier: workspace:*
-        version: link:../types
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.5
-        version: 22.10.5
-      tsup:
-        specifier: ^8.3.5
-        version: 8.3.5(typescript@5.7.2)
-      typescript:
-        specifier: ^5.7.2
-        version: 5.7.2
-      vitest:
-        specifier: ^2.1.8
-        version: 2.1.8(@types/node@22.10.5)
-
   packages/generator:
     dependencies:
       '@contentrain/types':
@@ -73,9 +54,6 @@ importers:
 
   packages/query:
     dependencies:
-      '@contentrain/core':
-        specifier: workspace:*
-        version: link:../core
       '@contentrain/types':
         specifier: workspace:*
         version: link:../types

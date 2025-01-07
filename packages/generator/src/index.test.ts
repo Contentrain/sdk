@@ -378,9 +378,9 @@ describe('contentrain Tests', () => {
     });
     it('should correctly write type definitions to a file mock data', () => {
       const generatorX = new ContentrainGenerator({
-        modelsDir: path.join(__dirname, '__mocks__/contentrain/models'),
-        contentDir: path.join(__dirname, '__mocks__/contentrain'),
-        outputDir: path.join(__dirname, '__mocks__/output'),
+        modelsDir: path.join(process.cwd(), '../../__mocks__/contentrain/models'),
+        contentDir: path.join(process.cwd(), '../../__mocks__/contentrain'),
+        outputDir: path.join(process.cwd(), '../../__mocks__/output'),
       });
       (generatorX as any).generate();
     });
@@ -521,8 +521,8 @@ describe('contentrain Tests', () => {
     afterEach(() => {
       // Sadece geçici test dosyalarını temizle
       try {
-        if (fs.existsSync(path.join(__dirname, '__mocks__/temp')))
-          fs.rmSync(path.join(__dirname, '__mocks__/temp'), { recursive: true, force: true });
+        if (fs.existsSync(path.join(__dirname, '__mocks__')))
+          fs.rmSync(path.join(__dirname, '__mocks__'), { recursive: true, force: true });
       }
       catch {
         // Ignore cleanup errors
