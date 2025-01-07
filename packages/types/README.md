@@ -46,7 +46,7 @@ Configuration type for the SDK.
 
 ```typescript
 interface ContentrainConfig {
-  contentPath?: string
+  contentDir?: string
   modelsPath?: string
   assetsPath?: string
   locale?: string

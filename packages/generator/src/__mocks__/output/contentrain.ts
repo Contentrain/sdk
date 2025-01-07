@@ -84,6 +84,165 @@ export interface IWorkItems extends BaseContentrainType {
   'category-data'?: IWorkCategories
 }
 
+
+// Contentrain Metadata
+export const contentrainMetadata = {
+  "services": {
+    "name": "ServicesItems",
+    "modelId": "services",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "processes": {
+    "name": "ProcessItems",
+    "modelId": "processes",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "tabitems": {
+    "name": "TabItems",
+    "modelId": "tabitems",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "workitems": {
+    "name": "WorkItems",
+    "modelId": "workitems",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "workcategories": {
+    "name": "WorkCategories",
+    "modelId": "workcategories",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "faqitems": {
+    "name": "FaqItems",
+    "modelId": "faqitems",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "sections": {
+    "name": "Sections",
+    "modelId": "sections",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "sociallinks": {
+    "name": "SocialLinks",
+    "modelId": "sociallinks",
+    "localization": false,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "references": {
+    "name": "References",
+    "modelId": "references",
+    "localization": false,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "meta-tags": {
+    "name": "MetaTags",
+    "modelId": "meta-tags",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  "testimonail-items": {
+    "name": "Testimonail Items",
+    "modelId": "testimonail-items",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  }
+} as const;
+
+// Metadata type definitions
+export type ContentrainMetadata = typeof contentrainMetadata;
+export type ModelMetadata<T extends keyof ContentrainMetadata> = ContentrainMetadata[T];
+export type ContentrainModelIds = keyof ContentrainMetadata;
+
+// Base Field Type
+export interface ContentrainField {
+  name: string
+  fieldId: string
+  componentId: string
+  fieldType: 'string' | 'number' | 'boolean' | 'array' | 'date' | 'media' | 'relation'
+  options: ContentrainFieldOptions
+  validations: ContentrainValidations
+  system?: boolean
+  defaultField?: boolean
+  modelId: string
+}
+
+// Field Validation Types
+export interface ContentrainValidation {
+  value: boolean;
+  message?: string;
+}
+
+export interface ContentrainValidations {
+  'required-field'?: ContentrainValidation;
+  'unique-field'?: ContentrainValidation;
+  'min-length'?: ContentrainValidation & { minLength: number };
+  'max-length'?: ContentrainValidation & { maxLength: number };
+}
+
+// Field Option Types
+export interface ContentrainTitleFieldOption {
+  value: boolean;
+}
+
+export interface ContentrainDefaultValueOption<T> {
+  value: boolean;
+  form: {
+    [K: string]: {
+      value: T;
+    };
+  };
+}
+
+export interface ContentrainReferenceOption {
+  value: boolean;
+  form: {
+    reference: {
+      value: string;
+    };
+  };
+}
+
+export interface ContentrainFieldOptions {
+  'title-field'?: ContentrainTitleFieldOption;
+  'default-value'?: ContentrainDefaultValueOption<string | number | boolean>;
+  'reference'?: ContentrainReferenceOption;
+}
+
+// Enhanced Field Type
+export interface ContentrainFieldDefinition extends Omit<ContentrainField, 'options' | 'validations'> {
+  validations?: ContentrainValidations;
+  options?: ContentrainFieldOptions;
+}
+
 // Type mapping for model IDs to their respective interfaces
 export type ContentrainTypeMap = {
   'faqitems': IFaqItems

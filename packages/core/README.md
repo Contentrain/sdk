@@ -18,7 +18,7 @@ const core = new ContentrainCore()
 
 // Initialize with custom configuration
 const customCore = new ContentrainCore({
-  contentPath: 'custom/content/path',
+  contentDir: 'custom/content/path',
   modelsPath: 'custom/models/path',
   locale: 'en'
 })
@@ -49,7 +49,7 @@ Creates a new instance of ContentrainCore.
 #### Parameters
 
 - `config` (optional): Configuration object
-  - `contentPath`: Path to content directory (default: 'contentrain')
+  - `contentDir`: Path to content directory (default: 'contentrain')
   - `modelsPath`: Path to models directory (default: 'contentrain/models')
   - `assetsPath`: Path to assets directory (default: 'contentrain/assets')
   - `locale`: Locale for content (default: undefined)

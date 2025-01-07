@@ -42,13 +42,13 @@ describe('contentrain types', () => {
 
   it('should have correct ContentrainConfig type', () => {
     const config: ContentrainConfig = {
-      contentPath: 'contentrain',
+      contentDir: 'contentrain',
       modelsPath: 'contentrain/models',
       assetsPath: 'contentrain/assets.json',
       locale: 'tr',
     };
 
-    expect(typeof config.contentPath).toBe('string');
+    expect(typeof config.contentDir).toBe('string');
     expect(typeof config.modelsPath).toBe('string');
     expect(typeof config.assetsPath).toBe('string');
     expect(typeof config.locale).toBe('string');

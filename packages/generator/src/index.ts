@@ -1,7 +1,8 @@
-import type { ContentrainError, ContentrainField, ContentrainModelMetadata } from '@contentrain/types';
+import type { ContentrainField, ContentrainModelMetadata } from '@contentrain/types';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { ErrorCode } from '@contentrain/types';
 
 // Constants
 const FieldTypeComponentMap = {
@@ -18,19 +19,42 @@ const FieldTypeComponentMap = {
 export interface GeneratorConfig {
   modelsDir: string
   outputDir: string
-  contentPath: string
+  contentDir: string
 }
 
 // Helper Functions
-function readJsonFile<T>(filePath: string): T | null {
+export function readJsonFile<T>(filePath: string): T {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`File not found: ${filePath}`, {
+      cause: {
+        code: ErrorCode.FILE_NOT_FOUND,
+        path: filePath,
+      },
+    });
+  }
+
   try {
     const fullPath = path.resolve(filePath);
     const fileContent = fs.readFileSync(fullPath, 'utf-8');
     return JSON.parse(fileContent) as T;
   }
   catch (error) {
-    console.error(`Error reading file at ${filePath}:`, error);
-    return null;
+    if (error instanceof SyntaxError) {
+      throw new TypeError(`Invalid JSON in file: ${filePath}`, {
+        cause: {
+          code: ErrorCode.FILE_READ_ERROR,
+          path: filePath,
+          details: { originalError: error },
+        },
+      });
+    }
+    throw new Error(`Error reading file: ${filePath}`, {
+      cause: {
+        code: ErrorCode.FILE_READ_ERROR,
+        path: filePath,
+        details: { originalError: error },
+      },
+    });
   }
 }
 
@@ -41,13 +65,34 @@ export class ContentrainGenerator {
     const defaultConfig: GeneratorConfig = {
       modelsDir: path.join(process.cwd(), 'contentrain/models'),
       outputDir: path.join(process.cwd(), 'types'),
-      contentPath: path.join(process.cwd(), 'contentrain'),
+      contentDir: path.join(process.cwd(), 'contentrain'),
     };
 
     const configPath = path.join(process.cwd(), 'contentrain-config.json');
     if (fs.existsSync(configPath)) {
-      const fileConfig = readJsonFile<Partial<GeneratorConfig>>(configPath) || {};
-      this.config = { ...defaultConfig, ...fileConfig, ...config };
+      try {
+        const fileContent = fs.readFileSync(configPath, 'utf-8');
+        const fileConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
+        this.config = { ...defaultConfig, ...fileConfig, ...config };
+      }
+      catch (error) {
+        if (error instanceof SyntaxError) {
+          throw new TypeError('Invalid JSON in configuration file', {
+            cause: {
+              code: ErrorCode.INVALID_CONFIG,
+              path: configPath,
+              details: { originalError: error },
+            },
+          });
+        }
+        throw new Error('Failed to read configuration file', {
+          cause: {
+            code: ErrorCode.INVALID_CONFIG,
+            path: configPath,
+            details: { originalError: error },
+          },
+        });
+      }
     }
     else {
       this.config = { ...defaultConfig, ...config };
@@ -55,16 +100,29 @@ export class ContentrainGenerator {
   }
 
   // Public Methods
-  async generateTypes(): Promise<void> {
-    const modelFiles = this.getModelFiles(this.config.modelsDir);
-    const modelIds = this.getModelIds(modelFiles);
-    const metadata = this.getMetaData(this.config.modelsDir);
-    let typeDefinitions = this.initializeTypeDefinitions(modelIds);
-    const { generatedCount, skippedCount, errors, interfaceNames, updatedTypeDefinitions } = this.processModelFiles(modelFiles, this.config.modelsDir, typeDefinitions, metadata);
-    typeDefinitions = updatedTypeDefinitions;
-    typeDefinitions += this.finalizeTypeDefinitions(modelIds, interfaceNames, modelFiles, this.config.modelsDir, metadata);
+  generate(): void {
+    try {
+      const modelFiles = this.getModelFiles(this.config.modelsDir);
+      const modelIds = this.getModelIds(modelFiles);
+      const metadata = this.getMetaData(this.config.modelsDir);
+      let typeDefinitions = this.initializeTypeDefinitions(modelIds);
+      const { generatedCount, skippedCount, errors, interfaceNames, updatedTypeDefinitions } = this.processModelFiles(modelFiles, this.config.modelsDir, typeDefinitions, metadata);
+      typeDefinitions = updatedTypeDefinitions;
+      typeDefinitions += this.finalizeTypeDefinitions(modelIds, interfaceNames, modelFiles, this.config.modelsDir, metadata);
 
-    this.writeTypeDefinitions(this.config.outputDir, typeDefinitions, generatedCount, skippedCount, errors);
+      this.writeTypeDefinitions(this.config.outputDir, typeDefinitions, generatedCount, skippedCount, errors);
+    }
+    catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Failed to generate types', {
+        cause: {
+          code: ErrorCode.TYPE_GENERATION_ERROR,
+          details: { originalError: error },
+        },
+      });
+    }
   }
 
   // Type Generation Methods
@@ -98,13 +156,13 @@ ${modelIdType}`;
     const interfaceNames = new Map<string, string>();
 
     modelFiles.forEach((file) => {
-      const modelId = path.basename(file, '.json');
-      const modelPath = path.join(modelsDir, file);
-      const modelContent: ContentrainField[] = readJsonFile<ContentrainField[]>(modelPath) || [];
-      const modelMetadata: ContentrainModelMetadata | undefined = metadata.find(m => m.modelId === modelId);
-      const modelName = modelMetadata?.name || modelId;
-
       try {
+        const modelId = path.basename(file, '.json');
+        const modelPath = path.join(modelsDir, file);
+        const modelContent: ContentrainField[] = readJsonFile<ContentrainField[]>(modelPath) || [];
+        const modelMetadata: ContentrainModelMetadata | undefined = metadata.find(m => m.modelId === modelId);
+        const modelName = modelMetadata?.name || modelId;
+
         this.checkDuplicateFields(modelContent, modelName);
         const interfaceName = this.formatInterfaceName({
           name: modelName,
@@ -122,16 +180,11 @@ ${modelIdType}`;
         generatedCount++;
         console.log(`✓ Generated interface for ${interfaceName}`);
       }
-      catch (error: any) {
-        const contentrainError: ContentrainError = {
-          name: 'ContentrainError',
-          message: error.message,
-          code: 'MODEL_PROCESSING_ERROR',
-          path: modelPath,
-        };
-        errors.push({ model: modelName, error: contentrainError.message });
+      catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        errors.push({ model: file, error: errorMessage });
         skippedCount++;
-        console.error('\x1B[31m%s\x1B[0m', `✗ Error in ${modelName}: ${contentrainError.message}`);
+        console.error('\x1B[31m%s\x1B[0m', `✗ Error in ${file}: ${errorMessage}`);
       }
     });
 
@@ -141,9 +194,15 @@ ${modelIdType}`;
   private finalizeTypeDefinitions(modelIds: string[], interfaceNames: Map<string, string>, modelFiles: string[], modelsDir: string, metadata: ContentrainModelMetadata[]): string {
     let typeDefinitions = '';
 
+    // Metadata export
+    typeDefinitions += this.generateMetadataExport(metadata);
+
+    // Validation ve Option tipleri
+    typeDefinitions += this.generateValidationAndOptionTypes();
+
     // ContentrainTypeMap
     const typeMapEntries = modelIds.map(id => `  '${id}': ${interfaceNames.get(id)}`).join('\n');
-    typeDefinitions += `// Type mapping for model IDs to their respective interfaces\nexport type ContentrainTypeMap = {\n${typeMapEntries}\n}\n`;
+    typeDefinitions += `\n// Type mapping for model IDs to their respective interfaces\nexport type ContentrainTypeMap = {\n${typeMapEntries}\n}\n`;
 
     // Relations
     typeDefinitions += this.generateRelationMapping(modelFiles, modelsDir);
@@ -220,7 +279,7 @@ ${modelIdType}`;
 
   private generateLocaleContentMap(metadata: ContentrainModelMetadata[]): string {
     const modelLocales: Record<string, Set<string>> = {};
-    const contentDir = path.resolve(this.config.contentPath);
+    const contentDir = path.resolve(this.config.contentDir);
     const allLocales = new Set<string>();
 
     // Get localized models and their locales
@@ -302,9 +361,85 @@ export interface ContentrainAsset {
 export type ContentrainAssets = ContentrainAsset[]\n`;
   }
 
+  private generateValidationAndOptionTypes(): string {
+    return `
+// Base Field Type
+export interface ContentrainField {
+  name: string
+  fieldId: string
+  componentId: string
+  fieldType: 'string' | 'number' | 'boolean' | 'array' | 'date' | 'media' | 'relation'
+  options: ContentrainFieldOptions
+  validations: ContentrainValidations
+  system?: boolean
+  defaultField?: boolean
+  modelId: string
+}
+
+// Field Validation Types
+export interface ContentrainValidation {
+  value: boolean;
+  message?: string;
+}
+
+export interface ContentrainValidations {
+  'required-field'?: ContentrainValidation;
+  'unique-field'?: ContentrainValidation;
+  'min-length'?: ContentrainValidation & { minLength: number };
+  'max-length'?: ContentrainValidation & { maxLength: number };
+}
+
+// Field Option Types
+export interface ContentrainTitleFieldOption {
+  value: boolean;
+}
+
+export interface ContentrainDefaultValueOption<T> {
+  value: boolean;
+  form: {
+    [K: string]: {
+      value: T;
+    };
+  };
+}
+
+export interface ContentrainReferenceOption {
+  value: boolean;
+  form: {
+    reference: {
+      value: string;
+    };
+  };
+}
+
+export interface ContentrainFieldOptions {
+  'title-field'?: ContentrainTitleFieldOption;
+  'default-value'?: ContentrainDefaultValueOption<string | number | boolean>;
+  'reference'?: ContentrainReferenceOption;
+}
+
+// Enhanced Field Type
+export interface ContentrainFieldDefinition extends Omit<ContentrainField, 'options' | 'validations'> {
+  validations?: ContentrainValidations;
+  options?: ContentrainFieldOptions;
+}
+`;
+  }
+
   // Utility Methods
   private getModelFiles(modelsDir: string): string[] {
-    return fs.readdirSync(modelsDir).filter(file => file.endsWith('.json') && file !== 'metadata.json');
+    try {
+      return fs.readdirSync(modelsDir).filter(file => file.endsWith('.json') && file !== 'metadata.json');
+    }
+    catch (error) {
+      throw new Error(`Failed to read models directory: ${modelsDir}`, {
+        cause: {
+          code: ErrorCode.FILE_READ_ERROR,
+          path: modelsDir,
+          details: { originalError: error },
+        },
+      });
+    }
   }
 
   private getModelIds(modelFiles: string[]): string[] {
@@ -312,12 +447,30 @@ export type ContentrainAssets = ContentrainAsset[]\n`;
   }
 
   private getMetaData(modelsDir: string): ContentrainModelMetadata[] {
-    const metadataPath = path.join(modelsDir, 'metadata.json');
-    const metadata = readJsonFile<ContentrainModelMetadata[]>(metadataPath);
-    if (!metadata) {
-      throw new Error(`Metadata could not be read from ${metadataPath}`);
+    try {
+      const metadataPath = path.join(modelsDir, 'metadata.json');
+      if (!fs.existsSync(metadataPath)) {
+        throw new Error(`Metadata file not found at ${metadataPath}`, {
+          cause: {
+            code: ErrorCode.MODEL_NOT_FOUND,
+            path: metadataPath,
+          },
+        });
+      }
+      return readJsonFile<ContentrainModelMetadata[]>(metadataPath);
     }
-    return metadata;
+    catch (error) {
+      if (error instanceof Error && error.cause) {
+        throw error;
+      }
+      throw new Error('Failed to read metadata', {
+        cause: {
+          code: ErrorCode.FILE_READ_ERROR,
+          path: path.join(modelsDir, 'metadata.json'),
+          details: { originalError: error },
+        },
+      });
+    }
   }
 
   // Type Conversion Methods
@@ -400,7 +553,12 @@ export type ContentrainAssets = ContentrainAsset[]\n`;
       fieldIds.add(field.fieldId);
     });
     if (duplicates.length > 0) {
-      throw new Error(`Duplicate fields found in model '${modelName}': ${duplicates.join(', ')}`);
+      throw new Error(`Duplicate fields found in model '${modelName}': ${duplicates.join(', ')}`, {
+        cause: {
+          code: ErrorCode.MODEL_VALIDATION_ERROR,
+          details: { duplicateFields: duplicates },
+        },
+      });
     }
   }
 
@@ -410,7 +568,15 @@ export type ContentrainAssets = ContentrainAsset[]\n`;
 
   private extractRelations(modelContent: ContentrainField[], modelMetadata: ContentrainModelMetadata[]): Record<string, { model: string, type: string, modelName: string }> {
     if (!modelMetadata || !modelContent) {
-      throw new Error('Model metadata and content are required to extract relations');
+      throw new Error('Model metadata and content are required to extract relations', {
+        cause: {
+          code: ErrorCode.MODEL_VALIDATION_ERROR,
+          details: {
+            hasMetadata: !!modelMetadata,
+            hasContent: !!modelContent,
+          },
+        },
+      });
     }
 
     return modelContent
@@ -432,19 +598,38 @@ export type ContentrainAssets = ContentrainAsset[]\n`;
   // File System Methods
   private writeTypeDefinitions(outputDir: string, typeDefinitions: string, generatedCount: number, skippedCount: number, errors: any[]): void {
     try {
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
+      const outputPath = path.resolve(outputDir);
+
+      if (!fs.existsSync(outputPath)) {
+        fs.mkdirSync(outputPath, { recursive: true });
       }
 
-      fs.writeFileSync(path.join(outputDir, 'contentrain.ts'), typeDefinitions);
-      this.logGenerationSummary(generatedCount, skippedCount, errors, outputDir);
+      let finalPath: string;
+      if (outputPath.endsWith('.ts')) {
+        finalPath = outputPath;
+        const dir = path.dirname(outputPath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      }
+      else {
+        finalPath = path.join(outputPath, 'contentrain.ts');
+      }
+
+      fs.writeFileSync(finalPath, typeDefinitions);
+      this.logGenerationSummary(generatedCount, skippedCount, errors, finalPath);
     }
     catch (error) {
-      console.error('Error writing type definitions:', error);
+      throw new Error('Failed to write type definitions', {
+        cause: {
+          code: ErrorCode.FILE_WRITE_ERROR,
+          details: { originalError: error },
+        },
+      });
     }
   }
 
-  private logGenerationSummary(generatedCount: number, skippedCount: number, errors: any[], outputDir: string): void {
+  private logGenerationSummary(generatedCount: number, skippedCount: number, errors: any[], outputPath: string): void {
     console.log('\n\x1B[36m%s\x1B[0m', 'Generation Summary:');
     console.log('\x1B[36m%s\x1B[0m', '-----------------------------------');
     console.log('\x1B[32m%s\x1B[0m', `✓ Successfully generated ${generatedCount} interfaces`);
@@ -457,6 +642,24 @@ export type ContentrainAssets = ContentrainAsset[]\n`;
       });
     }
 
-    console.log('\n\x1B[32m%s\x1B[0m', `TypeScript types generated in ${path.join(outputDir, 'contentrain.ts')}`);
+    console.log('\n\x1B[32m%s\x1B[0m', `✨ Type definitions generated successfully in ${outputPath}`);
+  }
+
+  private generateMetadataExport(metadata: ContentrainModelMetadata[]): string {
+    // Metadata'yı model ID'lerine göre map'leyelim
+    const metadataMap = metadata.reduce((acc, model) => {
+      acc[model.modelId] = model;
+      return acc;
+    }, {} as Record<string, ContentrainModelMetadata>);
+
+    return `
+// Contentrain Metadata
+export const contentrainMetadata = ${JSON.stringify(metadataMap, null, 2)} as const;
+
+// Metadata type definitions
+export type ContentrainMetadata = typeof contentrainMetadata;
+export type ModelMetadata<T extends keyof ContentrainMetadata> = ContentrainMetadata[T];
+export type ContentrainModelIds = keyof ContentrainMetadata;
+`;
   }
 }

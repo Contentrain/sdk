@@ -32,7 +32,7 @@ import { ContentrainQuery } from '@contentrain/query';
 
 // Create a core instance
 const core = new ContentrainCore({
-  contentPath: 'contentrain',
+  contentDir: 'contentrain',
   locale: 'en' // Optional
 });
 

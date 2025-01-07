@@ -1,48 +1,33 @@
 #!/usr/bin/env node
-import { promises as fs } from 'node:fs';
-import { dirname, join } from 'node:path';
+
 import process from 'node:process';
-import { program } from 'commander';
-import { ContentrainGenerator } from './index';
+import { Command } from 'commander';
+import { ContentrainGenerator } from '.';
 
-async function ensureDirectoryExists(filePath: string): Promise<void> {
-  const dir = dirname(filePath);
-  try {
-    await fs.access(dir);
-  }
-  catch {
-    await fs.mkdir(dir, { recursive: true });
-  }
+const program = new Command();
+
+program
+  .name('contentrain-generator')
+  .description('CLI to generate TypeScript types from Contentrain models')
+  .version('1.0.0')
+  .option('-m, --models <path>', 'Path to models directory')
+  .option('-o, --output <path>', 'Path to output directory')
+  .option('-c, --content <path>', 'Path to content directory')
+  .parse(process.argv);
+
+const options = program.opts();
+
+const generator = new ContentrainGenerator({
+  modelsDir: options.models,
+  outputDir: options.output,
+  contentDir: options.content,
+});
+
+try {
+  generator.generate();
+  console.log('✨ Type definitions generated successfully');
 }
-
-async function main() {
-  program
-    .name('contentrain-generator')
-    .description('Contentrain için TypeScript tip tanımları oluşturur')
-    .option('-o, --output <path>', 'Çıktı dosyası yolu', 'types/contentrain.ts')
-    .option('-m, --models <path>', 'Model tanımları klasörü yolu', 'contentrain/models')
-    .parse();
-
-  const options = program.opts();
-  const outputPath = join(process.cwd(), options.output ?? 'types/contentrain.ts');
-
-  try {
-    const generator = new ContentrainGenerator({
-      modelsDir: options.models,
-      outputDir: dirname(outputPath),
-    });
-    await generator.generateTypes();
-
-    await ensureDirectoryExists(outputPath);
-    await fs.writeFile(outputPath, '', 'utf-8');
-
-    console.log(`✨ Tip tanımları başarıyla oluşturuldu: ${outputPath}`);
-  }
-  catch (error) {
-    console.error('❌ Tip tanımları oluşturulurken hata oluştu:');
-    console.error(error instanceof Error ? error.message : error);
-    process.exit(1);
-  }
+catch (error: unknown) {
+  console.error('❌ Error generating type definitions:', error instanceof Error ? error.message : String(error));
+  process.exit(1);
 }
-
-void main();
