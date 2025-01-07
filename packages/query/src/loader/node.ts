@@ -11,7 +11,8 @@ export class FileSystemLoader implements DataLoader {
     try {
       const fullPath = path.join(this.basePath, filePath);
       const content = await fs.readFile(fullPath, 'utf-8');
-      return JSON.parse(content);
+      const data = JSON.parse(content);
+      return data;
     }
     catch (error) {
       throw new QueryError(
@@ -22,22 +23,27 @@ export class FileSystemLoader implements DataLoader {
     }
   }
 
-  async loadModel<T extends ContentrainBaseModel>(modelId: string, locale?: string): Promise<T[]> {
+  private async fileExists(filePath: string): Promise<boolean> {
     try {
-      // If locale is specified, load language file
-      if (locale) {
-        const filePath = path.join(modelId, `${locale}.json`);
-        return await this.readJsonFile<T[]>(filePath);
-      }
+      await fs.access(path.join(this.basePath, filePath));
+      return true;
+    }
+    catch {
+      return false;
+    }
+  }
 
-      // If no locale, try direct model file first
-      try {
-        return await this.readJsonFile<T[]>(`${modelId}.json`);
+  async loadModel<T extends ContentrainBaseModel>(modelId: string, locale: string = 'en'): Promise<T[]> {
+    try {
+      const filePath = path.join(modelId, `${locale}.json`);
+      if (!await this.fileExists(filePath)) {
+        throw new Error(`Model file not found: ${filePath}`);
       }
-      catch {
-        // If direct file not found, try modelId/modelId.json
-        return await this.readJsonFile<T[]>(path.join(modelId, `${modelId}.json`));
+      const data = await this.readJsonFile<T[]>(filePath);
+      if (!Array.isArray(data)) {
+        throw new TypeError('Invalid model data format');
       }
+      return data;
     }
     catch (error) {
       throw new QueryError(
@@ -48,9 +54,35 @@ export class FileSystemLoader implements DataLoader {
     }
   }
 
-  async loadRelation<T extends ContentrainBaseModel>(relationId: string, id: string): Promise<T | null> {
+  async loadModelSchema<T>(modelId: string): Promise<T> {
     try {
-      const items = await this.loadModel<T>(relationId);
+      const filePath = path.join('models', `${modelId}.json`);
+      if (!await this.fileExists(filePath)) {
+        throw new Error(`Model schema not found: ${filePath}`);
+      }
+      const fields = await this.readJsonFile<T>(filePath);
+      return {
+        name: modelId,
+        modelId,
+        fields,
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      } as T;
+    }
+    catch (error) {
+      throw new QueryError(
+        `Failed to load model schema: ${modelId}`,
+        QueryErrorCodes.MODEL_NOT_FOUND,
+        { modelId, error },
+      );
+    }
+  }
+
+  async loadRelation<T extends ContentrainBaseModel>(relationId: string, id: string, locale: string = 'en'): Promise<T | null> {
+    try {
+      const items = await this.loadModel<T>(relationId, locale);
       return items.find(item => item.ID === id) || null;
     }
     catch {
@@ -60,11 +92,42 @@ export class FileSystemLoader implements DataLoader {
 
   async getModelMetadata(modelId: string): Promise<ContentrainModelMetadata | null> {
     try {
-      const filePath = path.join(modelId, 'metadata.json');
-      return await this.readJsonFile<ContentrainModelMetadata>(filePath);
+      const filePath = path.join('models', 'metadata.json');
+      if (!await this.fileExists(filePath)) {
+        return {
+          name: modelId,
+          modelId,
+          fields: [],
+          localization: true,
+          type: 'JSON',
+          createdBy: 'system',
+          isServerless: false,
+        };
+      }
+      const allMetadata = await this.readJsonFile<Record<string, ContentrainModelMetadata>>(filePath);
+      if (!allMetadata || typeof allMetadata !== 'object') {
+        throw new Error('Invalid metadata format');
+      }
+      return allMetadata[modelId] || {
+        name: modelId,
+        modelId,
+        fields: [],
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      };
     }
     catch {
-      return null;
+      return {
+        name: modelId,
+        modelId,
+        fields: [],
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      };
     }
   }
 }

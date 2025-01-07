@@ -24,6 +24,42 @@ export class NodeRuntime implements RuntimeAdapter {
     }
   }
 
+  private getModelPath(model: string, context?: RuntimeContext): string {
+    if (!this.options?.basePath) {
+      throw new Error('Base path not configured');
+    }
+    return path.join(this.options.basePath, model, `${context?.locale || 'en'}.json`);
+  }
+
+  private getCacheKey(model: string, context?: RuntimeContext): string {
+    return `${model}:${context?.locale || 'en'}`;
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    }
+    catch {
+      return false;
+    }
+  }
+
+  private async getCachedData<T>(key: string): Promise<{ data: T[], buildInfo: any } | null> {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < 300000) { // 5 dakika cache süresi
+      return cached.data;
+    }
+    return null;
+  }
+
+  private async setCachedData<T>(key: string, data: { data: T[], buildInfo: any }): Promise<void> {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+    });
+  }
+
   async loadModel<T extends ContentrainBaseModel>(
     model: string,
     context?: RuntimeContext,
@@ -47,33 +83,59 @@ export class NodeRuntime implements RuntimeAdapter {
     }
 
     const modelPath = this.getModelPath(model, context);
-    const exists = await fs.stat(modelPath).catch(() => false);
+    const exists = await this.fileExists(modelPath);
 
     if (!exists) {
-      throw new Error(`Model not found: ${model}`);
+      return {
+        data: [],
+        metadata: {
+          total: 0,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+          },
+        },
+      };
     }
 
-    const content = await fs.readFile(modelPath, 'utf-8');
-    const data = JSON.parse(content) as T[];
+    try {
+      const content = await fs.readFile(modelPath, 'utf-8');
+      const data = JSON.parse(content) as T[];
 
-    const result: RuntimeResult<T> = {
-      data,
-      metadata: {
-        total: data.length,
-        cached: false,
-        buildInfo: {
-          timestamp: Date.now(),
-          version: '1.0.0', // TODO: Versiyon bilgisi eklenecek
+      const result: RuntimeResult<T> = {
+        data,
+        metadata: {
+          total: data.length,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+          },
         },
-      },
-    };
+      };
 
-    await this.setCachedData(cacheKey, {
-      data: result.data,
-      buildInfo: result.metadata.buildInfo,
-    });
+      await this.setCachedData(cacheKey, {
+        data: result.data,
+        buildInfo: result.metadata.buildInfo,
+      });
 
-    return result;
+      return result;
+    }
+    catch (error) {
+      return {
+        data: [],
+        metadata: {
+          total: 0,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        },
+      };
+    }
   }
 
   async loadRelation<T extends ContentrainBaseModel>(
@@ -107,109 +169,19 @@ export class NodeRuntime implements RuntimeAdapter {
     }
   }
 
-  async cleanup(): Promise<void> {
-    this.cache.clear();
-    if (this.options?.cache?.strategy === 'filesystem') {
-      await this.clearFilesystemCache();
-    }
-    this.options = null;
-  }
-
-  private getModelPath(model: string, context?: RuntimeContext): string {
-    const base = this.options?.basePath || process.cwd();
-    const buildOutput = context?.buildOutput || '.contentrain/dist';
-    return path.join(base, buildOutput, `${model}.json`);
-  }
-
-  private getCacheKey(model: string, context?: RuntimeContext): string {
-    const parts = [model];
-    if (context?.locale)
-      parts.push(`locale:${context.locale}`);
-    if (context?.namespace)
-      parts.push(`ns:${context.namespace}`);
-    return parts.join(':');
-  }
-
-  private async getCachedData<T>(key: string): Promise<{
-    data: T[]
-    buildInfo?: { timestamp: number, version: string }
-  } | null> {
-    if (this.options?.cache?.strategy === 'memory') {
-      const cached = this.cache.get(key);
-      if (cached && this.isValidCache(cached.timestamp)) {
-        return cached.data;
-      }
-    }
-    else if (this.options?.cache?.strategy === 'filesystem') {
-      return this.getFromFilesystem(key);
-    }
-    return null;
-  }
-
-  private async setCachedData(
-    key: string,
-    data: { data: any, buildInfo?: { timestamp: number, version: string } },
-  ): Promise<void> {
-    if (this.options?.cache?.strategy === 'memory') {
-      this.cache.set(key, { data, timestamp: Date.now() });
-    }
-    else if (this.options?.cache?.strategy === 'filesystem') {
-      await this.setToFilesystem(key, data);
-    }
-  }
-
-  private isValidCache(timestamp: number): boolean {
-    const ttl = this.options?.cache?.ttl || 300000; // 5 dakika varsayılan
-    return Date.now() - timestamp < ttl;
-  }
-
-  // Filesystem cache işlemleri
-  private async getFromFilesystem(key: string): Promise<any> {
-    const cached = this.fsCache.get(key);
-    if (cached && this.isValidCache(cached.timestamp)) {
-      return cached.data;
-    }
-
-    const cacheFile = this.getCacheFilePath(key);
-    try {
-      const content = await fs.readFile(cacheFile, 'utf-8');
-      const data = JSON.parse(content);
-      this.fsCache.set(key, { data, timestamp: Date.now() });
-      return data;
-    }
-    catch {
-      return null;
-    }
-  }
-
-  private async setToFilesystem(key: string, data: any): Promise<void> {
-    const cacheFile = this.getCacheFilePath(key);
-    await fs.writeFile(cacheFile, JSON.stringify(data));
-    this.fsCache.set(key, { data, timestamp: Date.now() });
-  }
-
   private async clearFilesystemCache(model?: string): Promise<void> {
     const cacheDir = path.join(process.cwd(), '.contentrain', 'cache');
-
     if (model) {
-      const pattern = `${model}-*.json`;
-      const files = await fs.readdir(cacheDir);
-      for (const file of files) {
-        if (file.match(pattern)) {
-          await fs.unlink(path.join(cacheDir, file));
-        }
-      }
+      const modelCacheDir = path.join(cacheDir, model);
+      await fs.rm(modelCacheDir, { recursive: true, force: true });
     }
     else {
       await fs.rm(cacheDir, { recursive: true, force: true });
-      await fs.mkdir(cacheDir, { recursive: true });
     }
-
-    this.fsCache.clear();
   }
 
-  private getCacheFilePath(key: string): string {
-    const sanitizedKey = key.replace(/[^a-z0-9-]/gi, '-');
-    return path.join(process.cwd(), '.contentrain', 'cache', `${sanitizedKey}.json`);
+  async cleanup(): Promise<void> {
+    this.cache.clear();
+    this.fsCache.clear();
   }
 }

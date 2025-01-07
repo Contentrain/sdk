@@ -46,7 +46,9 @@ describe('runtime Adapters', () => {
       const result = await runtime.loadModel<FAQ>('faqitems', { locale: 'en' });
       const mockData = await loadMockData('faqitems', 'en');
 
-      expect(result.data).toHaveLength(mockData.length);
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBe(mockData.length);
       expect(result.metadata.total).toBe(mockData.length);
       expect(result.metadata.cached).toBe(false);
       expect(result.metadata.buildInfo).toBeDefined();
@@ -56,8 +58,12 @@ describe('runtime Adapters', () => {
       const result = await runtime.loadModel<FAQ>('faqitems', { locale: 'tr' });
       const mockData = await loadMockData('faqitems', 'tr');
 
-      expect(result.data).toHaveLength(mockData.length);
-      expect(result.data[0].question).toBe(mockData[0].question);
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBe(mockData.length);
+      if (mockData.length > 0) {
+        expect(result.data[0].question).toBe(mockData[0].question);
+      }
     });
 
     it('should load relation data', async () => {
@@ -73,7 +79,12 @@ describe('runtime Adapters', () => {
 
     it('should handle invalid model gracefully', async () => {
       const result = await runtime.loadModel('invalid', { locale: 'en' });
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
       expect(result.data).toHaveLength(0);
+      expect(result.metadata.total).toBe(0);
+      expect(result.metadata.cached).toBe(false);
+      expect(result.metadata.buildInfo).toBeDefined();
     });
   });
 
@@ -94,49 +105,58 @@ describe('runtime Adapters', () => {
     });
 
     it('should handle model loading', async () => {
-      // Browser runtime'ı gerçek HTTP istekleri yapmadan test etmek için
-      // mock implementasyonunu kullanıyoruz
       const mockData = await loadMockData('faqitems', 'en');
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
-        Promise.resolve(new Response(JSON.stringify(mockData))),
-      );
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+        return {
+          ok: true,
+          json: async () => mockData,
+        } as Response;
+      });
 
       const result = await runtime.loadModel<FAQ>('faqitems', { locale: 'en' });
-      expect(result.data).toHaveLength(mockData.length);
-      expect(fetchSpy).toHaveBeenCalled();
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBe(mockData.length);
+      expect(result.metadata.total).toBe(mockData.length);
+      expect(result.metadata.cached).toBe(false);
+      expect(result.metadata.buildInfo).toBeDefined();
 
       fetchSpy.mockRestore();
     });
 
-    it('should handle relation loading', async () => {
-      const mockData = await loadMockData('faqitems', 'en');
-      const itemWithCategory = mockData.find(item => item.categoryId);
+    it('should handle model loading errors', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+        return {
+          ok: false,
+          status: 404,
+        } as Response;
+      });
 
-      if (itemWithCategory) {
-        const categoryData = await loadMockData('workcategories', 'en');
-        const category = categoryData.find(cat => cat.ID === itemWithCategory.categoryId);
+      const result = await runtime.loadModel<FAQ>('faqitems', { locale: 'en' });
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data).toHaveLength(0);
+      expect(result.metadata.total).toBe(0);
+      expect(result.metadata.cached).toBe(false);
+      expect(result.metadata.buildInfo).toBeDefined();
+      expect(result.metadata.buildInfo?.error).toBe('HTTP error! status: 404');
 
-        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
-          Promise.resolve(new Response(JSON.stringify(category))),
-        );
-
-        const relation = await runtime.loadRelation('workcategories', itemWithCategory.categoryId, { locale: 'en' });
-        expect(relation).toBeDefined();
-        expect(relation?.ID).toBe(itemWithCategory.categoryId);
-        expect(fetchSpy).toHaveBeenCalled();
-
-        fetchSpy.mockRestore();
-      }
+      fetchSpy.mockRestore();
     });
 
-    it('should handle invalid model gracefully', async () => {
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () =>
-        Promise.resolve(new Response('[]')),
-      );
+    it('should handle network errors', async () => {
+      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
+        throw new Error('Network error');
+      });
 
-      const result = await runtime.loadModel('invalid', { locale: 'en' });
+      const result = await runtime.loadModel<FAQ>('faqitems', { locale: 'en' });
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
       expect(result.data).toHaveLength(0);
-      expect(fetchSpy).toHaveBeenCalled();
+      expect(result.metadata.total).toBe(0);
+      expect(result.metadata.cached).toBe(false);
+      expect(result.metadata.buildInfo).toBeDefined();
+      expect(result.metadata.buildInfo?.error).toBe('Network error');
 
       fetchSpy.mockRestore();
     });

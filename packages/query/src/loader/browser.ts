@@ -11,7 +11,8 @@ export class FetchLoader implements DataLoader {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      return data;
     }
     catch (error) {
       throw new QueryError(
@@ -22,22 +23,14 @@ export class FetchLoader implements DataLoader {
     }
   }
 
-  async loadModel<T extends ContentrainBaseModel>(modelId: string, locale?: string): Promise<T[]> {
+  async loadModel<T extends ContentrainBaseModel>(modelId: string, locale: string = 'en'): Promise<T[]> {
     try {
-      // If locale is specified, load language file
-      if (locale) {
-        const filePath = `${modelId}/${locale}.json`;
-        return await this.fetchJson<T[]>(filePath);
+      const filePath = `${modelId}/${locale}.json`;
+      const data = await this.fetchJson<T[]>(filePath);
+      if (!Array.isArray(data)) {
+        throw new TypeError('Invalid model data format');
       }
-
-      // If no locale, try direct model file first
-      try {
-        return await this.fetchJson<T[]>(`${modelId}.json`);
-      }
-      catch {
-        // If direct file not found, try modelId/modelId.json
-        return await this.fetchJson<T[]>(`${modelId}/${modelId}.json`);
-      }
+      return data;
     }
     catch (error) {
       throw new QueryError(
@@ -48,9 +41,32 @@ export class FetchLoader implements DataLoader {
     }
   }
 
-  async loadRelation<T extends ContentrainBaseModel>(relationId: string, id: string): Promise<T | null> {
+  async loadModelSchema<T>(modelId: string): Promise<T> {
     try {
-      const items = await this.loadModel<T>(relationId);
+      const filePath = `models/${modelId}.json`;
+      const fields = await this.fetchJson<T>(filePath);
+      return {
+        name: modelId,
+        modelId,
+        fields,
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      } as T;
+    }
+    catch (error) {
+      throw new QueryError(
+        `Failed to load model schema: ${modelId}`,
+        QueryErrorCodes.MODEL_NOT_FOUND,
+        { modelId, error },
+      );
+    }
+  }
+
+  async loadRelation<T extends ContentrainBaseModel>(relationId: string, id: string, locale: string = 'en'): Promise<T | null> {
+    try {
+      const items = await this.loadModel<T>(relationId, locale);
       return items.find(item => item.ID === id) || null;
     }
     catch {
@@ -60,11 +76,31 @@ export class FetchLoader implements DataLoader {
 
   async getModelMetadata(modelId: string): Promise<ContentrainModelMetadata | null> {
     try {
-      const filePath = `${modelId}/metadata.json`;
-      return await this.fetchJson<ContentrainModelMetadata>(filePath);
+      const filePath = 'models/metadata.json';
+      const allMetadata = await this.fetchJson<Record<string, ContentrainModelMetadata>>(filePath);
+      if (!allMetadata || typeof allMetadata !== 'object') {
+        throw new Error('Invalid metadata format');
+      }
+      return allMetadata[modelId] || {
+        name: modelId,
+        modelId,
+        fields: [],
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      };
     }
     catch {
-      return null;
+      return {
+        name: modelId,
+        modelId,
+        fields: [],
+        localization: true,
+        type: 'JSON',
+        createdBy: 'system',
+        isServerless: false,
+      };
     }
   }
 }

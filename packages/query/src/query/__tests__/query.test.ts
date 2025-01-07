@@ -9,13 +9,12 @@ interface FAQ extends ContentrainBaseModel {
   question: string
   answer: string
   order: number
-  categoryId?: string
-  category?: any
+  scheduled: boolean
 }
 
-async function loadMockData(modelId: string, locale?: string): Promise<any[]> {
+async function loadMockData(modelId: string, locale: string = 'en'): Promise<ContentrainBaseModel[]> {
   try {
-    const filePath = path.join(process.cwd(), '__mocks__/contentrain', modelId, `${locale || 'en'}.json`);
+    const filePath = path.join(process.cwd(), '__mocks__/contentrain', modelId, `${locale}.json`);
     const content = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(content);
   }
@@ -26,8 +25,8 @@ async function loadMockData(modelId: string, locale?: string): Promise<any[]> {
 
 describe('query Builder', () => {
   const mockRuntime: RuntimeAdapter = {
-    loadModel: vi.fn().mockImplementation(async (modelId: string, options?: { locale?: string }): Promise<RuntimeResult> => {
-      const data = await loadMockData(modelId, options?.locale);
+    loadModel: vi.fn().mockImplementation(async (modelId: string, options?: { locale?: string }): Promise<RuntimeResult<ContentrainBaseModel>> => {
+      const data = await loadMockData(modelId, options?.locale || 'en');
       return {
         data,
         metadata: {
@@ -41,8 +40,8 @@ describe('query Builder', () => {
       };
     }),
     loadRelation: vi.fn().mockImplementation(async (modelId: string, id: string, options?: { locale?: string }): Promise<ContentrainBaseModel | null> => {
-      const items = await loadMockData(modelId, options?.locale);
-      return items.find((item: ContentrainBaseModel) => item.ID === id) || null;
+      const items = await loadMockData(modelId, options?.locale || 'en');
+      return items.find(item => item.ID === id) || null;
     }),
     initialize: vi.fn(),
     cleanup: vi.fn(),
@@ -60,18 +59,19 @@ describe('query Builder', () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results[0]).toHaveProperty('question');
     expect(results[0]).toHaveProperty('answer');
+    expect(results[0]).toHaveProperty('order');
   });
 
   it('should filter items using where clause', async () => {
     const query = createQuery<FAQ>(mockRuntime);
     const results = await query
       .from('faqitems')
-      .where('order', 'eq', 1)
+      .where('order', 'eq', 7)
       .get();
 
     expect(results.length).toBeGreaterThan(0);
     results.forEach((item) => {
-      expect(item.order).toBe(1);
+      expect(item.order).toBe(7);
     });
   });
 
@@ -98,20 +98,6 @@ describe('query Builder', () => {
     expect(results.length).toBeLessThanOrEqual(pageSize);
   });
 
-  it('should load relations', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const results = await query
-      .from('faqitems')
-      .with('category')
-      .get();
-
-    results.forEach((item) => {
-      if (item.categoryId) {
-        expect(item.category).toBeDefined();
-      }
-    });
-  });
-
   it('should handle locale fallback', async () => {
     const query = createQuery<FAQ>(mockRuntime, {
       locale: 'tr',
@@ -135,6 +121,8 @@ describe('query Builder', () => {
     const item = await query.from('faqitems').first();
     expect(item).toBeDefined();
     expect(item?.question).toBeDefined();
+    expect(item?.answer).toBeDefined();
+    expect(item?.order).toBeDefined();
   });
 
   it('should handle errors gracefully', async () => {

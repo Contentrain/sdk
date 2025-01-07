@@ -1,6 +1,6 @@
 import type { ContentrainBaseModel } from '@contentrain/types';
 import type { RuntimeAdapter } from '../runtime/types';
-import type { AdapterOptions, AdapterResult } from './types';
+import type { AdapterOneResult, AdapterOptions, AdapterResult } from './types';
 import { useCallback, useEffect, useState } from 'react';
 import { BaseAdapter } from './base';
 
@@ -15,10 +15,10 @@ export function useQuery<T extends ContentrainBaseModel>(
   model: string,
   options?: AdapterOptions,
 ) {
-  type QueryResult = AdapterResult<T[]>;
-
-  const [result, setResult] = useState<QueryResult>({
+  const [result, setResult] = useState<AdapterResult<T>>({
     data: [],
+    total: 0,
+    cached: false,
     error: null,
     isLoading: true,
     isFetching: true,
@@ -28,20 +28,32 @@ export function useQuery<T extends ContentrainBaseModel>(
   });
 
   const refetch = useCallback(async () => {
-    setResult((prev: QueryResult) => ({ ...prev, isFetching: true }));
-    const newResult = await adapter.query<T>(model, options);
-    setResult(newResult);
+    setResult(prev => ({ ...prev, isFetching: true }));
+    try {
+      const queryResult = await adapter.query<T>(model, options);
+      setResult(_ => ({
+        ...queryResult,
+        error: null,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch,
+        invalidate: async () => {
+          await adapter.runtime.invalidateCache(model);
+          await refetch();
+        },
+      }));
+    }
+    catch (error) {
+      setResult(prev => ({
+        ...prev,
+        error: error as Error,
+        isError: true,
+        isLoading: false,
+        isFetching: false,
+      }));
+    }
   }, [adapter, model, options]);
-
-  const invalidate = useCallback(async () => {
-    await adapter.runtime.invalidateCache(model);
-    await refetch();
-  }, [adapter, model, refetch]);
-
-  useEffect(() => {
-    result.refetch = refetch;
-    result.invalidate = invalidate;
-  }, [result, refetch, invalidate]);
 
   useEffect(() => {
     let mounted = true;
@@ -50,12 +62,23 @@ export function useQuery<T extends ContentrainBaseModel>(
       try {
         const queryResult = await adapter.query<T>(model, options);
         if (mounted) {
-          setResult(queryResult);
+          setResult({
+            ...queryResult,
+            error: null,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+            refetch,
+            invalidate: async () => {
+              await adapter.runtime.invalidateCache(model);
+              await refetch();
+            },
+          });
         }
       }
       catch (error) {
         if (mounted) {
-          setResult((prev: QueryResult) => ({
+          setResult(prev => ({
             ...prev,
             error: error as Error,
             isError: true,
@@ -71,7 +94,7 @@ export function useQuery<T extends ContentrainBaseModel>(
     return () => {
       mounted = false;
     };
-  }, [adapter, model, options]);
+  }, [adapter, model, options, refetch]);
 
   return result;
 }
@@ -82,10 +105,10 @@ export function useOne<T extends ContentrainBaseModel>(
   id: string,
   options?: AdapterOptions,
 ) {
-  type OneResult = AdapterResult<T | null>;
-
-  const [result, setResult] = useState<OneResult>({
-    data: null,
+  const [result, setResult] = useState<AdapterOneResult<T>>({
+    data: [],
+    total: 0,
+    cached: false,
     error: null,
     isLoading: true,
     isFetching: true,
@@ -95,34 +118,61 @@ export function useOne<T extends ContentrainBaseModel>(
   });
 
   const refetch = useCallback(async () => {
-    setResult((prev: OneResult) => ({ ...prev, isFetching: true }));
-    const newResult = await adapter.getOne<T>(model, id, options);
-    setResult(newResult);
+    setResult(prev => ({ ...prev, isFetching: true }));
+    try {
+      const item = await adapter.getOne<T>(model, id, options);
+      setResult({
+        data: item ? [item] : [],
+        total: item ? 1 : 0,
+        cached: false,
+        error: null,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch,
+        invalidate: async () => {
+          await adapter.runtime.invalidateCache(model);
+          await refetch();
+        },
+      });
+    }
+    catch (error) {
+      setResult(prev => ({
+        ...prev,
+        error: error as Error,
+        isError: true,
+        isLoading: false,
+        isFetching: false,
+      }));
+    }
   }, [adapter, model, id, options]);
-
-  const invalidate = useCallback(async () => {
-    await adapter.runtime.invalidateCache(model);
-    await refetch();
-  }, [adapter, model, refetch]);
-
-  useEffect(() => {
-    result.refetch = refetch;
-    result.invalidate = invalidate;
-  }, [result, refetch, invalidate]);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchData = async () => {
       try {
-        const queryResult = await adapter.getOne<T>(model, id, options);
+        const item = await adapter.getOne<T>(model, id, options);
         if (mounted) {
-          setResult(queryResult);
+          setResult({
+            data: item ? [item] : [],
+            total: item ? 1 : 0,
+            cached: false,
+            error: null,
+            isLoading: false,
+            isFetching: false,
+            isError: false,
+            refetch,
+            invalidate: async () => {
+              await adapter.runtime.invalidateCache(model);
+              await refetch();
+            },
+          });
         }
       }
       catch (error) {
         if (mounted) {
-          setResult((prev: OneResult) => ({
+          setResult(prev => ({
             ...prev,
             error: error as Error,
             isError: true,
@@ -138,7 +188,7 @@ export function useOne<T extends ContentrainBaseModel>(
     return () => {
       mounted = false;
     };
-  }, [adapter, model, id, options]);
+  }, [adapter, model, id, options, refetch]);
 
   return result;
 }

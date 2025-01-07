@@ -22,6 +22,44 @@ export class BrowserRuntime implements RuntimeAdapter {
     }
   }
 
+  private getModelUrl(model: string, context?: RuntimeContext): string {
+    if (!this.options?.basePath) {
+      throw new Error('Base path not configured');
+    }
+    return `${this.options.basePath}/${model}/${context?.locale || 'en'}.json`;
+  }
+
+  private getCacheKey(model: string, context?: RuntimeContext): string {
+    return `${model}:${context?.locale || 'en'}`;
+  }
+
+  private async getCachedData<T>(key: string): Promise<{ data: T[], buildInfo: any } | null> {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < 300000) { // 5 dakika cache süresi
+      return cached.data;
+    }
+
+    if (this.indexedDB) {
+      const data = await this.indexedDB.get(key);
+      if (data) {
+        return data;
+      }
+    }
+
+    return null;
+  }
+
+  private async setCachedData<T>(key: string, data: { data: T[], buildInfo: any }): Promise<void> {
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+    });
+
+    if (this.indexedDB) {
+      await this.indexedDB.set(key, data);
+    }
+  }
+
   async loadModel<T extends ContentrainBaseModel>(
     model: string,
     context?: RuntimeContext,
@@ -44,30 +82,57 @@ export class BrowserRuntime implements RuntimeAdapter {
       };
     }
 
-    const response = await fetch(this.getModelUrl(model, context));
-    if (!response.ok) {
-      throw new Error(`Failed to load model: ${model}`);
-    }
+    try {
+      const response = await fetch(this.getModelUrl(model, context));
+      if (!response.ok) {
+        return {
+          data: [],
+          metadata: {
+            total: 0,
+            cached: false,
+            buildInfo: {
+              timestamp: Date.now(),
+              version: '1.0.0',
+              error: `HTTP error! status: ${response.status}`,
+            },
+          },
+        };
+      }
 
-    const data = await response.json();
-    const result: RuntimeResult<T> = {
-      data,
-      metadata: {
-        total: data.length,
-        cached: false,
-        buildInfo: {
-          timestamp: Date.now(),
-          version: '1.0.0', // TODO: Versiyon bilgisi eklenecek
+      const data = await response.json() as T[];
+      const result: RuntimeResult<T> = {
+        data,
+        metadata: {
+          total: data.length,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+          },
         },
-      },
-    };
+      };
 
-    await this.setCachedData(cacheKey, {
-      data: result.data,
-      buildInfo: result.metadata.buildInfo,
-    });
+      await this.setCachedData(cacheKey, {
+        data: result.data,
+        buildInfo: result.metadata.buildInfo,
+      });
 
-    return result;
+      return result;
+    }
+    catch (error) {
+      return {
+        data: [],
+        metadata: {
+          total: 0,
+          cached: false,
+          buildInfo: {
+            timestamp: Date.now(),
+            version: '1.0.0',
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        },
+      };
+    }
   }
 
   async loadRelation<T extends ContentrainBaseModel>(
@@ -104,60 +169,9 @@ export class BrowserRuntime implements RuntimeAdapter {
   async cleanup(): Promise<void> {
     this.cache.clear();
     if (this.indexedDB) {
-      await this.indexedDB.cleanup();
-      this.indexedDB = null;
+      await this.indexedDB.clear();
+      await this.indexedDB.close();
     }
-    this.options = null;
-  }
-
-  private getModelUrl(model: string, context?: RuntimeContext): string {
-    const base = this.options?.basePath || '';
-    const buildOutput = context?.buildOutput || '';
-    return `${base}/${buildOutput}/${model}.json`;
-  }
-
-  private getCacheKey(model: string, context?: RuntimeContext): string {
-    const parts = [model];
-    if (context?.locale)
-      parts.push(`locale:${context.locale}`);
-    if (context?.namespace)
-      parts.push(`ns:${context.namespace}`);
-    return parts.join(':');
-  }
-
-  private async getCachedData<T>(key: string): Promise<{
-    data: T[]
-    buildInfo?: { timestamp: number, version: string }
-  } | null> {
-    if (this.options?.cache?.strategy === 'memory') {
-      const cached = this.cache.get(key);
-      if (cached && this.isValidCache(cached.timestamp)) {
-        return cached.data;
-      }
-    }
-    else if (this.options?.cache?.strategy === 'indexeddb' && this.indexedDB) {
-      return this.indexedDB.get(key);
-    }
-    return null;
-  }
-
-  private async setCachedData(
-    key: string,
-    data: { data: any, buildInfo?: { timestamp: number, version: string } },
-  ): Promise<void> {
-    if (this.options?.cache?.strategy === 'memory') {
-      this.cache.set(key, { data, timestamp: Date.now() });
-    }
-    else if (this.options?.cache?.strategy === 'indexeddb' && this.indexedDB) {
-      await this.indexedDB.set(key, data, {
-        ttl: this.options.cache?.ttl,
-        namespace: this.options.cache?.namespace,
-      });
-    }
-  }
-
-  private isValidCache(timestamp: number): boolean {
-    const ttl = this.options?.cache?.ttl || 300000; // 5 dakika varsayılan
-    return Date.now() - timestamp < ttl;
+    this.indexedDB = null;
   }
 }

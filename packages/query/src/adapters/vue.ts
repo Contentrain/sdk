@@ -1,6 +1,6 @@
 import type { ContentrainBaseModel } from '@contentrain/types';
 import type { RuntimeAdapter } from '../runtime/types';
-import type { AdapterOptions, AdapterResult } from './types';
+import type { AdapterOneResult, AdapterOptions, AdapterResult } from './types';
 import { onUnmounted, ref, watch } from 'vue';
 import { BaseAdapter } from './base';
 
@@ -15,10 +15,10 @@ export function useQuery<T extends ContentrainBaseModel>(
   model: string,
   options?: AdapterOptions,
 ) {
-  type QueryResult = AdapterResult<T[]>;
-
-  const result = ref<QueryResult>({
+  const result = ref<AdapterResult<T>>({
     data: [],
+    total: 0,
+    cached: false,
     error: null,
     isLoading: true,
     isFetching: true,
@@ -31,7 +31,18 @@ export function useQuery<T extends ContentrainBaseModel>(
     result.value.isFetching = true;
     try {
       const queryResult = await adapter.query<T>(model, options);
-      result.value = queryResult;
+      result.value = {
+        ...queryResult,
+        error: null,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: fetchData,
+        invalidate: async () => {
+          await adapter.runtime.invalidateCache(model);
+          await fetchData();
+        },
+      };
     }
     catch (error) {
       result.value = {
@@ -43,15 +54,6 @@ export function useQuery<T extends ContentrainBaseModel>(
       };
     }
   };
-
-  const invalidateData = async () => {
-    await adapter.runtime.invalidateCache(model);
-    await fetchData();
-  };
-
-  // Metodları güncelle
-  result.value.refetch = fetchData;
-  result.value.invalidate = invalidateData;
 
   // İlk yükleme
   void fetchData();
@@ -74,10 +76,10 @@ export function useOne<T extends ContentrainBaseModel>(
   id: string,
   options?: AdapterOptions,
 ) {
-  type OneResult = AdapterResult<T | null>;
-
-  const result = ref<OneResult>({
-    data: null,
+  const result = ref<AdapterOneResult<T>>({
+    data: [],
+    total: 0,
+    cached: false,
     error: null,
     isLoading: true,
     isFetching: true,
@@ -89,8 +91,21 @@ export function useOne<T extends ContentrainBaseModel>(
   const fetchData = async () => {
     result.value.isFetching = true;
     try {
-      const queryResult = await adapter.getOne<T>(model, id, options);
-      result.value = queryResult;
+      const item = await adapter.getOne<T>(model, id, options);
+      result.value = {
+        data: item ? [item] : [],
+        total: item ? 1 : 0,
+        cached: false,
+        error: null,
+        isLoading: false,
+        isFetching: false,
+        isError: false,
+        refetch: fetchData,
+        invalidate: async () => {
+          await adapter.runtime.invalidateCache(model);
+          await fetchData();
+        },
+      };
     }
     catch (error) {
       result.value = {
@@ -102,15 +117,6 @@ export function useOne<T extends ContentrainBaseModel>(
       };
     }
   };
-
-  const invalidateData = async () => {
-    await adapter.runtime.invalidateCache(model);
-    await fetchData();
-  };
-
-  // Metodları güncelle
-  result.value.refetch = fetchData;
-  result.value.invalidate = invalidateData;
 
   // İlk yükleme
   void fetchData();

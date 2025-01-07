@@ -21,21 +21,7 @@ export abstract class BaseAdapter implements FrameworkAdapter {
   async query<T extends ContentrainBaseModel>(
     model: string,
     options?: AdapterOptions,
-  ): Promise<AdapterResult<T[]>> {
-    const result: AdapterResult<T[]> = {
-      data: [] as T[],
-      error: null,
-      isLoading: true,
-      isFetching: true,
-      isError: false,
-      refetch: async () => {
-        await this.invalidateAndRefetch(model);
-      },
-      invalidate: async () => {
-        await this.runtime.invalidateCache(model);
-      },
-    };
-
+  ): Promise<AdapterResult<T>> {
     try {
       await this.executeHooks('onBeforeQuery', model);
 
@@ -45,28 +31,18 @@ export abstract class BaseAdapter implements FrameworkAdapter {
         buildOutput: options?.basePath,
       });
 
-      result.data = queryResult.data;
-      result.isLoading = false;
-      result.isFetching = false;
-
-      if (queryResult.metadata.cached) {
-        await this.executeHooks('onCacheHit', model);
-      }
-      else {
-        await this.executeHooks('onCacheMiss', model);
-      }
-
       await this.executeHooks('onAfterQuery', model, queryResult.data);
+
+      return {
+        data: queryResult.data,
+        total: queryResult.metadata.total,
+        cached: queryResult.metadata.cached,
+      };
     }
     catch (error) {
-      result.error = error as Error;
-      result.isError = true;
-      result.isLoading = false;
-      result.isFetching = false;
       await this.executeHooks('onError', error as Error);
+      throw error;
     }
-
-    return result;
   }
 
   async getOne<T extends ContentrainBaseModel>(
@@ -74,20 +50,6 @@ export abstract class BaseAdapter implements FrameworkAdapter {
     id: string,
     options?: AdapterOptions,
   ): Promise<AdapterResult<T | null>> {
-    const result: AdapterResult<T | null> = {
-      data: null,
-      error: null,
-      isLoading: true,
-      isFetching: true,
-      isError: false,
-      refetch: async () => {
-        await this.invalidateAndRefetch(model);
-      },
-      invalidate: async () => {
-        await this.runtime.invalidateCache(model);
-      },
-    };
-
     try {
       await this.executeHooks('onBeforeQuery', model);
 
@@ -97,21 +59,18 @@ export abstract class BaseAdapter implements FrameworkAdapter {
         buildOutput: options?.basePath,
       });
 
-      result.data = item;
-      result.isLoading = false;
-      result.isFetching = false;
-
       await this.executeHooks('onAfterQuery', model, item ? [item] : []);
+
+      return {
+        data: item ? [item] : [],
+        total: item ? 1 : 0,
+        cached: false,
+      };
     }
     catch (error) {
-      result.error = error as Error;
-      result.isError = true;
-      result.isLoading = false;
-      result.isFetching = false;
       await this.executeHooks('onError', error as Error);
+      throw error;
     }
-
-    return result;
   }
 
   async prefetch(models: string[]): Promise<void> {

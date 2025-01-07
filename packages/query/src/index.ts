@@ -37,8 +37,8 @@ export type {
 export * from './runtime';
 export type {
   RuntimeAdapter,
-  RuntimeCacheOptions,
   RuntimeContext,
+  RuntimeMetadata,
   RuntimeOptions,
   RuntimeResult,
 } from './runtime/types';
