@@ -2,7 +2,6 @@ import type {
   ContentrainBaseModel,
   ContentrainField,
   ContentrainModelMetadata,
-  ContentrainModelType,
 } from '@contentrain/types';
 import type { ModelMetadata } from '../types';
 import type { DataLoader } from './types';
@@ -57,18 +56,12 @@ export class FileSystemLoader implements DataLoader {
     model: string,
     locale?: string,
   ): Promise<T[]> {
-    try {
-      const metadata = await this.getModelMetadata(model);
-      const filePath = metadata.localization && locale
-        ? join(this.basePath, model, `${locale}.json`)
-        : join(this.basePath, model, 'index.json');
+    const metadata = await this.getModelMetadata(model);
+    const filePath = metadata.localization && locale
+      ? join(this.basePath, model, `${locale}.json`)
+      : join(this.basePath, model, 'index.json');
 
-      return await this.readJsonFile<T[]>(filePath);
-    }
-    catch (error) {
-      console.error(`Error loading model ${model}:`, error);
-      return [];
-    }
+    return this.readJsonFile<T[]>(filePath);
   }
 
   async loadRelation<T extends ContentrainBaseModel>(
@@ -76,13 +69,7 @@ export class FileSystemLoader implements DataLoader {
     id: string,
     locale?: string,
   ): Promise<T | null> {
-    try {
-      const items = await this.loadModel<T>(model, locale);
-      return items.find(item => item.ID === id) || null;
-    }
-    catch (error) {
-      console.error(`Error loading relation ${model}:`, error);
-      return null;
-    }
+    const items = await this.loadModel<T>(model, locale);
+    return items.find(item => item.ID === id) || null;
   }
 }

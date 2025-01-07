@@ -1,227 +1,278 @@
-import type { ContentrainBaseModel } from '@contentrain/types';
-import type { DataLoader } from '../types';
-import { join } from 'node:path';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { mockData } from '../../__mocks__/data';
 import { FetchLoader } from '../browser';
 import { FileSystemLoader } from '../node';
 
-interface TestPost extends ContentrainBaseModel {
-  title: string
-  content: string
-  categoryId: string
-}
-
-interface TestCategory extends ContentrainBaseModel {
-  name: string
-}
-
-interface TestMetadata {
-  name: string
-  modelId: string
-  localization: boolean
-  type: string
-}
-
-interface TestData {
-  metadata: TestMetadata[]
-  posts: {
-    fields: unknown[]
-    tr: TestPost[]
-    en: TestPost[]
-  }
-  categories: TestCategory[]
-}
-
-const TEST_DATA: TestData = {
-  metadata: [
-    {
-      name: 'Posts',
-      modelId: 'posts',
-      localization: true,
-      type: 'MD',
-    },
-    {
-      name: 'Categories',
-      modelId: 'categories',
-      localization: false,
-      type: 'JSON',
-    },
-  ],
-  posts: {
-    fields: [],
-    tr: [
-      {
-        ID: '1',
-        title: 'Merhaba Dünya',
-        content: 'İçerik',
-        categoryId: 'cat1',
-        status: 'publish',
-        createdAt: '2024-01-07T00:00:00.000Z',
-        updatedAt: '2024-01-07T00:00:00.000Z',
-        scheduled: false,
-      },
-    ],
-    en: [
-      {
-        ID: '1',
-        title: 'Hello World',
-        content: 'Content',
-        categoryId: 'cat1',
-        status: 'publish',
-        createdAt: '2024-01-07T00:00:00.000Z',
-        updatedAt: '2024-01-07T00:00:00.000Z',
-        scheduled: false,
-      },
-    ],
-  },
-  categories: [
-    {
-      ID: 'cat1',
-      name: 'Technology',
-      status: 'publish',
-      createdAt: '2024-01-07T00:00:00.000Z',
-      updatedAt: '2024-01-07T00:00:00.000Z',
-      scheduled: false,
-    },
-  ],
-};
-
 describe('dataLoader', () => {
-  let fsLoader: DataLoader;
-  let fetchLoader: DataLoader;
-
-  beforeEach(() => {
-    // Setup FileSystemLoader
-    fsLoader = new FileSystemLoader(join(process.cwd(), 'contentrain'));
-
-    // Setup FetchLoader
-    vi.stubGlobal('fetch', vi.fn());
-    fetchLoader = new FetchLoader('/api/contentrain');
-  });
-
   describe('loadModel', () => {
     it('should load localized model data', async () => {
-      // Mock FileSystemLoader
-      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(
-        (async (path: string) => {
-          if (path.includes('metadata.json'))
-            return TEST_DATA.metadata;
-          if (path.includes('posts.json'))
-            return TEST_DATA.posts.fields;
-          if (path.includes('tr.json'))
-            return TEST_DATA.posts.tr;
-          if (path.includes('en.json'))
-            return TEST_DATA.posts.en;
-          return [];
-        }) as any,
-      );
-
-      // Mock FetchLoader
-      const mockFetch = vi.fn().mockImplementation(async (url: string) => {
-        let responseData: unknown[] = [];
-        if (url.includes('metadata.json'))
-          responseData = TEST_DATA.metadata;
-        if (url.includes('posts.json'))
-          responseData = TEST_DATA.posts.fields;
-        if (url.includes('tr.json'))
-          responseData = TEST_DATA.posts.tr;
-        if (url.includes('en.json'))
-          responseData = TEST_DATA.posts.en;
-
-        return Promise.resolve({
-          ok: true,
-          json: async () => Promise.resolve(responseData),
-        });
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
       // Test FileSystemLoader
-      const trPosts = await fsLoader.loadModel<TestPost>('posts', 'tr');
-      expect(trPosts).toEqual(TEST_DATA.posts.tr);
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Posts',
+              modelId: 'posts',
+              localization: true,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('posts.json')) {
+          return [];
+        }
+        if (path.includes('posts/index.json')) {
+          return mockData.posts;
+        }
+        throw new Error('File not found');
+      });
 
-      const enPosts = await fsLoader.loadModel<TestPost>('posts', 'en');
-      expect(enPosts).toEqual(TEST_DATA.posts.en);
+      const posts = await fsLoader.loadModel('posts');
+      expect(posts).toEqual(mockData.posts);
 
       // Test FetchLoader
-      const trPostsFetch = await fetchLoader.loadModel<TestPost>('posts', 'tr');
-      expect(trPostsFetch).toEqual(TEST_DATA.posts.tr);
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Posts',
+              modelId: 'posts',
+              localization: true,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('posts.json')) {
+          return [];
+        }
+        if (path.includes('posts/index.json')) {
+          return mockData.posts;
+        }
+        throw new Error('File not found');
+      });
 
-      const enPostsFetch = await fetchLoader.loadModel<TestPost>('posts', 'en');
-      expect(enPostsFetch).toEqual(TEST_DATA.posts.en);
+      const fetchedPosts = await fetchLoader.loadModel('posts');
+      expect(fetchedPosts).toEqual(mockData.posts);
     });
 
     it('should load non-localized model data', async () => {
-      // Mock FileSystemLoader
-      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(
-        (async (path: string) => {
-          if (path.includes('metadata.json'))
-            return TEST_DATA.metadata;
-          if (path.includes('categories.json'))
-            return TEST_DATA.categories;
-          return [];
-        }) as any,
-      );
-
-      // Mock FetchLoader
-      const mockFetch = vi.fn().mockImplementation(async (url: string) => {
-        let responseData: unknown[] = [];
-        if (url.includes('metadata.json'))
-          responseData = TEST_DATA.metadata;
-        if (url.includes('categories.json'))
-          responseData = TEST_DATA.categories;
-
-        return Promise.resolve({
-          ok: true,
-          json: async () => Promise.resolve(responseData),
-        });
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
       // Test FileSystemLoader
-      const categories = await fsLoader.loadModel<TestCategory>('categories');
-      expect(categories).toEqual(TEST_DATA.categories);
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const categories = await fsLoader.loadModel('categories');
+      expect(categories).toEqual(mockData.categories);
 
       // Test FetchLoader
-      const categoriesFetch = await fetchLoader.loadModel<TestCategory>('categories');
-      expect(categoriesFetch).toEqual(TEST_DATA.categories);
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const fetchedCategories = await fetchLoader.loadModel('categories');
+      expect(fetchedCategories).toEqual(mockData.categories);
+    });
+
+    it('should handle file not found errors', async () => {
+      // Test FileSystemLoader
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'NonExistent',
+              modelId: 'nonexistent',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        throw new Error('File not found');
+      });
+
+      await expect(fsLoader.loadModel('nonexistent')).rejects.toThrow('File not found');
+
+      // Test FetchLoader
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'NonExistent',
+              modelId: 'nonexistent',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        throw new Error('File not found');
+      });
+
+      await expect(fetchLoader.loadModel('nonexistent')).rejects.toThrow('File not found');
     });
   });
 
   describe('loadRelation', () => {
     it('should load related model data', async () => {
-      // Mock FileSystemLoader
-      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(
-        (async (path: string) => {
-          if (path.includes('metadata.json'))
-            return TEST_DATA.metadata;
-          if (path.includes('categories.json'))
-            return TEST_DATA.categories;
-          return [];
-        }) as any,
-      );
-
-      // Mock FetchLoader
-      const mockFetch = vi.fn().mockImplementation(async (url: string) => {
-        let responseData: unknown[] = [];
-        if (url.includes('metadata.json'))
-          responseData = TEST_DATA.metadata;
-        if (url.includes('categories.json'))
-          responseData = TEST_DATA.categories;
-
-        return Promise.resolve({
-          ok: true,
-          json: async () => Promise.resolve(responseData),
-        });
-      });
-      vi.stubGlobal('fetch', mockFetch);
-
       // Test FileSystemLoader
-      const category = await fsLoader.loadRelation<TestCategory>('categories', 'cat1');
-      expect(category).toEqual(TEST_DATA.categories[0]);
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const category = await fsLoader.loadRelation('categories', '1');
+      expect(category).toEqual(mockData.categories[0]);
 
       // Test FetchLoader
-      const categoryFetch = await fetchLoader.loadRelation<TestCategory>('categories', 'cat1');
-      expect(categoryFetch).toEqual(TEST_DATA.categories[0]);
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const fetchedCategory = await fetchLoader.loadRelation('categories', '1');
+      expect(fetchedCategory).toEqual(mockData.categories[0]);
+    });
+
+    it('should return null for non-existent relation', async () => {
+      // Test FileSystemLoader
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const category = await fsLoader.loadRelation('categories', 'nonexistent');
+      expect(category).toBeNull();
+
+      // Test FetchLoader
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockImplementation(async (...args: unknown[]) => {
+        const path = args[0] as string;
+        if (path.includes('metadata.json')) {
+          return [
+            {
+              name: 'Categories',
+              modelId: 'categories',
+              localization: false,
+              type: 'JSON',
+            },
+          ];
+        }
+        if (path.includes('categories.json')) {
+          return [];
+        }
+        if (path.includes('categories/index.json')) {
+          return mockData.categories;
+        }
+        throw new Error('File not found');
+      });
+
+      const fetchedCategory = await fetchLoader.loadRelation('categories', 'nonexistent');
+      expect(fetchedCategory).toBeNull();
+    });
+
+    it('should handle errors when loading relations', async () => {
+      // Test FileSystemLoader
+      const fsLoader = new FileSystemLoader('');
+      vi.spyOn(fsLoader as any, 'readJsonFile').mockRejectedValue(new Error('Failed to load relation'));
+      await expect(fsLoader.loadRelation('categories', '1')).rejects.toThrow('Failed to load relation');
+
+      // Test FetchLoader
+      const fetchLoader = new FetchLoader('');
+      vi.spyOn(fetchLoader as any, 'fetchJson').mockRejectedValue(new Error('Failed to load relation'));
+      await expect(fetchLoader.loadRelation('categories', '1')).rejects.toThrow('Failed to load relation');
     });
   });
 });

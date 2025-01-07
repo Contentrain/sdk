@@ -1,226 +1,112 @@
-import type { CacheManager } from '../cache';
-import type { DataLoader } from '../loader';
-import type {
-  ContentrainBaseModel,
-  PaginationOptions,
-  QueryCondition,
-  QueryOptions,
-  QueryState,
-  SortOption,
-} from '../types';
-import { createCacheManager } from '../cache';
-import { createLoader } from '../loader';
+import type { ContentrainBaseModel } from '@contentrain/types';
+import type { DataLoader } from '../loader/types';
+import type { FilterOperator, OrderByCondition, PaginationOptions, QueryOptions, WhereCondition } from './types';
 
 export class ContentrainQuery<T extends ContentrainBaseModel> {
-  private state: QueryState<T> = {
-    conditions: [],
-    relations: [],
-    relationCounts: [],
-    sorts: [],
-  };
+  private loader: DataLoader;
+  private modelId: string;
+  private locale?: string;
+  private whereConditions: WhereCondition[] = [];
+  private orderByConditions: OrderByCondition[] = [];
+  private pagination: PaginationOptions = {};
 
-  private loader?: DataLoader;
-  private cache: CacheManager;
-
-  constructor(private options: QueryOptions = {}) {
-    this.cache = createCacheManager(options.cacheStrategy || 'none');
+  constructor(modelId: string, options: QueryOptions) {
+    this.loader = options.loader;
+    this.modelId = modelId;
+    this.locale = options.locale;
   }
 
-  private async ensureLoader(): Promise<void> {
-    if (!this.loader) {
-      const isNode = typeof window === 'undefined';
-      this.loader = await createLoader(isNode ? 'node' : 'browser', this.options.basePath || '');
-    }
-  }
-
-  from<K extends string>(model: K): ContentrainQuery<T> {
-    this.state.model = model;
+  where(field: string, operator: FilterOperator, value: unknown): this {
+    this.whereConditions.push({ field, operator, value });
     return this;
   }
 
-  where(field: keyof T, operator: QueryCondition<T>['operator'], value: any): this {
-    this.state.conditions.push({ field, operator, value });
+  whereIn(field: string, values: unknown[]): this {
+    this.whereConditions.push({ field, operator: 'in', value: values });
     return this;
   }
 
-  whereIn(field: keyof T, values: any[]): this {
-    return this.where(field, 'in', values);
-  }
-
-  whereLike(field: keyof T, pattern: string): this {
-    return this.where(field, 'contains', pattern);
-  }
-
-  with(relation: string): this {
-    this.state.relations.push(relation);
+  whereLike(field: string, value: string): this {
+    this.whereConditions.push({ field, operator: 'contains', value });
     return this;
   }
 
-  withCount(relation: string): this {
-    this.state.relationCounts.push(relation);
+  orderBy(field: string, direction: 'asc' | 'desc'): this {
+    this.orderByConditions.push({ field, direction });
     return this;
   }
 
-  orderBy(field: keyof T, direction: SortOption<T>['direction']): this {
-    this.state.sorts.push({ field, direction });
+  take(limit: number): this {
+    this.pagination.take = limit;
     return this;
   }
 
-  locale(locale: string): this {
-    this.state.locale = locale;
+  skip(offset: number): this {
+    this.pagination.skip = offset;
     return this;
-  }
-
-  skip(count: number): this {
-    this.state.skip = count;
-    return this;
-  }
-
-  take(count: number): this {
-    this.state.take = count;
-    return this;
-  }
-
-  paginate(page: number, perPage: number): this {
-    this.state.pagination = { page, perPage };
-    return this;
-  }
-
-  private async executeQuery(): Promise<T[]> {
-    if (!this.state.model) {
-      throw new Error('Model not specified. Call from() first.');
-    }
-
-    await this.ensureLoader();
-
-    const cacheKey = JSON.stringify({
-      model: this.state.model,
-      state: this.state,
-    });
-
-    const cached = await this.cache.get<T[]>(cacheKey);
-    if (cached)
-      return cached;
-
-    const data = await this.loader!.loadModel<T>(
-      this.state.model,
-      this.state.locale || this.options.defaultLocale,
-    );
-
-    let result = this.applyConditions(data);
-    result = this.applySorting(result);
-    result = this.applyPagination(result);
-
-    if (this.state.relations.length > 0) {
-      result = await this.loadRelations(result);
-    }
-
-    await this.cache.set(cacheKey, result, {
-      ttl: this.options.cacheTTL,
-    });
-
-    return result;
-  }
-
-  private applyConditions(data: T[]): T[] {
-    return data.filter(item =>
-      this.state.conditions.every(({ field, operator, value }) => {
-        switch (operator) {
-          case 'eq':
-            return item[field] === value;
-          case 'neq':
-            return item[field] !== value;
-          case 'gt':
-            return item[field] > value;
-          case 'gte':
-            return item[field] >= value;
-          case 'lt':
-            return item[field] < value;
-          case 'lte':
-            return item[field] <= value;
-          case 'in':
-            return Array.isArray(value) && value.includes(item[field]);
-          case 'nin':
-            return Array.isArray(value) && !value.includes(item[field]);
-          case 'contains':
-            return String(item[field]).includes(String(value));
-          case 'startsWith':
-            return String(item[field]).startsWith(String(value));
-          case 'endsWith':
-            return String(item[field]).endsWith(String(value));
-          case 'exists':
-            return value ? item[field] !== undefined : item[field] === undefined;
-          case 'notExists':
-            return value ? item[field] === undefined : item[field] !== undefined;
-          default:
-            return true;
-        }
-      }),
-    );
-  }
-
-  private applySorting(data: T[]): T[] {
-    if (this.state.sorts.length === 0)
-      return data;
-
-    return [...data].sort((a, b) => {
-      for (const { field, direction } of this.state.sorts) {
-        if (a[field] === b[field])
-          continue;
-
-        const modifier = direction === 'asc' ? 1 : -1;
-        return a[field] > b[field] ? modifier : -modifier;
-      }
-      return 0;
-    });
-  }
-
-  private applyPagination(data: T[]): T[] {
-    if (this.state.pagination) {
-      const { page, perPage } = this.state.pagination;
-      const start = (page - 1) * perPage;
-      return data.slice(start, start + perPage);
-    }
-
-    if (this.state.skip !== undefined || this.state.take !== undefined) {
-      const start = this.state.skip || 0;
-      const end = this.state.take ? start + this.state.take : undefined;
-      return data.slice(start, end);
-    }
-
-    return data;
-  }
-
-  private async loadRelations(data: T[]): Promise<T[]> {
-    const result = [...data];
-
-    for (const item of result) {
-      for (const relation of this.state.relations) {
-        const related = await this.loader!.loadRelation(
-          relation,
-          item.ID,
-          this.state.locale || this.options.defaultLocale,
-        );
-        if (related) {
-          (item as any)[`${relation}-data`] = related;
-        }
-      }
-    }
-
-    return result;
   }
 
   async get(): Promise<T[]> {
-    return this.executeQuery();
-  }
+    const data = await this.loader.loadModel<T>(this.modelId, this.locale);
+    let result = [...data];
 
-  async first(): Promise<T | null> {
-    const results = await this.executeQuery();
-    return results[0] || null;
-  }
+    // Apply where conditions
+    if (this.whereConditions.length > 0) {
+      result = result.filter((item) => {
+        return this.whereConditions.every((condition) => {
+          const value = item[condition.field as keyof T];
+          switch (condition.operator) {
+            case 'equals':
+              return value === condition.value;
+            case 'notEquals':
+              return value !== condition.value;
+            case 'contains':
+              return typeof value === 'string' && value.toLowerCase().includes(String(condition.value).toLowerCase());
+            case 'notContains':
+              return typeof value === 'string' && !value.toLowerCase().includes(String(condition.value).toLowerCase());
+            case 'startsWith':
+              return typeof value === 'string' && value.toLowerCase().startsWith(String(condition.value).toLowerCase());
+            case 'endsWith':
+              return typeof value === 'string' && value.toLowerCase().endsWith(String(condition.value).toLowerCase());
+            case 'in':
+              return Array.isArray(condition.value) && condition.value.includes(value);
+            case 'notIn':
+              return Array.isArray(condition.value) && !condition.value.includes(value);
+            default:
+              return false;
+          }
+        });
+      });
+    }
 
-  async count(): Promise<number> {
-    const results = await this.executeQuery();
-    return results.length;
+    // Apply order by conditions
+    if (this.orderByConditions.length > 0) {
+      result.sort((a, b) => {
+        for (const condition of this.orderByConditions) {
+          const aValue = a[condition.field as keyof T];
+          const bValue = b[condition.field as keyof T];
+
+          if (aValue === bValue)
+            continue;
+
+          if (condition.direction === 'asc') {
+            return aValue < bValue ? -1 : 1;
+          }
+          else {
+            return aValue > bValue ? -1 : 1;
+          }
+        }
+        return 0;
+      });
+    }
+
+    // Apply pagination
+    if (this.pagination.skip !== undefined || this.pagination.take !== undefined) {
+      const start = this.pagination.skip || 0;
+      const end = this.pagination.take ? start + this.pagination.take : undefined;
+      result = result.slice(start, end);
+    }
+
+    return result;
   }
 }

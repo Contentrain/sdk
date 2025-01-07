@@ -5,4 +5,9 @@ export default defineConfig({
   format: ['cjs', 'esm'],
   dts: true,
   clean: true,
+  splitting: true,
+  treeshake: true,
+  sourcemap: true,
+  minify: true,
+  external: ['@contentrain/types'],
 });

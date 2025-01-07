@@ -1,4 +1,4 @@
-import type { ContentrainBaseModel } from '../types';
+import type { ContentrainBaseModel } from '@contentrain/types';
 
 export interface DataLoader {
   /**

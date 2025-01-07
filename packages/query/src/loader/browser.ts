@@ -52,18 +52,12 @@ export class FetchLoader implements DataLoader {
     model: string,
     locale?: string,
   ): Promise<T[]> {
-    try {
-      const metadata = await this.getModelMetadata(model);
-      const url = metadata.localization && locale
-        ? `${this.basePath}/${model}/${locale}.json`
-        : `${this.basePath}/${model}/index.json`;
+    const metadata = await this.getModelMetadata(model);
+    const url = metadata.localization && locale
+      ? `${this.basePath}/${model}/${locale}.json`
+      : `${this.basePath}/${model}/index.json`;
 
-      return await this.fetchJson<T[]>(url);
-    }
-    catch (error) {
-      console.error(`Error loading model ${model}:`, error);
-      return [];
-    }
+    return this.fetchJson<T[]>(url);
   }
 
   async loadRelation<T extends ContentrainBaseModel>(
@@ -71,13 +65,7 @@ export class FetchLoader implements DataLoader {
     id: string,
     locale?: string,
   ): Promise<T | null> {
-    try {
-      const items = await this.loadModel<T>(model, locale);
-      return items.find(item => item.ID === id) || null;
-    }
-    catch (error) {
-      console.error(`Error loading relation ${model}:`, error);
-      return null;
-    }
+    const items = await this.loadModel<T>(model, locale);
+    return items.find(item => item.ID === id) || null;
   }
 }
