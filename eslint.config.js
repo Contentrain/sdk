@@ -11,6 +11,7 @@ export default antfu({
     '**/*.md',
     '**/*.mdx',
     '**/*.markdown',
+    '**/*.json',
   ],
   typescript: {
     tsconfigPath: './tsconfig.json',

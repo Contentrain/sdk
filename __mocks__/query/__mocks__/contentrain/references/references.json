@@ -1,0 +1,42 @@
+[
+  {
+    "ID": "34e63b4829f0",
+    "createdAt": "2024-09-27T19:58:20.000Z",
+    "updatedAt": "2024-10-08T13:42:57.061Z",
+    "status": "publish",
+    "logo": "public/1728394907608_Popile.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "5c5955d57da8",
+    "createdAt": "2024-09-27T19:58:54.000Z",
+    "updatedAt": "2024-10-09T15:05:43.629Z",
+    "status": "publish",
+    "logo": "public/1728394892554_pazardan.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "7fa159ae4aaf",
+    "createdAt": "2024-09-27T19:58:40.000Z",
+    "updatedAt": "2024-10-08T13:42:57.072Z",
+    "status": "publish",
+    "logo": "public/1728394876736_Contentrain.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "ae0d98f178d1",
+    "createdAt": "2024-09-27T19:59:08.000Z",
+    "updatedAt": "2024-10-08T13:42:57.076Z",
+    "status": "publish",
+    "logo": "public/1728394832510_Visivi.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "ca7bedf86bfb",
+    "createdAt": "2024-09-27T19:59:01.000Z",
+    "updatedAt": "2024-10-09T07:27:46.424Z",
+    "status": "publish",
+    "logo": "public/1728458840475_Bloomandfresh.svg",
+    "scheduled": false
+  }
+]

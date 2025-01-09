@@ -1,0 +1,30 @@
+[
+  {
+    "ID": "1",
+    "createdAt": "2024-01-09T00:00:00.000Z",
+    "updatedAt": "2024-01-09T00:00:00.000Z",
+    "title": "Contentrain SDK ile İçerik Yönetimi",
+    "content": "Contentrain SDK, içerik yönetimini kolaylaştıran modern bir araçtır...",
+    "author": "Ahmet Bayramoğlu",
+    "tags": [
+      "sdk",
+      "içerik-yönetimi",
+      "typescript"
+    ],
+    "status": "publish"
+  },
+  {
+    "ID": "2",
+    "createdAt": "2024-01-09T00:00:00.000Z",
+    "updatedAt": "2024-01-09T00:00:00.000Z",
+    "title": "TypeScript ile Güçlü Tip Sistemi",
+    "content": "TypeScript'in güçlü tip sistemi ile daha güvenli kod yazabilirsiniz...",
+    "author": "Mehmet Yılmaz",
+    "tags": [
+      "typescript",
+      "javascript",
+      "programlama"
+    ],
+    "status": "draft"
+  }
+]

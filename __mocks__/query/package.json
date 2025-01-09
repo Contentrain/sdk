@@ -1,0 +1,46 @@
+{
+  "name": "@contentrain/query",
+  "version": "1.0.0",
+  "description": "Framework agnostic query builder for Contentrain CMS",
+  "author": "Contentrain",
+  "license": "MIT",
+  "keywords": [
+    "contentrain",
+    "query",
+    "cms",
+    "headless",
+    "vite-plugin"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "check-deps": "taze check",
+    "update-deps": "taze update",
+    "major-deps": "taze major",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.12",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "eslint": "^8.57.1",
+    "taze": "^0.13.9",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11",
+    "vitest": "^1.6.0"
+  }
+}

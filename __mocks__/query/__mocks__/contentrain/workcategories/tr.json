@@ -1,0 +1,83 @@
+[
+  {
+    "ID": "59cbdac46c1e",
+    "createdAt": "Wed Oct 16 2024 11:08:46 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Oct 16 2024 11:08:46 GMT+0300 (GMT+03:00)",
+    "category": "Web Tasarım ve Geliştirme",
+    "status": "publish",
+    "scheduled": false,
+    "order": 6
+  },
+  {
+    "ID": "8ac7d8c79484",
+    "createdAt": "Wed Oct 16 2024 13:49:43 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Oct 16 2024 13:49:43 GMT+0300 (GMT+03:00)",
+    "category": "Destek ve Bakım",
+    "status": "publish",
+    "scheduled": false,
+    "order": 7
+  },
+  {
+    "ID": "b5debb48ccb2",
+    "createdAt": "Wed Oct 16 2024 14:02:44 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Oct 16 2024 14:02:44 GMT+0300 (GMT+03:00)",
+    "category": "Mobil Uygulama Geliştirme",
+    "status": "publish",
+    "scheduled": false,
+    "order": 8
+  },
+  {
+    "ID": "bcc834108adc",
+    "createdAt": "Wed Oct 16 2024 11:02:51 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Wed Oct 16 2024 11:02:51 GMT+0300 (GMT+03:00)",
+    "category": "Ürün Geliştirme",
+    "status": "publish",
+    "scheduled": false,
+    "order": 9
+  },
+  {
+    "ID": "cab37361e7e6",
+    "createdAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "category": "Frontend Geliştirme",
+    "status": "publish",
+    "scheduled": false,
+    "order": 1
+  },
+  {
+    "ID": "cab37361e7e7",
+    "createdAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "category": "Backend Geliştirme",
+    "status": "publish",
+    "scheduled": false,
+    "order": 2
+  },
+  {
+    "ID": "cab37361e7e8",
+    "createdAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "category": "UI/UX Tasarımı",
+    "status": "publish",
+    "scheduled": false,
+    "order": 3
+  },
+  {
+    "ID": "cab37361e7e9",
+    "createdAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "category": "SEO Optimizasyonu",
+    "status": "publish",
+    "scheduled": false,
+    "order": 4
+  },
+  {
+    "ID": "cab37361e7ea",
+    "createdAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Thu Sep 26 2024 21:05:55 GMT+0300 (GMT+03:00)",
+    "category": "Sosyal Medya Pazarlama",
+    "status": "publish",
+    "scheduled": false,
+    "order": 5
+  }
+]

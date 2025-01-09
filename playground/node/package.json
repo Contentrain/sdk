@@ -1,0 +1,23 @@
+{
+    "name": "node",
+    "version": "1.0.0",
+    "description": "Contentrain SDK Node.js Playground",
+    "author": "",
+    "license": "ISC",
+    "keywords": [],
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "ts-node src/index.ts",
+        "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
+    },
+    "dependencies": {
+        "@contentrain/core": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.5",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.7.2"
+    }
+}

@@ -1,0 +1,30 @@
+[
+    {
+        "ID": "1",
+        "title": "İlk Blog Yazısı",
+        "content": "Bu bir örnek blog yazısıdır.",
+        "author": "author-1",
+        "tags": [
+            "tag-1",
+            "tag-2"
+        ],
+        "status": "publish",
+        "createdAt": "2024-01-08T00:00:00.000Z",
+        "updatedAt": "2024-01-08T00:00:00.000Z",
+        "scheduled": false
+    },
+    {
+        "ID": "2",
+        "title": "İkinci Blog Yazısı",
+        "content": "Bu da başka bir örnek blog yazısıdır.",
+        "author": "author-2",
+        "tags": [
+            "tag-2",
+            "tag-3"
+        ],
+        "status": "publish",
+        "createdAt": "2024-01-08T01:00:00.000Z",
+        "updatedAt": "2024-01-08T01:00:00.000Z",
+        "scheduled": false
+    }
+]
