@@ -153,7 +153,7 @@ export class ContentLoader {
         return {
           model: reference,
           type: field.componentId === 'one-to-one' ? 'one-to-one' : 'one-to-many',
-          foreignKey: field.name,
+          foreignKey: field.fieldId,
         };
       });
     }

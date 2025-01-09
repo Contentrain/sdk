@@ -1,13 +1,5 @@
 [
   {
-    "name": "Posts",
-    "modelId": "posts",
-    "localization": true,
-    "type": "JSON",
-    "createdBy": "user",
-    "isServerless": false
-  },
-  {
     "name": "ServicesItems",
     "modelId": "services",
     "localization": true,

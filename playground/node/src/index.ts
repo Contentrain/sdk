@@ -5,7 +5,7 @@ import ContentrainSDK from '@contentrain/core';
 
 // SDK'yı yapılandır
 const sdk = new ContentrainSDK({
-  contentDir: join(__dirname, '../content'),
+  contentDir: join(__dirname, '../contentrain'),
   defaultLocale: 'tr',
   cache: true,
   ttl: 60 * 1000,
@@ -46,11 +46,11 @@ interface IMetaTag extends BaseContentrainType {
 }
 
 interface ITestimonialItem extends BaseContentrainType {
-  name: string
-  description: string
-  title: string
-  image: string
-  creativeWork: IWorkItem
+  'name': string
+  'description': string
+  'title': string
+  'image': string
+  'creative-work': IWorkItem
 }
 
 async function main() {
@@ -75,9 +75,9 @@ async function main() {
       .where('name', 'startsWith', 'og')
       .get();
 
-    const testimonials = await sdk.query<ITestimonialItem>('testimonail-items')
+    const testimonails = await sdk.query<ITestimonialItem>('testimonail-items')
       .locale('en')
-      .include('creativeWork')
+      .include('creative-work')
       .where('status', 'eq', 'publish')
       .get();
 
@@ -151,13 +151,12 @@ ${JSON.stringify(metaTags.data, null, 2)}
 \`\`\`typescript
 sdk.query<ITestimonialItem>('testimonail-items')
   .locale('en')
-  .include('creativeWork')
   .where('status', 'eq', 'publish')
   .get();
 \`\`\`
 
 <results>
-${JSON.stringify(testimonials.data, null, 2)}
+${JSON.stringify(testimonails.data, null, 2)}
 </results>
 
 ## Örnek 6: Yayındaki ve Sırası 0'dan Büyük İş Öğelerini Filtreleme

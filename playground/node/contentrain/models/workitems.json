@@ -102,7 +102,7 @@
     "name": "category",
     "fieldId": "category",
     "modelId": "workitems",
-    "componentId": "one-to-many",
+    "componentId": "one-to-one",
     "options": {
       "reference": {
         "value": true,

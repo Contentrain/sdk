@@ -5,10 +5,10 @@
     "updatedAt": "2024-10-16T11:10:08.066Z",
     "status": "publish",
     "name": "Ertuğrul Uçar",
-    "description": "Lanista Software supported Popile's frontend and backend in its early stages, helping us improve our work.",
+    "description": "Lanista Software supported Popile’s frontend and backend in its early stages, helping us improve our work.",
     "image": "public/1728463995414_ertugrul.jpeg",
     "title": "CEO, Popile",
-    "creativeWork": "51bf2dbbed29",
+    "creative-work": "51bf2dbbed29",
     "scheduled": false
   },
   {
@@ -20,7 +20,7 @@
     "description": "The team has a great ability to resolve any problem by adapting innovative technologies and approaches.",
     "image": "public/1729164933955_murat.png",
     "title": "Co-Founder, Bloom and Fresh",
-    "creativeWork": "8a8044e883e9",
+    "creative-work": "8a8044e883e9",
     "scheduled": false
   },
   {
@@ -32,7 +32,7 @@
     "image": "public/1728464446315_ege.jpeg",
     "title": "Founder, Visivi",
     "status": "publish",
-    "creativeWork": "8a8044e883eb",
+    "creative-work": "8a8044e883eb",
     "scheduled": false
   }
 ]

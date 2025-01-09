@@ -109,8 +109,10 @@ export class QueryExecutor {
           return r.ID === value;
         });
 
-        // @ts-expect-error: İlişkili veriyi ekle
-        item[field] = Array.isArray(value) ? relatedItems : relatedItems[0];
+        if (!item._relations) {
+          item._relations = {};
+        }
+        item._relations[field] = Array.isArray(value) ? relatedItems : relatedItems[0];
       });
     }
 

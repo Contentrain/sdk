@@ -4,6 +4,9 @@ export interface BaseContentrainType {
   updatedAt: string
   status: 'draft' | 'changed' | 'publish'
   scheduled: boolean
+  _relations?: {
+    [key: string]: BaseContentrainType | BaseContentrainType[]
+  }
 }
 
 export type ContentrainStatus = 'draft' | 'changed' | 'publish';
