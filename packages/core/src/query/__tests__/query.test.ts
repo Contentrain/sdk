@@ -13,7 +13,10 @@ interface WorkCategory extends BaseContentrainType {
 interface WorkItem extends BaseContentrainType {
   title: string
   description: string
-  category: WorkCategory
+  category: string
+  _relations: {
+    category: WorkCategory
+  }
   image: string
   link: string
   order: number
@@ -154,9 +157,9 @@ describe('query', () => {
         .get();
 
       expect(result.data.length).toBe(1);
-      expect(result.data[0].category).toBeDefined();
-      expect(result.data[0].category.ID).toBe('bcc834108adc');
-      expect(result.data[0].category.category).toBe('Product Development');
+      expect(result.data[0]._relations?.category).toBeDefined();
+      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
+      expect(result.data[0]._relations?.category.category).toBe('Product Development');
     });
 
     it('should handle multiple relations', async () => {
@@ -166,9 +169,9 @@ describe('query', () => {
         .get();
 
       expect(result.data.length).toBe(1);
-      expect(result.data[0].category).toBeDefined();
-      expect(result.data[0].category.ID).toBe('bcc834108adc');
-      expect(result.data[0].category.category).toBe('Product Development');
+      expect(result.data[0]._relations?.category).toBeDefined();
+      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
+      expect(result.data[0]._relations?.category.category).toBe('Product Development');
     });
   });
 
