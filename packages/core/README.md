@@ -1,52 +1,48 @@
 # @contentrain/core
 
-Contentrain SDK'nın çekirdek paketi. Bu paket, Contentrain CMS ile entegrasyon sağlamak için gerekli temel fonksiyonları içerir.
+Contentrain SDK Core paketi, Contentrain platformu için geliştirilmiş resmi JavaScript/TypeScript SDK'sıdır.
 
 ## Özellikler
 
-- 🚀 Yüksek performanslı içerik yükleme
-- 💾 Akıllı önbellek sistemi
-- 🔍 Güçlü sorgu motoru
-- 🔄 İlişki yönetimi
+- 🚀 Model bazlı veri yönetimi
+- 🔄 İlişkisel veri desteği (one-to-one, one-to-many)
+- 💾 Yerleşik önbellek sistemi
 - 🌍 Çoklu dil desteği
-- 📦 TypeScript ile tam tip desteği
+- 🔍 Gelişmiş sorgu yetenekleri
+- 📦 Tree-shakeable ve hafif paket boyutu
+- 💪 Tam TypeScript desteği
 
 ## Kurulum
 
 ```bash
-# npm ile
 npm install @contentrain/core
-
-# yarn ile
+# veya
 yarn add @contentrain/core
-
-# pnpm ile
+# veya
 pnpm add @contentrain/core
 ```
 
 ## Hızlı Başlangıç
 
 ```typescript
-import ContentrainSDK from '@contentrain/core';
+import { ContentrainSDK } from '@contentrain/core';
 
 // SDK'yı yapılandırın
 const sdk = new ContentrainSDK({
   contentDir: './contentrain',
-  defaultLocale: 'tr',
-  cache: true,
+  cache: true, // Önbellek aktif (opsiyonel)
+  ttl: 3600000, // Önbellek süresi - ms (opsiyonel)
 });
 
-// İçeriği yükleyin
-const posts = await sdk.query('posts')
+// Veri yükleme
+const result = await sdk.load('blog-posts');
+
+// Sorgu oluşturma
+const posts = await sdk
+  .query('blog-posts')
   .where('status', 'eq', 'publish')
   .orderBy('createdAt', 'desc')
   .limit(10)
-  .get();
-
-// İlişkili verileri yükleyin
-const postsWithAuthor = await sdk.query('posts')
-  .include('author')
-  .where('status', 'eq', 'publish')
   .get();
 ```
 
@@ -54,119 +50,289 @@ const postsWithAuthor = await sdk.query('posts')
 
 ### ContentrainSDK
 
-SDK'nın ana sınıfı.
+SDK'nın ana sınıfı. Veri yükleme ve sorgu oluşturma işlemlerini yönetir.
 
 ```typescript
 const sdk = new ContentrainSDK({
-  contentDir: string;      // İçerik dizini
-  defaultLocale?: string;  // Varsayılan dil
-  cache?: boolean;         // Önbellek aktif/pasif
-  ttl?: number;           // Önbellek süresi (ms)
-  maxCacheSize?: number;  // Maksimum önbellek boyutu (MB)
+  contentDir: string;
+  defaultLocale?: string;
+  cache?: boolean;
+  ttl?: number;
+  maxCacheSize?: number;
+  modelTTL?: {
+    [model: string]: number;
+  };
 });
 ```
 
+#### Metodlar
+
+- `load<T>(model: string)`: Model verilerini yükler
+- `query<T>(model: string)`: Sorgu builder'ı başlatır
+
 ### Query Builder
 
-İçerik sorgulama için akıcı bir API.
+Veri sorgulama için akıcı bir API sunar.
 
 ```typescript
-sdk.query(model: string)
-  .where(field, operator, value)    // Filtreleme
-  .include(relations)               // İlişkileri dahil etme
-  .orderBy(field, direction)        // Sıralama
-  .limit(count)                     // Limit
-  .offset(count)                    // Sayfa atlama
-  .locale(code)                     // Dil seçimi
-  .cache(ttl?)                      // Önbellek ayarı
-  .get()                           // Sorguyu çalıştır
+sdk.query('model-name')
+  .where(field, operator, value)
+  .include(relations)
+  .orderBy(field, direction)
+  .limit(count)
+  .offset(count)
+  .locale(code)
+  .cache(ttl)
+  .get();
 ```
 
-#### Operatörler
+#### Sorgu Operatörleri
 
 - `eq`: Eşitlik
 - `ne`: Eşit değil
 - `gt`: Büyüktür
-- `gte`: Büyük eşittir
+- `gte`: Büyük veya eşit
 - `lt`: Küçüktür
-- `lte`: Küçük eşittir
+- `lte`: Küçük veya eşit
 - `in`: Liste içinde
-- `nin`: Liste dışında
+- `nin`: Liste içinde değil
 - `contains`: İçerir
 - `startsWith`: İle başlar
 - `endsWith`: İle biter
 
+### İlişki Yönetimi
+
+İlişkiler, `_relations` alanı altında döner. İlişki tipine göre (one-to-one veya one-to-many) tekil veya dizi olarak gelir.
+
+```typescript
+// Temel ilişki tipleri
+interface BaseContentrainType {
+  ID: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'draft' | 'changed' | 'publish';
+  scheduled: boolean;
+  _relations?: {
+    [key: string]: BaseContentrainType | BaseContentrainType[];
+  };
+}
+
+// Örnek model tanımları
+interface Author extends BaseContentrainType {
+  name: string;
+  email: string;
+}
+
+interface Post extends BaseContentrainType {
+  title: string;
+  content: string;
+  authorId: string; // İlişki için foreign key
+  categoryIds: string[]; // Çoklu ilişki için foreign key array
+  _relations?: {
+    author?: Author;        // One-to-one ilişki
+    categories?: Category[]; // One-to-many ilişki
+  };
+}
+
+// Kullanım örnekleri
+const posts = await sdk.query<Post>('posts')
+  .include('author')
+  .get();
+
+// Tekli ilişki erişimi
+const authorName = posts.data[0]._relations?.author?.name;
+
+// Çoklu ilişki erişimi
+const categories = posts.data[0]._relations?.categories?.map(c => c.name);
+
+// İç içe ilişki tanımı
+interface PostWithNestedRelations extends BaseContentrainType {
+  title: string;
+  _relations?: {
+    author?: Author & {
+      _relations?: {
+        profile?: Profile;
+      };
+    };
+    comments?: Comment[];
+  };
+}
+
+// İç içe ilişki sorgusu
+const postsWithNested = await sdk.query<PostWithNestedRelations>('posts')
+  .include({
+    author: {
+      include: {
+        profile: true
+      }
+    },
+    comments: true
+  })
+  .get();
+
+// İç içe ilişkilere erişim
+const authorProfile = postsWithNested.data[0]._relations?.author?._relations?.profile;
+const comments = postsWithNested.data[0]._relations?.comments;
+```
+
+#### Sorgu Sonuç Tipleri
+
+```typescript
+// Temel sorgu sonucu
+interface QueryResult<T> {
+  data: T[];           // Veri dizisi
+  total: number;       // Toplam kayıt sayısı
+  pagination?: {       // Sayfalama bilgisi (varsa)
+    limit: number;     // Sayfa başına kayıt
+    offset: number;    // Atlanan kayıt sayısı
+    hasMore: boolean;  // Daha fazla kayıt var mı
+  };
+}
+
+// Örnek kullanım
+const result = await sdk.query<Post>('posts')
+  .limit(10)
+  .offset(0)
+  .include('author')
+  .get();
+
+console.log(result.total);        // Toplam post sayısı
+console.log(result.data.length);  // Dönen post sayısı
+console.log(result.pagination?.hasMore); // Daha fazla post var mı
+```
+
 ### Önbellek Yönetimi
 
 ```typescript
-// Önbelleği temizle
-await sdk.clearCache();
+// Global önbellek konfigürasyonu
+const sdk = new ContentrainSDK({
+  cache: true,
+  ttl: 3600000, // 1 saat
+  maxCacheSize: 100 // MB
+});
 
-// Belirli bir modelin önbelleğini yenile
-await sdk.refreshCache('posts');
+// Sorgu bazlı önbellek
+sdk.query('posts')
+  .cache(60000) // 1 dakika
+  .get();
 
-// Önbellek istatistiklerini al
-const stats = sdk.getCacheStats();
+// Önbelleği devre dışı bırakma
+sdk.query('posts')
+  .noCache()
+  .get();
 ```
 
 ## TypeScript Desteği
 
-SDK, tam TypeScript desteği sunar. Model tiplerini tanımlayarak tip güvenliği sağlayabilirsiniz:
+SDK, tam TypeScript desteği sunar. Model tiplerini iki farklı şekilde kullanabilirsiniz:
+
+### 1. Sorgu Bazlı Tip Tanımlama
 
 ```typescript
-interface Post extends BaseContentrainType {
+interface BlogPost extends BaseContentrainType {
   title: string;
   content: string;
-  author: string; // İlişki ID'si
+  author: string;
   tags: string[];
 }
 
-const posts = await sdk.query<Post>('posts').get();
-// posts.data[0].title -> string
-```
-
-## Hata Yönetimi
-
-SDK, hataları `ContentrainError` sınıfı ile yönetir:
-
-```typescript
-try {
-  const posts = await sdk.query('posts').get();
-} catch (error) {
-  if (error instanceof ContentrainError) {
-    console.error(`Hata tipi: ${error.type}`);
-    console.error(`Hata mesajı: ${error.message}`);
-    console.error(`Detaylar:`, error.details);
-  }
-}
-```
-
-## Performans İpuçları
-
-1. **Önbellek Kullanımı**: Sık erişilen veriler için önbellek kullanın
-```typescript
-const posts = await sdk.query('posts')
-  .cache(60 * 1000) // 1 dakika
+const posts = await sdk
+  .query<BlogPost>('blog-posts')
+  .where('tags', 'contains', 'typescript')
   .get();
 ```
 
-2. **Seçici İlişki Yükleme**: Sadece ihtiyaç duyulan ilişkileri yükleyin
+### 2. SDK Instance'ı için Model-Tip Eşleştirmesi
+
 ```typescript
-const posts = await sdk.query('posts')
+// Model tiplerini tanımlayın
+interface BlogPost extends BaseContentrainType {
+  title: string;
+  content: string;
+  author: string;
+  tags: string[];
+}
+
+interface Author extends BaseContentrainType {
+  name: string;
+  email: string;
+}
+
+// Model-tip map'ini oluşturun
+interface ContentrainModels {
+  'blog-posts': BlogPost;
+  'authors': Author;
+}
+
+// SDK'yı tip map'i ile başlatın
+const sdk = new ContentrainSDK<ContentrainModels>({
+  contentDir: './contentrain'
+});
+
+// Artık query metodları otomatik olarak doğru tipi alacak
+const posts = await sdk
+  .query('blog-posts') // Tip hatası olmadan sadece 'blog-posts' veya 'authors' yazılabilir
+  .where('tags', 'contains', 'typescript') // BlogPost tipine göre alan kontrolü
+  .get(); // posts otomatik olarak BlogPost[] tipinde
+
+const authors = await sdk
+  .query('authors') // Tip hatası olmadan sadece 'blog-posts' veya 'authors' yazılabilir
+  .where('email', 'contains', '@') // Author tipine göre alan kontrolü
+  .get(); // authors otomatik olarak Author[] tipinde
+
+// Olmayan bir model adı kullanılamaz
+const invalid = await sdk
+  .query('invalid-model') // TypeScript hatası
+  .get();
+```
+
+Bu yaklaşımın avantajları:
+1. Model isimleri için otomatik tamamlama
+2. Yanlış model isimlerinde derleme zamanında hata
+3. Her sorgu için ayrıca tip belirtmeye gerek yok
+4. Where, orderBy gibi metodlarda alan isimlerinin validasyonu
+5. İlişki sorgularında tip güvenliği
+
+### Gelişmiş Kullanım
+
+```typescript
+// İlişkili modeller için
+interface ContentrainModels {
+  'blog-posts': BlogPost & {
+    _relations: {
+      author: ContentrainModels['authors'];
+      comments: ContentrainModels['comments'][];
+    }
+  };
+  'authors': Author & {
+    _relations: {
+      posts: ContentrainModels['blog-posts'][];
+      profile: ContentrainModels['profiles'];
+    }
+  };
+  'comments': Comment;
+  'profiles': Profile;
+}
+
+const sdk = new ContentrainSDK<ContentrainModels>({
+  contentDir: './contentrain'
+});
+
+// İlişki sorgularında tam tip desteği
+const posts = await sdk
+  .query('blog-posts')
   .include({
     author: {
-      fields: ['name', 'avatar']
+      include: {
+        profile: true
+      }
     }
   })
   .get();
-```
 
-3. **Sayfalama**: Büyük veri setleri için sayfalama kullanın
-```typescript
-const posts = await sdk.query('posts')
-  .limit(10)
-  .offset(0)
-  .get();
+// Tip güvenli erişim
+const authorProfile = posts.data[0]._relations.author._relations.profile;
+// authorProfile otomatik olarak Profile tipinde
 ```
 
 ## Lisans
