@@ -5,7 +5,7 @@ import ContentrainSDK from '@contentrain/core';
 
 // SDK'yı yapılandır
 const sdk = new ContentrainSDK({
-  contentDir: join(__dirname, '../contentrain'),
+  contentDir: join(__dirname, '../../contentrain'),
   defaultLocale: 'tr',
   cache: true,
   ttl: 60 * 1000,
