@@ -1,9 +1,9 @@
 {
-    "name": "node",
+    "name": "@contentrain/playground",
     "version": "1.0.0",
     "description": "Contentrain SDK Node.js Playground",
-    "author": "",
-    "license": "ISC",
+    "author": "Contentrain",
+    "license": "MIT",
     "keywords": [],
     "main": "dist/index.js",
     "scripts": {
