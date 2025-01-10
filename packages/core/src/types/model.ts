@@ -108,3 +108,15 @@ export interface AssetMetadata {
   createdAt: string
   updatedAt: string
 }
+
+export type ContentrainLocales = string;
+
+export interface QueryConfig<
+  TFields extends BaseContentrainType,
+  TLocales extends ContentrainLocales,
+  TRelations extends Record<string, BaseContentrainType>,
+> {
+  fields: TFields
+  locales: TLocales
+  relations: TRelations
+}

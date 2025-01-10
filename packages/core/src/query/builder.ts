@@ -1,9 +1,13 @@
 import type { ContentLoader } from '../loader/content';
-import type { BaseContentrainType } from '../types/model';
+import type { BaseContentrainType, ContentrainLocales } from '../types/model';
 import type { Filter, Include, Operator, QueryOptions, QueryResult, Sort } from '../types/query';
 import type { QueryExecutor } from './executor';
 
-export class ContentrainQueryBuilder<T extends BaseContentrainType> {
+export class ContentrainQueryBuilder<
+  TFields extends BaseContentrainType,
+  TLocales extends ContentrainLocales = 'en' | 'tr',
+  TRelations extends Record<string, BaseContentrainType> = Record<string, never>,
+> {
   private model: string;
   private filters: Filter[] = [];
   private includes: Include = {};
@@ -23,7 +27,11 @@ export class ContentrainQueryBuilder<T extends BaseContentrainType> {
     this.loader = loader;
   }
 
-  where(field: keyof T, operator: Operator, value: any): this {
+  where<K extends keyof TFields>(
+    field: K,
+    operator: Operator,
+    value: TFields[K] extends Array<infer U> ? U | U[] : TFields[K],
+  ): this {
     this.filters.push({
       field: field as string,
       operator,
@@ -32,25 +40,19 @@ export class ContentrainQueryBuilder<T extends BaseContentrainType> {
     return this;
   }
 
-  include(relations: string | string[] | Include): this {
-    if (typeof relations === 'string') {
-      this.includes[relations] = {};
+  include<K extends keyof TRelations>(relation: K | K[]): this {
+    if (typeof relation === 'string') {
+      this.includes[relation] = {};
     }
-    else if (Array.isArray(relations)) {
-      relations.forEach((relation) => {
-        this.includes[relation] = {};
+    else if (Array.isArray(relation)) {
+      relation.forEach((r) => {
+        this.includes[r as string] = {};
       });
-    }
-    else {
-      this.includes = {
-        ...this.includes,
-        ...relations,
-      };
     }
     return this;
   }
 
-  orderBy(field: keyof T, direction: 'asc' | 'desc' = 'asc'): this {
+  orderBy<K extends keyof TFields>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
     this.sorting.push({
       field: field as string,
       direction,
@@ -68,7 +70,7 @@ export class ContentrainQueryBuilder<T extends BaseContentrainType> {
     return this;
   }
 
-  locale(code: string): this {
+  locale(code: TLocales): this {
     this.options.locale = code;
     return this;
   }
@@ -102,9 +104,8 @@ export class ContentrainQueryBuilder<T extends BaseContentrainType> {
     };
   }
 
-  async get(): Promise<QueryResult<T>> {
-    // Content Loader'dan veriyi al
-    const result = await this.loader.load<T>(this.model);
+  async get(): Promise<QueryResult<TFields>> {
+    const result = await this.loader.load<TFields>(this.model);
     const data = this.options.locale ? result.content[this.options.locale] : result.content.en;
 
     return this.executor.execute({
@@ -118,7 +119,7 @@ export class ContentrainQueryBuilder<T extends BaseContentrainType> {
     });
   }
 
-  async first(): Promise<T | null> {
+  async first(): Promise<TFields | null> {
     const result = await this.limit(1).get();
     return result.data[0] || null;
   }
