@@ -20,55 +20,67 @@ export class ContentrainTypesGenerator {
       contentDir: path.join(process.cwd(), 'contentrain'),
     };
 
-    // Config dosyasını ara
-    const possibleConfigPaths = [
-      path.join(process.cwd(), 'contentrain-config.json'),
-      path.join(process.cwd(), '.contentrain/config.json'),
-      path.join(process.cwd(), '.config/contentrain.json'),
-    ];
+    // Eğer config parametresi verilmişse, dosya aramadan direkt olarak kullan
+    if (config) {
+      const cliConfig: Partial<GeneratorConfig> = {};
+      if (config.modelsDir)
+        cliConfig.modelsDir = path.resolve(process.cwd(), config.modelsDir);
+      if (config.outputDir)
+        cliConfig.outputDir = path.resolve(process.cwd(), config.outputDir);
+      if (config.contentDir)
+        cliConfig.contentDir = path.resolve(process.cwd(), config.contentDir);
 
-    const fileConfig: Partial<GeneratorConfig> = {};
-    for (const configPath of possibleConfigPaths) {
-      if (fs.existsSync(configPath)) {
-        try {
-          const fileContent = fs.readFileSync(configPath, 'utf-8');
-          const parsedConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
+      this.config = {
+        ...defaultConfig,
+        ...cliConfig,
+      };
+    }
+    else {
+      // Config dosyasını ara
+      const possibleConfigPaths = [
+        path.join(process.cwd(), 'contentrain-config.json'),
+        path.join(process.cwd(), '.contentrain/config.json'),
+        path.join(process.cwd(), '.config/contentrain.json'),
+      ];
 
-          console.log('Okunan yapılandırma:', parsedConfig);
+      const fileConfig: Partial<GeneratorConfig> = {};
+      for (const configPath of possibleConfigPaths) {
+        if (fs.existsSync(configPath)) {
+          try {
+            const fileContent = fs.readFileSync(configPath, 'utf-8');
+            const parsedConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
 
-          // Yolları mutlak yola çevir
-          if (parsedConfig.modelsDir)
-            fileConfig.modelsDir = path.resolve(process.cwd(), parsedConfig.modelsDir);
-          if (parsedConfig.outputDir)
-            fileConfig.outputDir = path.resolve(process.cwd(), parsedConfig.outputDir);
-          if (parsedConfig.contentDir)
-            fileConfig.contentDir = path.resolve(process.cwd(), parsedConfig.contentDir);
+            console.log('Okunan yapılandırma:', parsedConfig);
 
-          console.log('Çözümlenmiş yapılandırma:', fileConfig);
-          console.log(`✓ Yapılandırma dosyası okundu: ${configPath}`);
-          break;
-        }
-        catch (error) {
-          console.warn(`! Yapılandırma dosyası okunamadı: ${configPath}`, error);
+            // Yolları mutlak yola çevir
+            if (parsedConfig.modelsDir)
+              fileConfig.modelsDir = path.resolve(process.cwd(), parsedConfig.modelsDir);
+            if (parsedConfig.outputDir)
+              fileConfig.outputDir = path.resolve(process.cwd(), parsedConfig.outputDir);
+            if (parsedConfig.contentDir)
+              fileConfig.contentDir = path.resolve(process.cwd(), parsedConfig.contentDir);
+
+            console.log('Çözümlenmiş yapılandırma:', fileConfig);
+            console.log(`✓ Yapılandırma dosyası okundu: ${configPath}`);
+            break;
+          }
+          catch (error) {
+            // Dosya varsa ama JSON geçersizse hata fırlat
+            if (error instanceof SyntaxError) {
+              console.warn(`! Yapılandırma dosyası okunamadı: ${configPath}`, error);
+              throw new Error('Yapılandırma dosyası okunamadı');
+            }
+            // Diğer hatalarda sadece uyarı ver ve devam et
+            console.warn(`! Yapılandırma dosyası okunamadı: ${configPath}`, error);
+          }
         }
       }
+
+      this.config = {
+        ...defaultConfig,
+        ...fileConfig,
+      };
     }
-
-    // Komut satırı argümanlarını mutlak yola çevir
-    const cliConfig: Partial<GeneratorConfig> = {};
-    if (config?.modelsDir)
-      cliConfig.modelsDir = path.resolve(process.cwd(), config.modelsDir);
-    if (config?.outputDir)
-      cliConfig.outputDir = path.resolve(process.cwd(), config.outputDir);
-    if (config?.contentDir)
-      cliConfig.contentDir = path.resolve(process.cwd(), config.contentDir);
-
-    // Config'i birleştir (öncelik sırası: varsayılan < dosya < komut satırı)
-    this.config = {
-      ...defaultConfig,
-      ...fileConfig,
-      ...cliConfig,
-    };
 
     console.log('Birleştirilmiş yapılandırma:', this.config);
 

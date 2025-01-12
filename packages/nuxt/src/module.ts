@@ -1,4 +1,3 @@
-import type { Defu } from 'defu';
 import { addImportsDir, addServerHandler, createResolver, defineNuxtModule } from '@nuxt/kit';
 import defu from 'defu';
 
@@ -36,7 +35,7 @@ export default defineNuxtModule<ModuleOptions>({
   },
   async setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
-    const { resolve } = resolver;
+    const resolve = resolver.resolve.bind(resolver);
 
     // Runtime config
     nuxt.options.runtimeConfig.contentrain = defu(

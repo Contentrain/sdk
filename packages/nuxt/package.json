@@ -1,9 +1,10 @@
 {
   "name": "@contentrain/nuxt",
   "version": "1.0.0",
-  "description": "My new Nuxt module",
-  "repository": "your-org/my-module",
+  "description": "Official Nuxt module for Contentrain SDK, providing seamless integration with Contentrain CMS",
+  "repository": "contentrain/contentrain-sdk",
   "license": "MIT",
+  "private": false,
   "type": "module",
   "exports": {
     ".": {
@@ -23,7 +24,8 @@
     "build": "nuxt-module-build build",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest watch"
+    "test:watch": "vitest watch",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "@nuxt/kit": "^3.15.1",

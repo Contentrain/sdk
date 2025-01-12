@@ -1,16 +1,30 @@
 {
     "name": "@contentrain/core",
-    "version": "0.0.1",
-    "description": "Contentrain SDK Core Package",
-    "author": "",
+    "version": "1.0.0",
+    "description": "Core package for Contentrain SDK, providing fundamental functionality and types",
+    "author": "Contentrain",
     "license": "MIT",
-    "keywords": [],
+    "private": false,
+    "keywords": [
+        "contentrain",
+        "sdk",
+        "core",
+        "content-management"
+    ],
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "tsup && rm -rf dist/types dist/cache dist/loader dist/query",
         "test": "vitest",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "clean": "rm -rf dist"
     },
     "devDependencies": {
         "@types/node": "^20.10.6",
