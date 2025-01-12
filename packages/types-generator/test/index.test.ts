@@ -137,7 +137,7 @@ describe('contentrainTypesGenerator Tests', () => {
       expect(() => {
         const files = (invalidGenerator as any).getModelFiles();
         void files;
-      }).toThrow('Model dizini okunamadı');
+      }).toThrow('Failed to read model directory');
     });
 
     it('geçersiz metadata dosyası için hata fırlatmalı', () => {
@@ -153,7 +153,7 @@ describe('contentrainTypesGenerator Tests', () => {
       expect(() => {
         const metadata = (invalidGenerator as any).getMetadata();
         void metadata;
-      }).toThrow('Metadata okunamadı');
+      }).toThrow('Failed to read metadata');
 
       fs.rmSync(tempModelPath, { recursive: true, force: true });
     });
@@ -164,7 +164,7 @@ describe('contentrainTypesGenerator Tests', () => {
 
       expect(() => {
         void new ContentrainTypesGenerator();
-      }).toThrow('Yapılandırma dosyası okunamadı');
+      }).toThrow('Failed to read configuration file');
 
       fs.unlinkSync(configPath);
     });
