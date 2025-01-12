@@ -7,11 +7,13 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "types:generate": "contentrain-types-generator"
   },
   "dependencies": {
     "@contentrain/core": "workspace:*",
     "@contentrain/nuxt": "workspace:*",
+    "@contentrain/types-generator": "workspace:*",
     "nuxt": "^3.15.1",
     "vue": "latest",
     "vue-router": "latest"

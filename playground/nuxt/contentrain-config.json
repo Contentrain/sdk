@@ -1,0 +1,5 @@
+{
+  "modelsDir": "../contentrain/models",
+  "contentDir": "../contentrain",
+  "outputDir": "types"
+}
