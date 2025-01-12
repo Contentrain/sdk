@@ -1,36 +1,30 @@
-import type { BaseContentrainType } from '@contentrain/core';
+import type { BaseContentrainType, QueryConfig } from '@contentrain/core';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import ContentrainSDK from '@contentrain/core';
+import { ContentrainSDK } from '@contentrain/core';
 
-// SDK'yı yapılandır
-const sdk = new ContentrainSDK({
-  contentDir: join(__dirname, '../../contentrain'),
-  defaultLocale: 'tr',
-  cache: true,
-  ttl: 60 * 1000,
-  maxCacheSize: 100,
-});
-
-// Tip tanımlamaları
+// Base Model Tipleri
 interface IProcessItems extends BaseContentrainType {
   title: string
   description: string
   icon: string
 }
 
+interface IWorkCategory extends BaseContentrainType {
+  category: string
+  order: number
+}
+
 interface IWorkItem extends BaseContentrainType {
   title: string
   description: string
   image: string
-  category: IWorkCategory
+  category: string
   link: string
   order: number
-}
-
-interface IWorkCategory extends BaseContentrainType {
-  category: string
-  order: number
+  _relations: {
+    category: IWorkCategory
+  }
 }
 
 interface IFaqItem extends BaseContentrainType {
@@ -50,50 +44,113 @@ interface ITestimonialItem extends BaseContentrainType {
   'description': string
   'title': string
   'image': string
-  'creative-work': IWorkItem
+  'creative-work': string
+  '_relations': {
+    'creative-work': IWorkItem
+  }
 }
+
+// Query Config Tipleri
+interface IProcessItemsQuery extends QueryConfig<
+  IProcessItems,
+  'en' | 'tr',
+  Record<string, never>
+> {}
+
+interface IWorkItemQuery extends QueryConfig<
+  IWorkItem,
+  'en' | 'tr',
+  { category: IWorkCategory }
+> {}
+
+interface IFaqItemQuery extends QueryConfig<
+  IFaqItem,
+  'en' | 'tr',
+  Record<string, never>
+> {}
+
+interface IMetaTagQuery extends QueryConfig<
+  IMetaTag,
+  'en' | 'tr',
+  Record<string, never>
+> {}
+
+interface ITestimonialItemQuery extends QueryConfig<
+  ITestimonialItem,
+  'en' | 'tr',
+  { 'creative-work': IWorkItem }
+> {}
+
+// SDK'yı yapılandır
+const sdk = new ContentrainSDK({
+  contentDir: join(__dirname, '../../contentrain'),
+  defaultLocale: 'tr',
+  cache: true,
+  ttl: 60 * 1000,
+  maxCacheSize: 100,
+});
 
 async function main() {
   try {
     // Tüm sorguları çalıştır
-    const processes = await sdk.query<IProcessItems>('processes')
+    const processes = await sdk.query<IProcessItemsQuery>('processes')
       .orderBy('title', 'asc')
       .limit(3)
       .get();
 
-    const workItems = await sdk.query<IWorkItem>('workitems')
+    const workItems = await sdk.query<IWorkItemQuery>('workitems')
       .include('category')
       .orderBy('order', 'asc')
       .get();
 
-    const publishedFaqs = await sdk.query<IFaqItem>('faqitems')
+    const publishedFaqs = await sdk.query<IFaqItemQuery>('faqitems')
       .where('status', 'eq', 'publish')
       .orderBy('order', 'asc')
       .get();
 
-    const metaTags = await sdk.query<IMetaTag>('meta-tags')
+    const metaTags = await sdk.query<IMetaTagQuery>('meta-tags')
       .where('name', 'startsWith', 'og')
       .get();
 
-    const testimonails = await sdk.query<ITestimonialItem>('testimonail-items')
+    const testimonails = await sdk.query<ITestimonialItemQuery>('testimonail-items')
       .locale('en')
       .include('creative-work')
       .where('status', 'eq', 'publish')
       .get();
 
-    const filteredWorks = await sdk.query<IWorkItem>('workitems')
+    let lang: 'en' | 'tr' = 'en';
+    async function changeLangTest(lang: 'en' | 'tr') {
+      const testimonails = await sdk.query<ITestimonialItemQuery>('testimonail-items')
+        .locale(lang)
+        .include('creative-work')
+        .where('status', 'eq', 'publish')
+        .get();
+      console.log(testimonails);
+    }
+
+    const intervalId = setInterval(() => {
+      lang = lang === 'en' ? 'tr' : 'en';
+      changeLangTest(lang).catch(console.error);
+    }, 1000);
+    clearInterval(intervalId);
+    const filteredWorks = await sdk.query<IWorkItemQuery>('workitems')
       .where('status', 'eq', 'publish')
       .where('order', 'gt', 0)
       .orderBy('order', 'asc')
       .limit(5)
       .get();
 
-    const singleWork = await sdk.query<IWorkItem>('workitems').locale('tr').where('ID', 'eq', '1a01328952b4').include('category').first();
+    const singleWork = await sdk.query<IWorkItemQuery>('workitems')
+      .locale('tr')
+      .where('ID', 'eq', '1a01328952b4')
+      .include('category')
+      .first();
 
-    const englishContent = await sdk.query<IProcessItems>('processes')
+    const englishContent = await sdk.query<IProcessItemsQuery>('processes')
       .locale('en')
       .get();
-    const turkishContent = await sdk.query<IProcessItems>('processes')
+
+    const turkishContent = await sdk.query<IProcessItemsQuery>('processes')
       .locale('tr')
       .get();
 

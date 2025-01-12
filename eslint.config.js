@@ -16,6 +16,25 @@ export default antfu({
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
+  vue: {
+    overrides: {
+      'vue/html-indent': 'off',
+      'vue/first-attribute-linebreak': 'off',
+      'vue/html-closing-bracket-newline': 'off',
+      'vue/max-attributes-per-line': 'off',
+      'vue/singleline-html-element-content-newline': 'off',
+      'vue/multiline-html-element-content-newline': 'off',
+      'vue/html-self-closing': ['error', {
+        html: {
+          void: 'always',
+          normal: 'never',
+          component: 'always',
+        },
+        svg: 'always',
+        math: 'always',
+      }],
+    },
+  },
   rules: {
     'no-console': 'off',
     'style/semi': ['error', 'always'],

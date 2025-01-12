@@ -123,4 +123,9 @@ export class ContentrainQueryBuilder<
     const result = await this.limit(1).get();
     return result.data[0] || null;
   }
+
+  async count(): Promise<number> {
+    const result = await this.get();
+    return result.total;
+  }
 }

@@ -1,0 +1,20 @@
+[
+  {
+    "ID": "1",
+    "question": "Hizmetleriniz nelerdir?",
+    "answer": "Web ve mobil uygulama geliştirme hizmetleri sunuyoruz.",
+    "order": 1,
+    "status": "publish",
+    "createdAt": "2024-01-12T00:00:00.000Z",
+    "updatedAt": "2024-01-12T00:00:00.000Z"
+  },
+  {
+    "ID": "2",
+    "question": "Ne kadar sürede teslim ediyorsunuz?",
+    "answer": "Projenin kapsamına göre 2-6 ay arasında değişmektedir.",
+    "order": 2,
+    "status": "publish",
+    "createdAt": "2024-01-12T00:00:00.000Z",
+    "updatedAt": "2024-01-12T00:00:00.000Z"
+  }
+]
