@@ -27,10 +27,10 @@ export class ContentrainQueryBuilder<
     this.loader = loader;
   }
 
-  where<K extends keyof TFields>(
+  where<K extends keyof TFields, O extends Operator>(
     field: K,
-    operator: Operator,
-    value: TFields[K] extends Array<infer U> ? U | U[] : TFields[K],
+    operator: O,
+    value: O extends 'in' ? TFields[K][] : TFields[K],
   ): this {
     this.filters.push({
       field: field as string,

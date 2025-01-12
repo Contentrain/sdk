@@ -58,9 +58,9 @@ describe('contentrain Nuxt Modülü', async () => {
     },
   });
 
-  // Modül Yapılandırması Testleri
-  describe('modül Yapılandırması', () => {
-    it('varsayılan yapılandırma değerlerini doğru şekilde ayarlar', () => {
+  // Module Configuration Tests
+  describe('module Configuration', () => {
+    it('sets default configuration values correctly', () => {
       const options = {
         contentDir,
         defaultLocale: 'tr',

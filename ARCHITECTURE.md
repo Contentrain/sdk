@@ -1,188 +1,208 @@
-# Contentrain SDK Mimarisi
+# Contentrain SDK Architecture
 
-## 1. Genel Bakış
+This document details the architectural structure and design decisions of the Contentrain SDK.
 
-Contentrain SDK, Git-based headless CMS olan Contentrain'in içerik yönetimi ve sorgulama yeteneklerini modern web uygulamalarına entegre etmek için geliştirilmiş bir araçtır.
+## 🏗️ Overview
 
-### 1.1 Temel Özellikler
-- Framework-agnostic yapı (Vue, React, Svelte, vb.)
-- TypeScript öncelikli geliştirme
-- Build-time optimizasyonları
-- SSR/SSG uyumlu
-- HMR desteği
-- Tip güvenliği
-- Performans odaklı cache sistemi
+Contentrain SDK is designed with a modular architecture consisting of three main packages:
 
-### 1.2 Kullanım Senaryoları
-- Statik site oluşturma (SSG)
-- Server-side rendering (SSR)
-- Single-page applications (SPA)
-- Jamstack uygulamaları
+1. **Core Package** (`@contentrain/core`)
+   - Provides core SDK functionality
+   - Framework-agnostic design
+   - Forms the foundation for other packages
 
-## 2. Core Paket Mimarisi
+2. **Nuxt Module** (`@contentrain/nuxt`)
+   - Nuxt.js integration
+   - Provides Nuxt-specific features using the core package
 
-### 2.1 Paket Yapısı
+3. **Type Generator** (`@contentrain/types-generator`)
+   - Automatically generates TypeScript type definitions
+   - Performs type inference from model definitions
+
+## 📦 Package Details
+
+### Core Package
+
+#### Main Components
+
 ```
-packages/
-  core/                       # Framework-agnostic core package
-    ├── src/
-    │   ├── types/           # Temel tip tanımları
-    │   │   ├── index.ts     # Re-export tüm tipler
-    │   │   ├── model.ts     # Model ve Field tipleri
-    │   │   ├── query.ts     # Query tipleri
-    │   │   ├── config.ts    # Konfigürasyon tipleri
-    │   │   ├── error.ts     # Error tipleri
-    │   │   ├── loader.ts    # Loader tipleri
-    │   │   └── cache.ts     # Cache tipleri
-    │   │
-    │   ├── query/           # Query engine
-    │   │   ├── builder.ts   # Query builder
-    │   │   └── executor.ts  # Query execution
-    │   │
-    │   ├── loader/          # Content loader
-    │   │   └── content.ts   # Content loader implementasyonu
-    │   │
-    │   ├── cache/          # Cache sistemi
-    │   │   ├── memory.ts   # Memory cache implementasyonu
-    │   │   └── index.ts    # Re-export
-    │   │
-    │   └── utils/          # Utility fonksiyonlar
-    │       ├── path.ts     # Path işlemleri
-    │       └── validation.ts # Validasyon helpers
-    │
-    └── package.json
+core/
+├── src/
+│   ├── loader/       # Content loading engine
+│   ├── query/        # Query processor
+│   ├── cache/        # Caching system
+│   └── types/        # Base type definitions
 ```
 
-### 2.2 Core Modüller
+#### Design Principles
 
-#### 2.2.1 Query Engine
-```typescript
-class ContentrainQueryBuilder<T extends BaseContentrainType> {
-  where(field: keyof T, operator: Operator, value: any): this
-  include(relations: string | string[] | Include): this
-  orderBy(field: keyof T, direction: 'asc' | 'desc'): this
-  limit(count: number): this
-  offset(count: number): this
-  locale(code: string): this
-  cache(ttl?: number): this
-  noCache(): this
-  bypassCache(): this
-  get(): Promise<QueryResult<T>>
-  first(): Promise<T | null>
-}
+1. **Modularity**
+   - Each component can work independently
+   - Loosely coupled design
+   - Easy testability
 
-class QueryExecutor {
-  private loader: ContentLoader
-  private cache: MemoryCache
+2. **Performance**
+   - LRU caching strategy
+   - Lazy loading support
+   - Minimal memory usage
 
-  execute<T>(query: QueryBuilder<T>): Promise<QueryResult<T>>
-  resolveRelations<T>(data: T[], relations: string[]): Promise<T[]>
-}
+3. **Type Safety**
+   - Full TypeScript support
+   - Generic type parameters
+   - Type inference
+
+### Nuxt Module
+
+#### Main Components
+
+```
+nuxt/
+├── src/
+│   ├── module.ts     # Nuxt module definition
+│   ├── runtime/      # Runtime helpers
+│   └── composables/  # Vue composables
 ```
 
-#### 2.2.2 Content Loader
-```typescript
-class ContentLoader {
-  private options: ContentLoaderOptions
-  private modelConfigs: Map<string, ModelConfig>
-  private relations: Map<string, RelationConfig[]>
-  private cache: MemoryCache
+#### Integration Points
 
-  async load<T extends BaseContentrainType>(model: string): Promise<LoaderResult<T>>
-  async resolveRelation<T extends BaseContentrainType, R extends BaseContentrainType>(
-    model: string,
-    relationField: keyof T,
-    data: T[],
-    locale?: string,
-  ): Promise<R[]>
-}
+1. **Module Setup**
+   - Nuxt hooks usage
+   - Automatic type definition
+   - Runtime configuration
+
+2. **Composables**
+   - Vue Composition API compatible
+   - SSR support
+   - Auto-import feature
+
+3. **Build Optimizations**
+   - Tree-shaking support
+   - Code splitting
+   - Minimal bundle size
+
+### Type Generator
+
+#### Main Components
+
+```
+types-generator/
+├── src/
+│   ├── generator/    # Type generation engine
+│   ├── parser/       # Model parser
+│   └── templates/    # Type templates
 ```
 
-#### 2.2.3 Cache Sistemi
-```typescript
-class MemoryCache {
-  private cache: Map<string, CacheEntry>
-  private options: Required<MemoryCacheOptions>
-  private stats: CacheStats
+#### Generation Process
 
-  constructor(options: MemoryCacheOptions = {}) {
-    this.options = {
-      maxSize: 100, // 100 MB
-      defaultTTL: 60 * 1000, // 1 dakika
-      ...options,
-    }
-  }
+1. **Model Analysis**
+   - JSON schema parsing
+   - Relation detection
+   - Type inference
 
-  set(key: string, value: any, ttl?: number): void
-  get(key: string): any | null
-  has(key: string): boolean
-  delete(key: string): void
-  clear(): void
-  getStats(): CacheStats
-}
+2. **Type Generation**
+   - TypeScript AST manipulation
+   - Template-based generation
+   - Prettier formatting
+
+3. **Validation**
+   - Type checking
+   - Circular dependency detection
+   - Error reporting
+
+## 🔄 Data Flow
+
+### Content Loading Process
+
+```mermaid
+graph LR
+    A[Request] --> B[Cache Check]
+    B --> |Cache Miss| C[File System]
+    B --> |Cache Hit| D[Cache]
+    C --> E[Data Processing]
+    D --> F[Response]
+    E --> F
 ```
 
-### 2.3 Error Handling
+### Query Processing Flow
 
-```typescript
-type ContentrainError =
-  | 'MODEL_NOT_FOUND'
-  | 'INVALID_FIELD'
-  | 'INVALID_RELATION'
-  | 'INVALID_OPERATOR'
-  | 'CACHE_ERROR'
-
-class ContentrainError extends Error {
-  constructor(
-    public type: ContentrainError,
-    message: string,
-    public details?: any
-  ) {
-    super(message)
-  }
-}
+```mermaid
+graph LR
+    A[Query] --> B[Parse]
+    B --> C[Optimize]
+    C --> D[Execute]
+    D --> E[Result]
 ```
 
-## 3. Test Stratejisi
+### Type Generation Flow
 
-### 3.1 Unit Tests
-- Memory Cache Tests (14 test)
-  - Set/Get operasyonları
-  - TTL yönetimi
-  - Cache temizleme
-  - Memory limitleri
-  - İstatistik takibi
+```mermaid
+graph LR
+    A[Model] --> B[Parse]
+    B --> C[Relation Analysis]
+    C --> D[Type Generation]
+    D --> E[Validation]
+    E --> F[Output]
+```
 
-- Content Loader Tests (20 test)
-  - Model yükleme
-  - İlişki çözümleme
-  - Hata yönetimi
-  - Lokalizasyon
-  - Concurrent yükleme
+## 🔒 Security
 
-- Query Builder Tests (21 test)
-  - Filtreleme operasyonları
-  - İlişki yükleme
-  - Sıralama ve sayfalama
-  - Cache yönetimi
-  - Kompleks sorgular
+1. **Data Validation**
+   - Input sanitization
+   - Type checking
+   - Schema validation
 
-### 3.2 Performance Tests
-- Bundle size limitleri
-- Memory kullanım limitleri
-- Query performance benchmarks
-- Cache hit/miss oranları
+2. **Error Handling**
+   - Detailed error messages
+   - Safe debugging
+   - Graceful degradation
 
-## 4. Versiyonlama ve Release
+3. **Resource Management**
+   - Memory leak prevention
+   - File handle management
+   - Cache size control
 
-### 4.1 Semantic Versioning
-- MAJOR: Breaking changes
-- MINOR: New features
-- PATCH: Bug fixes
+## 📈 Performance
 
-### 4.2 Release Checklist
-- Test coverage kontrolü
-- Bundle size kontrolü
-- Breaking change kontrolü
-- Doküman güncellemesi
-- Changelog güncellemesi
+1. **Caching Strategy**
+   - LRU (Least Recently Used) algorithm
+   - Memory limit control
+   - Automatic cleanup
+
+2. **Lazy Loading**
+   - Load on demand
+   - Chunk-based data transfer
+   - Progressive loading
+
+3. **Bundle Optimization**
+   - Tree-shaking
+   - Code splitting
+   - Minimal dependencies
+
+## 🔄 Version Management
+
+1. **Semantic Versioning**
+   - Major: Backward incompatible changes
+   - Minor: Backward compatible features
+   - Patch: Bug fixes
+
+2. **Change Management**
+   - Changesets usage
+   - Automatic version notes
+   - Release workflow
+
+## 🧪 Testing Strategy
+
+1. **Unit Tests**
+   - Isolated tests for each component
+   - Mock and stub usage
+   - 100% code coverage target
+
+2. **Integration Tests**
+   - Inter-package interaction tests
+   - E2E scenarios
+   - Performance tests
+
+3. **Playground**
+   - Example applications
+   - Manual testing environment
+   - Documentation examples

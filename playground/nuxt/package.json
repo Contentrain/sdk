@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "types:generate": "contentrain-types-generator"
+    "cr:generate": "contentrain-generate -d"
   },
   "dependencies": {
     "@contentrain/core": "workspace:*",

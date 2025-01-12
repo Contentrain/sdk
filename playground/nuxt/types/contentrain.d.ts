@@ -58,7 +58,7 @@ export interface ITestimonailItems extends BaseContentrainType {
   image: string
   'creative-work': string
   _relations?: {
-    creative-work: IWorkItems
+    'creative-work': IWorkItems
   }
 }
 
@@ -132,7 +132,7 @@ export interface ITestimonailItemsQuery extends QueryConfig<
   ITestimonailItems,
   'en' | 'tr',
   {
-    creative-work: IWorkItems
+    'creative-work': IWorkItems
   }
 > {}
 

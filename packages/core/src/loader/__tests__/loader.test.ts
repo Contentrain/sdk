@@ -10,7 +10,7 @@ describe('contentLoader', () => {
 
   beforeEach(() => {
     options = {
-      contentDir: join(__dirname, '../../../../../__mocks__/contentrain'),
+      contentDir: join(__dirname, '../../../../../playground/contentrain'),
       defaultLocale: 'en',
       cache: true,
       ttl: 60 * 1000, // 1 dakika
@@ -52,16 +52,17 @@ describe('contentLoader', () => {
     });
 
     it('should use cache for subsequent loads', async () => {
-      // İlk yükleme
+      // First load
       const result1 = await loader.load('workitems');
       const stats1 = loader.getCacheStats();
 
-      // İkinci yükleme (cache'den gelmeli)
+      // Second load (should come from cache)
       const result2 = await loader.load('workitems');
       const stats2 = loader.getCacheStats();
 
       expect(result1).toEqual(result2);
-      expect(stats2.hits).toBeGreaterThan(stats1.hits);
+      expect(stats1.hits).toBe(0);
+      expect(stats2.hits).toBe(1);
     });
 
     it('should load model metadata and fields correctly', async () => {
@@ -72,21 +73,26 @@ describe('contentLoader', () => {
       expect(result.model.metadata).toBeDefined();
       expect(result.model.metadata.modelId).toBe('faqitems');
 
-      // Field yapısını kontrol et
+      // Field structure
       expect(Array.isArray(result.model.fields)).toBe(true);
       expect(result.model.fields.length).toBeGreaterThan(0);
 
-      // Zorunlu field property'lerini kontrol et
+      // Check field structure
       const firstField = result.model.fields[0];
       expect(firstField).toHaveProperty('fieldId');
       expect(firstField).toHaveProperty('fieldType');
       expect(firstField).toHaveProperty('componentId');
 
-      // System field'larını kontrol et
+      // Check required field properties
+      expect(firstField.fieldId).toBe('title');
+      expect(firstField.fieldType).toBe('string');
+      expect(firstField.componentId).toBe('text');
+
+      // Check system fields
       const systemFields = result.model.fields.filter(f => f.system);
       expect(systemFields).toHaveLength(4); // ID, createdAt, updatedAt, status
 
-      // Özel field'ları kontrol et
+      // Check custom fields
       const questionField = result.model.fields.find(f => f.fieldId === 'question');
       expect(questionField).toBeDefined();
       expect(questionField?.fieldType).toBe('string');
@@ -97,11 +103,11 @@ describe('contentLoader', () => {
       // Sections modelini kullanarak field validasyonu testi
       const result = await loader.load('sections');
 
-      // Field yapısını kontrol et
+      // Field structure
       expect(Array.isArray(result.model.fields)).toBe(true);
       expect(result.model.fields.length).toBeGreaterThan(0);
 
-      // Her field'ın gerekli property'lere sahip olduğunu kontrol et
+      // Check that each field has required properties
       result.model.fields.forEach((field) => {
         expect(field.fieldId).toBeDefined();
         expect(field.fieldType).toBeDefined();
@@ -248,7 +254,7 @@ describe('contentLoader', () => {
     it('should handle file permission errors', async () => {
       const restrictedLoader = new ContentLoader({
         ...options,
-        contentDir: '/root/restricted', // Erişim izni olmayan dizin
+        contentDir: '/root/restricted', // Directory without access permission
       });
 
       await expect(restrictedLoader.load('workitems')).rejects.toThrow();

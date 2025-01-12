@@ -1,4 +1,4 @@
-import type { BaseContentrainType } from '../../types/model';
+import type { BaseContentrainType, ContentrainStatus } from '../../types/model';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ContentLoader } from '../../loader/content';
@@ -29,7 +29,7 @@ describe('query', () => {
 
   beforeEach(() => {
     loader = new ContentLoader({
-      contentDir: join(__dirname, '../../../../../__mocks__/contentrain'),
+      contentDir: join(__dirname, '../../../../../playground/contentrain'),
       defaultLocale: 'en',
       cache: true,
       ttl: 60 * 1000,
@@ -67,7 +67,7 @@ describe('query', () => {
 
     it('should combine multiple filters', async () => {
       const result = await builder
-        .where('status', 'eq', 'publish')
+        .where('status', 'eq', 'publish' as ContentrainStatus)
         .where('order', 'lt', 3)
         .get();
 
@@ -199,11 +199,11 @@ describe('query', () => {
 
   describe('cache', () => {
     it('should use cache by default', async () => {
-      // İlk sorgu
+      // First query
       await builder.get();
       const stats1 = loader.getCacheStats();
 
-      // İkinci sorgu (cache'den gelmeli)
+      // Second query (should come from cache)
       await builder.get();
       const stats2 = loader.getCacheStats();
 
@@ -211,13 +211,13 @@ describe('query', () => {
     });
 
     it('should respect custom TTL', async () => {
-      // Kısa TTL ile sorgu
+      // Query with short TTL
       await builder.cache(100).get();
 
-      // TTL süresini bekle
+      // Wait for TTL
       await new Promise(resolve => setTimeout(resolve, 150));
 
-      // Tekrar sorgu (cache miss olmalı)
+      // Query again (should be cache miss)
       await builder.get();
       const stats = loader.getCacheStats();
       expect(stats.misses).toBeGreaterThan(0);
@@ -227,7 +227,7 @@ describe('query', () => {
   describe('advanced filtering', () => {
     it('should handle multiple AND conditions', async () => {
       const result = await builder
-        .where('status', 'eq', 'publish')
+        .where('status', 'eq', 'publish' as ContentrainStatus)
         .where('order', 'lt', 3)
         .where('title', 'contains', 'Content')
         .get();
@@ -241,7 +241,7 @@ describe('query', () => {
     });
 
     it('should handle array operations with "in" operator', async () => {
-      const validStatuses = ['publish', 'draft'];
+      const validStatuses: ContentrainStatus[] = ['publish', 'draft', 'changed'];
       const result = await builder
         .where('status', 'in', validStatuses)
         .get();

@@ -274,10 +274,10 @@ ${JSON.stringify(turkishContent.data, null, 2)}
       'utf-8',
     );
 
-    console.log('Tüm sorgu sonuçları query-results.md dosyasına yazıldı.');
+    console.log('All query results have been written to query-results.md file.');
   }
   catch (error) {
-    console.error('Hata:', error);
+    console.error('Error:', error);
   }
 }
 

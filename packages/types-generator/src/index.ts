@@ -20,7 +20,7 @@ export class ContentrainTypesGenerator {
       contentDir: path.join(process.cwd(), 'contentrain'),
     };
 
-    // Eğer config parametresi verilmişse, dosya aramadan direkt olarak kullan
+    // If config parameter is provided, use it directly without searching for files
     if (config) {
       const cliConfig: Partial<GeneratorConfig> = {};
       if (config.modelsDir)
@@ -36,7 +36,7 @@ export class ContentrainTypesGenerator {
       };
     }
     else {
-      // Config dosyasını ara
+      // Search for config file
       const possibleConfigPaths = [
         path.join(process.cwd(), 'contentrain-config.json'),
         path.join(process.cwd(), '.contentrain/config.json'),
@@ -50,9 +50,9 @@ export class ContentrainTypesGenerator {
             const fileContent = fs.readFileSync(configPath, 'utf-8');
             const parsedConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
 
-            console.log('Okunan yapılandırma:', parsedConfig);
+            console.log('Read configuration:', parsedConfig);
 
-            // Yolları mutlak yola çevir
+            // Convert paths to absolute paths
             if (parsedConfig.modelsDir)
               fileConfig.modelsDir = path.resolve(process.cwd(), parsedConfig.modelsDir);
             if (parsedConfig.outputDir)
@@ -60,18 +60,18 @@ export class ContentrainTypesGenerator {
             if (parsedConfig.contentDir)
               fileConfig.contentDir = path.resolve(process.cwd(), parsedConfig.contentDir);
 
-            console.log('Çözümlenmiş yapılandırma:', fileConfig);
-            console.log(`✓ Yapılandırma dosyası okundu: ${configPath}`);
+            console.log('Resolved configuration:', fileConfig);
+            console.log(`✓ Configuration file read: ${configPath}`);
             break;
           }
           catch (error) {
-            // Dosya varsa ama JSON geçersizse hata fırlat
+            // Throw error if file exists but JSON is invalid
             if (error instanceof SyntaxError) {
-              console.warn(`! Yapılandırma dosyası okunamadı: ${configPath}`, error);
-              throw new Error('Yapılandırma dosyası okunamadı');
+              console.warn(`! Failed to read configuration file: ${configPath}`, error);
+              throw new Error('Failed to read configuration file');
             }
-            // Diğer hatalarda sadece uyarı ver ve devam et
-            console.warn(`! Yapılandırma dosyası okunamadı: ${configPath}`, error);
+            // For other errors, just warn and continue
+            console.warn(`! Failed to read configuration file: ${configPath}`, error);
           }
         }
       }
@@ -82,10 +82,10 @@ export class ContentrainTypesGenerator {
       };
     }
 
-    console.log('Birleştirilmiş yapılandırma:', this.config);
+    console.log('Merged configuration:', this.config);
 
     if (!this.config.modelsDir || !this.config.contentDir || !this.config.outputDir) {
-      throw new Error('Geçersiz yapılandırma: modelsDir, contentDir ve outputDir zorunludur');
+      throw new Error('Invalid configuration: modelsDir, contentDir and outputDir are required');
     }
   }
 
@@ -97,53 +97,77 @@ export class ContentrainTypesGenerator {
   // Ana tip üretme metodu
   generate(): void {
     try {
+      console.log('Reading model files...');
       const modelFiles = this.getModelFiles();
-      const metadata = this.getMetadata();
+      console.log('Found model files:', modelFiles);
 
+      console.log('Reading metadata...');
+      const metadata = this.getMetadata();
+      console.log('Metadata:', metadata);
+
+      console.log('Initializing type definitions...');
       let typeDefinitions = this.initializeTypeDefinitions();
+
+      console.log('Processing model files...');
       const { baseTypes, queryTypes } = this.processModelFiles(modelFiles, metadata);
 
       typeDefinitions += baseTypes;
-      typeDefinitions += '\n// Query Config Tipleri\n';
+      typeDefinitions += '\n// Query Config Types\n';
       typeDefinitions += queryTypes;
 
+      console.log('Writing type definitions...');
       this.writeTypeDefinitions(typeDefinitions);
+      console.log('✨ Type definitions successfully generated:', path.join(this.config.outputDir, 'contentrain.d.ts'));
     }
     catch (error) {
-      throw new Error('Tip üretimi başarısız oldu', { cause: error });
+      console.error('❌ Error details:', error instanceof Error ? error.cause : error);
+      throw new Error('Type generation failed', { cause: error });
     }
   }
 
-  // Model dosyalarını okuma
+  // Reading model files
   private getModelFiles(): string[] {
     try {
-      return fs.readdirSync(this.config.modelsDir)
+      if (!fs.existsSync(this.config.modelsDir)) {
+        throw new Error(`Model directory not found: ${this.config.modelsDir}`);
+      }
+      const files = fs.readdirSync(this.config.modelsDir)
         .filter(file => file.endsWith('.json') && file !== 'metadata.json');
+      if (files.length === 0) {
+        throw new Error(`No JSON files found in model directory: ${this.config.modelsDir}`);
+      }
+      return files;
     }
     catch (error) {
-      throw new Error(`Model dizini okunamadı: ${this.config.modelsDir}`, { cause: error });
+      console.error('❌ Error reading model files:', error instanceof Error ? error.message : String(error));
+      throw new Error(`Failed to read model directory: ${this.config.modelsDir}`, { cause: error });
     }
   }
 
-  // Metadata okuma
+  // Reading metadata
   private getMetadata(): ModelMetadata[] {
     try {
       const metadataPath = path.join(this.config.modelsDir, 'metadata.json');
       if (!fs.existsSync(metadataPath)) {
-        throw new Error(`Metadata dosyası bulunamadı: ${metadataPath}`);
+        throw new Error(`Metadata file not found: ${metadataPath}`);
       }
       const content = fs.readFileSync(metadataPath, 'utf-8');
-      return JSON.parse(content);
+      const metadata = JSON.parse(content);
+      if (!Array.isArray(metadata)) {
+        throw new TypeError('Metadata is not a valid array');
+      }
+      return metadata;
     }
     catch (error) {
-      throw new Error('Metadata okunamadı', { cause: error });
+      console.error('❌ Error reading metadata:', error instanceof Error ? error.message : String(error));
+      throw new Error('Failed to read metadata', { cause: error });
     }
   }
 
-  // Temel tip tanımlarını oluşturma
+  // Creating base type definitions
   private initializeTypeDefinitions(): string {
-    return `// @contentrain/types-generator tarafından otomatik oluşturuldu
-// Bu dosyayı manuel olarak düzenlemeyin
+    return `// Automatically generated by @contentrain/types-generator
+// Do not edit this file manually
 
 import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
   }
@@ -164,20 +188,20 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
         const modelMetadata = metadata.find(m => m.modelId === modelId);
 
         if (!modelMetadata) {
-          throw new Error(`Model metadata bulunamadı: ${modelId}`);
+          throw new Error(`Model metadata not found: ${modelId}`);
         }
 
-        // Base Type Üretimi
+        // Base Type Generation
         const interfaceName = this.formatInterfaceName(modelMetadata);
         const { typeDefinition, relations } = this.generateTypeForModel(modelContent, metadata);
         baseTypes += `export interface ${interfaceName} extends BaseContentrainType ${typeDefinition}\n\n`;
 
-        // Query Type Üretimi
+        // Query Type Generation
         const queryInterfaceName = `${interfaceName}Query`;
         queryTypes += this.generateQueryType(interfaceName, queryInterfaceName, modelMetadata, relations);
       }
       catch (error) {
-        console.error(`✗ ${file} dosyasında hata: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(`✗ Error in file ${file}: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
 
@@ -212,7 +236,7 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
             if (Object.keys(relations).length === 1) {
               typeDefinition += '  _relations?: {\n';
             }
-            typeDefinition += `    ${field.fieldId}: ${relatedInterfaceName}${field.componentId === 'one-to-many' ? '[]' : ''}\n`;
+            typeDefinition += `    ${this.formatPropertyName(field.fieldId)}: ${relatedInterfaceName}${field.componentId === 'one-to-many' ? '[]' : ''}\n`;
             if (Object.keys(relations).length === Object.keys(modelFields.filter(f => f.fieldType === 'relation')).length) {
               typeDefinition += '  }\n';
             }
@@ -241,7 +265,7 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
     const hasRelations = Object.keys(relations).length > 0;
     const relationsType = hasRelations
       ? `{\n    ${Object.entries(relations)
-        .map(([key]) => `${key}: ${relations[key].model}`)
+        .map(([key]) => `${this.formatPropertyName(key)}: ${relations[key].model}`)
         .join(',\n    ')}\n  }`
       : 'Record<string, never>';
 
@@ -268,10 +292,10 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
     return typeMap[field.fieldType] || 'unknown';
   }
 
-  // Alan adını formatlama
+  // Property ismini formatla
   private formatPropertyName(name: string): string {
-    // Tire içeren property'leri tırnak içinde yaz
-    return name.includes('-') ? `'${name}'` : name;
+    // Sadece özel karakter içeren property'ler için tırnak kullan
+    return /[-\s]/.test(name) ? `'${name}'` : name;
   }
 
   // Arayüz adını formatlama
@@ -300,10 +324,10 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/core';\n\n`;
       const outputPath = path.join(this.config.outputDir, 'contentrain.d.ts');
       fs.writeFileSync(outputPath, cleanedDefinitions);
 
-      console.log(`\n✨ Tip tanımları başarıyla oluşturuldu: ${outputPath}`);
+      console.log(`\n✨ Type definitions successfully generated: ${outputPath}`);
     }
     catch (error) {
-      throw new Error('Tip tanımları yazılamadı', { cause: error });
+      throw new Error('Failed to write type definitions', { cause: error });
     }
   }
 }

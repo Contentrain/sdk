@@ -22,7 +22,8 @@
     },
     "scripts": {
         "build": "tsup && rm -rf dist/types dist/cache dist/loader dist/query",
-        "test": "vitest",
+        "test": "vitest watch",
+        "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
         "clean": "rm -rf dist"
     },
