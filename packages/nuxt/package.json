@@ -1,10 +1,26 @@
 {
   "name": "@contentrain/nuxt",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Official Nuxt module for Contentrain SDK, providing seamless integration with Contentrain CMS",
-  "repository": "contentrain/contentrain-sdk",
+  "author": "Contentrain Inc.",
   "license": "MIT",
   "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentrain/contentrain-sdk.git",
+    "directory": "packages/nuxt"
+  },
+  "bugs": {
+    "url": "https://github.com/contentrain/contentrain-sdk/issues"
+  },
+  "homepage": "https://github.com/contentrain/contentrain-sdk/tree/main/packages/nuxt#readme",
+  "keywords": [
+    "contentrain",
+    "nuxt",
+    "module",
+    "cms",
+    "content-management"
+  ],
   "type": "module",
   "exports": {
     ".": {

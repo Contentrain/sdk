@@ -5,6 +5,12 @@
   "private": true,
   "packageManager": "pnpm@9.15.2",
   "description": "Contentrain SDK monorepo",
+  "author": "Contentrain Inc.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentrain/contentrain-sdk.git"
+  },
   "engines": {
     "node": ">=18",
     "pnpm": ">=8"

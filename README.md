@@ -1,84 +1,188 @@
 # Contentrain SDK
 
-Official JavaScript/TypeScript SDK for Contentrain CMS. This monorepo contains packages that help you integrate Contentrain's content management system into your JavaScript/TypeScript projects.
+<p align="center">
+  <img src="https://contentrain.io/images/1704967903123_logo.svg" alt="Contentrain SDK" width="200"/>
+</p>
+
+<p align="center">
+  Official SDK for Contentrain - A Headless CMS that combines Git and Serverless Platforms
+</p>
+
+<p align="center">
+  <a href="https://contentrain.io">Website</a> |
+  <a href="https://docs.contentrain.io">Documentation</a> |
+  <a href="https://discord.gg/contentrain">Discord</a>
+</p>
+
+## 🚀 Overview
+
+Contentrain SDK provides a seamless integration layer between your applications and Contentrain CMS. It enables developers to build high-quality digital products without being tied to complex SDKs and APIs.
+
+### Key Features
+
+- 🔄 **Native Git Integration**: Built-in version control and content history tracking
+- ⚡ **Serverless Collections**: Store and manage dynamic content on Serverless Platforms
+- 🌐 **Multi-language Support**: Built-in internationalization capabilities
+- 🔍 **Type-safe Queries**: Full TypeScript support with automatic type generation
+- 💾 **Smart Caching**: Built-in LRU caching for optimal performance
+- 🛠️ **Framework Agnostic**: Works with any JavaScript/TypeScript framework
+- 📦 **Zero Dependencies**: Minimal core package with optional integrations
 
 ## 📦 Packages
 
-| Package | Version | Description |
-|---------|---------|-------------|
-| [@contentrain/query](./packages/query) | 1.0.0 | Core SDK package providing content loading, querying, and caching functionality. |
-| [@contentrain/nuxt](./packages/nuxt) | 1.0.0 | Official Nuxt.js integration module. |
-| [@contentrain/types-generator](./packages/types-generator) | 1.0.0 | Tool for automatically generating TypeScript type definitions for content models. |
+This monorepo contains the following packages:
 
-## 🚀 Getting Started
+### [@contentrain/query](./packages/query)
 
-Each package can be installed and used independently. Choose the package that suits your needs:
+Core query package for content management operations.
+
+- **Features**:
+  - High-performance content loading
+  - Advanced query capabilities with type safety
+  - Built-in LRU caching
+  - Relation support
+  - Multi-language content handling
+  - Serverless collections support
+
+[📚 Documentation](./packages/query/README.md) | [💻 Source](./packages/query) | [📦 npm](https://www.npmjs.com/package/@contentrain/query)
+
+### [@contentrain/nuxt](./packages/nuxt)
+
+Official Nuxt.js integration module for Contentrain.
+
+- **Features**:
+  - Auto-imported composables
+  - SSR & SSG support
+  - Built-in caching
+  - Real-time content updates
+  - TypeScript support
+  - Nuxt 3 compatibility
+
+[📚 Documentation](./packages/nuxt/README.md) | [💻 Source](./packages/nuxt) | [📦 npm](https://www.npmjs.com/package/@contentrain/nuxt)
+
+### [@contentrain/types-generator](./packages/types-generator)
+
+TypeScript types generator for content models.
+
+- **Features**:
+  - Automatic type generation
+  - Watch mode support
+  - Custom type transformers
+  - Relation type mapping
+  - CLI tool
+  - Full type safety
+
+[📚 Documentation](./packages/types-generator/README.md) | [💻 Source](./packages/types-generator) | [📦 npm](https://www.npmjs.com/package/@contentrain/types-generator)
+
+## 🚀 Quick Start
 
 ```bash
-# For query package
+# Install core package
 npm install @contentrain/query
 
-# For Nuxt module
-npm install @contentrain/nuxt
+# Optional: Install framework integration
+npm install @contentrain/nuxt # for Nuxt.js
 
-# For type generator (as a dev dependency)
+# Optional: Install types generator
 npm install -D @contentrain/types-generator
 ```
 
-## 📖 Documentation
+## 💡 Usage Examples
 
-Each package has its own detailed documentation in its README file:
+### Basic Query Operations
 
-- [@contentrain/query documentation](./packages/query/README.md)
-- [@contentrain/nuxt documentation](./packages/nuxt/README.md)
-- [@contentrain/types-generator documentation](./packages/types-generator/README.md)
+```typescript
+import { ContentrainSDK } from '@contentrain/query';
 
-## 🛠️ Development
+const sdk = new ContentrainSDK({
+  contentDir: './content'
+});
 
-### Requirements
+// Simple query
+const posts = await sdk.query('posts')
+  .where('status', 'eq', 'published')
+  .orderBy('createdAt', 'desc')
+  .limit(10)
+  .get();
 
-- Node.js >= 18
-- pnpm >= 8
+// With relations
+const post = await sdk.query('posts')
+  .where('slug', 'eq', 'hello-world')
+  .include('author')
+  .include('categories')
+  .first();
 
-### Setup
+// Multi-language content
+const trPosts = await sdk.query('posts')
+  .locale('tr')
+  .get();
+```
+
+### Nuxt.js Integration
+
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@contentrain/nuxt'],
+  contentrain: {
+    contentDir: './content',
+    defaultLocale: 'en'
+  }
+});
+
+// In your components
+const { query, load } = useContentrain();
+const { data: posts } = await query('posts').get();
+```
+
+### Type Generation
 
 ```bash
-# Clone the repository
-git clone https://github.com/contentrain/contentrain-sdk.git
+# Generate types from your content models
+npx contentrain-generate
 
-# Navigate to directory
-cd contentrain-sdk
-
-# Install dependencies
-pnpm install
-
-# Build packages
-pnpm build
-
-# Run tests
-pnpm test
+# Watch mode
+npx contentrain-generate --watch
 ```
 
-### Monorepo Structure
+## 🌟 Key Benefits
 
-```
-contentrain-sdk/
-├── packages/
-│   ├── query/           # Core SDK package
-│   ├── nuxt/           # Nuxt.js module
-│   └── types-generator/ # Type generator
-├── playground/         # Test and example applications
-└── package.json       # Monorepo configuration
-```
+- **Developer Experience**: Built by developers, for developers
+- **Content Team Collaboration**: Seamless workflow between developers and content creators
+- **Serverless First**: Native support for serverless platforms
+- **Type Safety**: Full TypeScript support with automatic type generation
+- **Performance**: Built-in caching and optimization strategies
+- **Flexibility**: Framework agnostic with official integrations
+
+## 🔧 Advanced Features
+
+- **Content Schema Builder**: Design your content models with JSON or Markdown
+- **Asset Management**: Built-in support for various file types (SVG, PNG, PDF, JPEG, Video)
+- **Webhooks**: Create automations with your favorite third-party tools
+- **Version Control**: Track content history with native Git integration
+- **SEO Optimization**: Full control over meta titles, descriptions, and OG images
 
 ## 🤝 Contributing
 
-1. Fork this repository
-2. Create a new branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
+We love our contributors! Please read our [Contributing Guide](./CONTRIBUTING.md) to learn about our development process and how you can propose bugfixes and improvements.
+
+## 📚 Documentation
+
+- [Official Documentation](https://docs.contentrain.io)
+- [API Reference](https://docs.contentrain.io/api)
+- [Examples](https://docs.contentrain.io/examples)
+- [Headless CMS Guide](https://contentrain.io/headless-cms-guide)
+
+## 💬 Community
+
+- [Discord](https://discord.gg/contentrain)
+- [Twitter](https://twitter.com/contentrainio)
+- [Blog](https://contentrain.io/blog)
 
 ## 📝 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## 🏢 Company
+
+Contentrain Inc. is based in Beaverton, Oregon, U.S. Visit [contentrain.io](https://contentrain.io) to learn more about our company and products.
