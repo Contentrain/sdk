@@ -1,0 +1,25 @@
+{
+  "name": "@contentrain/nuxt-playground",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "cr:generate": "contentrain-generate -d"
+  },
+  "dependencies": {
+    "@contentrain/query": "workspace:*",
+    "@contentrain/nuxt": "workspace:*",
+    "@contentrain/types-generator": "workspace:*",
+    "nuxt": "^3.15.1",
+    "vue": "latest",
+    "vue-router": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "typescript": "^5.3.3"
+  }
+}

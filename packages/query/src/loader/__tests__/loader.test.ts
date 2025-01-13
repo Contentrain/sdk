@@ -1,118 +1,288 @@
-import type { ContentrainBaseModel } from '@contentrain/types';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { FetchLoader } from '../browser';
-import { FileSystemLoader } from '../node';
+import type { ContentLoaderOptions } from '../../types/loader';
+import type { BaseContentrainType } from '../../types/model';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ContentLoader } from '../content';
 
-const MOCKS_DIR = path.resolve(process.cwd(), '__mocks__/contentrain');
-
-async function loadMockFile(filePath: string): Promise<any> {
-  try {
-    const fullPath = path.join(MOCKS_DIR, filePath);
-    const content = await fs.readFile(fullPath, 'utf-8');
-    return JSON.parse(content);
-  }
-  catch {
-    return null;
-  }
-}
-
-describe('browserLoader', () => {
-  let fetchSpy: any;
+describe('contentLoader', () => {
+  let loader: ContentLoader;
+  let options: ContentLoaderOptions;
 
   beforeEach(() => {
-    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = input.toString();
-      const filePath = url.replace('http://localhost/__mocks__/contentrain/', '');
-      const data = await loadMockFile(filePath);
+    options = {
+      contentDir: join(__dirname, '../../../../../playground/contentrain'),
+      defaultLocale: 'en',
+      cache: true,
+      ttl: 60 * 1000, // 1 dakika
+      maxCacheSize: 100, // 100 MB
+    };
 
-      if (data === null) {
-        return new Response(null, { status: 404, statusText: 'Not Found' });
-      }
+    loader = new ContentLoader(options);
+  });
 
-      return new Response(JSON.stringify(data), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', ...init?.headers },
+  afterEach(async () => {
+    await loader.clearCache();
+  });
+
+  describe('load', () => {
+    it('should load model with content', async () => {
+      const result = await loader.load('workitems');
+
+      expect(result).toBeDefined();
+      expect(result.model).toBeDefined();
+      expect(result.model.metadata.modelId).toBe('workitems');
+      expect(result.model.metadata.localization).toBe(true);
+      expect(result.content).toBeDefined();
+      expect(result.content.en).toBeDefined();
+      expect(Array.isArray(result.content.en)).toBe(true);
+    });
+
+    it('should load non-localized model', async () => {
+      const result = await loader.load('sociallinks');
+
+      expect(result).toBeDefined();
+      expect(result.model).toBeDefined();
+      expect(result.model.metadata.localization).toBe(false);
+      expect(result.content.default).toBeDefined();
+      expect(Array.isArray(result.content.default)).toBe(true);
+    });
+
+    it('should throw error for non-existent model', async () => {
+      await expect(loader.load('non-existent')).rejects.toThrow();
+    });
+
+    it('should use cache for subsequent loads', async () => {
+      // First load
+      const result1 = await loader.load('workitems');
+      const stats1 = loader.getCacheStats();
+
+      // Second load (should come from cache)
+      const result2 = await loader.load('workitems');
+      const stats2 = loader.getCacheStats();
+
+      expect(result1).toEqual(result2);
+      expect(stats1.hits).toBe(0);
+      expect(stats2.hits).toBe(1);
+    });
+
+    it('should load model metadata and fields correctly', async () => {
+      const result = await loader.load('faqitems');
+
+      expect(result).toBeDefined();
+      expect(result.model).toBeDefined();
+      expect(result.model.metadata).toBeDefined();
+      expect(result.model.metadata.modelId).toBe('faqitems');
+
+      // Field structure
+      expect(Array.isArray(result.model.fields)).toBe(true);
+      expect(result.model.fields.length).toBeGreaterThan(0);
+
+      // Check field structure
+      const firstField = result.model.fields[0];
+      expect(firstField).toHaveProperty('fieldId');
+      expect(firstField).toHaveProperty('fieldType');
+      expect(firstField).toHaveProperty('componentId');
+
+      // Check system fields first
+      const systemFields = result.model.fields.filter(f => f.system);
+      expect(systemFields).toHaveLength(4); // ID, createdAt, updatedAt, status
+      expect(firstField.fieldId).toBe('createdAt'); // First field should be createdAt
+
+      // Check custom fields
+      const questionField = result.model.fields.find(f => f.fieldId === 'question');
+      expect(questionField).toBeDefined();
+      expect(questionField?.fieldType).toBe('string');
+      expect(questionField?.componentId).toBe('single-line-text');
+    });
+
+    it('should validate field structure', async () => {
+      // Sections modelini kullanarak field validasyonu testi
+      const result = await loader.load('sections');
+
+      // Field structure
+      expect(Array.isArray(result.model.fields)).toBe(true);
+      expect(result.model.fields.length).toBeGreaterThan(0);
+
+      // Check that each field has required properties
+      result.model.fields.forEach((field) => {
+        expect(field.fieldId).toBeDefined();
+        expect(field.fieldType).toBeDefined();
+        expect(field.componentId).toBeDefined();
       });
     });
   });
 
-  afterEach(() => {
-    fetchSpy.mockRestore();
+  describe('resolveRelation', () => {
+    it('should resolve one-to-one relation', async () => {
+      interface WorkItem extends BaseContentrainType {
+        category: string
+        title: string
+        image: string
+        description: string
+        link: string
+        order: number
+      }
+
+      interface WorkCategory extends BaseContentrainType {
+        category: string
+        order: number
+      }
+
+      // Ana içeriği yükle
+      await loader.load('workitems');
+      const workitems = await loader.load<WorkItem>('workitems');
+
+      // İlişkiyi çöz
+      const categories = await loader.resolveRelation<WorkItem, WorkCategory>(
+        'workitems',
+        'category',
+        workitems.content.en,
+        'en',
+      );
+
+      expect(Array.isArray(categories)).toBe(true);
+      expect(categories[0]).toHaveProperty('category');
+      expect(categories[0]).toHaveProperty('order');
+    });
+
+    it('should handle missing relation field', async () => {
+      interface WorkItem extends BaseContentrainType {
+        title: string
+        nonExistentRelation?: string
+      }
+
+      // Ana içeriği yükle
+      await loader.load('workitems');
+      const workitems = await loader.load<WorkItem>('workitems');
+
+      // Olmayan bir ilişki için test
+      await expect(
+        loader.resolveRelation(
+          'workitems',
+          'nonExistentRelation',
+          workitems.content.en,
+          'en',
+        ),
+      ).rejects.toThrow(/No relation found/);
+    });
   });
 
-  it('should load model data with locale', async () => {
-    const loader = new FetchLoader('http://localhost/__mocks__/contentrain');
-    const result = await loader.loadModel('faqitems', 'en');
-    expect(result).toBeDefined();
-    expect(Array.isArray(result)).toBe(true);
-    expect(result.length).toBeGreaterThan(0);
-    expect(result[0]).toHaveProperty('ID');
+  describe('cache management', () => {
+    it('should clear cache', async () => {
+      // Önce içeriği yükle
+      await loader.load('workitems');
+      const stats1 = loader.getCacheStats();
+      expect(stats1.size).toBeGreaterThan(0);
+
+      // Cache'i temizle
+      await loader.clearCache();
+      const stats2 = loader.getCacheStats();
+      expect(stats2.size).toBe(0);
+    });
+
+    it('should refresh specific model cache', async () => {
+      // İlk yükleme
+      await loader.load('workitems');
+      const stats1 = loader.getCacheStats();
+
+      // Cache'i yenile
+      await loader.refreshCache('workitems');
+      const stats2 = loader.getCacheStats();
+
+      expect(stats2.hits).toBeLessThan(stats1.hits + 1);
+    });
+
+    it('should respect TTL settings', async () => {
+      // Kısa TTL ile loader oluştur
+      const shortTTLLoader = new ContentLoader({
+        ...options,
+        ttl: 100, // 100ms
+      });
+
+      // İçeriği yükle
+      await shortTTLLoader.load('workitems');
+
+      // TTL süresini bekle
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Tekrar yükle (cache miss olmalı)
+      await shortTTLLoader.load('workitems');
+      const stats = shortTTLLoader.getCacheStats();
+      expect(stats.misses).toBeGreaterThan(0);
+    });
   });
 
-  it('should load model schema', async () => {
-    const loader = new FetchLoader('http://localhost/__mocks__/contentrain');
-    const result = await loader.loadModelSchema('faqitems');
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty('fields');
+  describe('error handling', () => {
+    it('should handle file system errors', async () => {
+      const badLoader = new ContentLoader({
+        ...options,
+        contentDir: 'non-existent-dir',
+      });
+
+      await expect(badLoader.load('workitems')).rejects.toThrow();
+    });
+
+    it('should handle invalid model config', async () => {
+      // Var olmayan bir model için test
+      await expect(loader.load('non-existent-model')).rejects.toThrow(/Model metadata not found/);
+    });
+
+    it('should handle non-existent model', async () => {
+      // Var olmayan bir model için test
+      await expect(loader.load('non-existent-model')).rejects.toThrow(/Model metadata not found/);
+    });
+
+    it('should handle invalid locale in content files', async () => {
+      const result = await loader.load('workitems');
+      expect(result.content['invalid-locale']).toBeUndefined();
+    });
+
+    it('should handle concurrent load requests gracefully', async () => {
+      const promises = Array.from({ length: 5 }).fill(null).map(async () => loader.load('workitems'));
+      const results = await Promise.all(promises);
+
+      results.forEach((result) => {
+        expect(result).toBeDefined();
+        expect(result.model.metadata.modelId).toBe('workitems');
+      });
+    });
+
+    it('should handle file permission errors', async () => {
+      const restrictedLoader = new ContentLoader({
+        ...options,
+        contentDir: '/root/restricted', // Directory without access permission
+      });
+
+      await expect(restrictedLoader.load('workitems')).rejects.toThrow();
+    });
   });
 
-  it('should handle model not found', async () => {
-    const loader = new FetchLoader('http://localhost/__mocks__/contentrain');
-    await expect(loader.loadModel('non-existent')).rejects.toThrow('Failed to load model: non-existent');
-  });
+  describe('model configuration', () => {
+    it('should load metadata from metadata.json', async () => {
+      const result = await loader.load('faqitems');
 
-  it('should load relation data', async () => {
-    const loader = new FetchLoader('http://localhost/__mocks__/contentrain');
-    const result = await loader.loadRelation<ContentrainBaseModel>('faqitems', '0c1b5726fbf6', 'en');
-    expect(result).toBeDefined();
-    expect(result?.ID).toBe('0c1b5726fbf6');
-  });
+      expect(result.model.metadata).toBeDefined();
+      expect(result.model.metadata.modelId).toBe('faqitems');
+      expect(result.model.metadata).toHaveProperty('localization');
+      expect(result.model.metadata).toHaveProperty('type');
+    });
 
-  it('should get model metadata', async () => {
-    const loader = new FetchLoader('http://localhost/__mocks__/contentrain');
-    const result = await loader.getModelMetadata('faqitems');
-    expect(result).toBeDefined();
-    expect(result?.modelId).toBe('faqitems');
-    expect(result?.type).toBe('JSON');
-  });
-});
+    it('should throw error for missing model in metadata', async () => {
+      // Metadata.json'da olmayan bir model için test
+      await expect(loader.load('non-existent-model')).rejects.toThrow(/Model metadata not found/);
+    });
 
-describe('nodeLoader', () => {
-  it('should load model data with locale', async () => {
-    const loader = new FileSystemLoader(MOCKS_DIR);
-    const result = await loader.loadModel('faqitems', 'en');
-    expect(result).toBeDefined();
-    expect(Array.isArray(result)).toBe(true);
-    expect(result.length).toBeGreaterThan(0);
-    expect(result[0]).toHaveProperty('ID');
-  });
+    it('should validate field structure', async () => {
+      // Sections modelini kullanarak field validasyonu testi
+      const result = await loader.load('sections');
 
-  it('should load model schema', async () => {
-    const loader = new FileSystemLoader(MOCKS_DIR);
-    const result = await loader.loadModelSchema('faqitems');
-    expect(result).toBeDefined();
-    expect(result).toHaveProperty('fields');
-  });
-
-  it('should handle model not found', async () => {
-    const loader = new FileSystemLoader(MOCKS_DIR);
-    await expect(loader.loadModel('non-existent')).rejects.toThrow('Failed to load model: non-existent');
-  });
-
-  it('should load relation data', async () => {
-    const loader = new FileSystemLoader(MOCKS_DIR);
-    const result = await loader.loadRelation<ContentrainBaseModel>('faqitems', '0c1b5726fbf6', 'en');
-    expect(result).toBeDefined();
-    expect(result?.ID).toBe('0c1b5726fbf6');
-  });
-
-  it('should get model metadata', async () => {
-    const loader = new FileSystemLoader(MOCKS_DIR);
-    const result = await loader.getModelMetadata('faqitems');
-    expect(result).toBeDefined();
-    expect(result?.modelId).toBe('faqitems');
-    expect(result?.type).toBe('JSON');
+      expect(result.model.fields).toBeDefined();
+      expect(result.model.fields.length).toBeGreaterThan(0);
+      result.model.fields.forEach((field) => {
+        expect(field.fieldId).toBeDefined();
+        expect(field.fieldType).toBeDefined();
+        expect(field.componentId).toBeDefined();
+      });
+    });
   });
 });

@@ -1,0 +1,5 @@
+{
+  "modelsDir": "../../playground/contentrain/models",
+  "contentDir": "../../playground/contentrain",
+  "outputDir": "types"
+}

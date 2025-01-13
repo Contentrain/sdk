@@ -1,44 +1,35 @@
-// Adapters
-export { BaseAdapter } from './adapters/base';
-export { createReactAdapter, ReactAdapter } from './adapters/react';
-export type {
-  AdapterHooks,
-  AdapterOptions,
-  AdapterResult,
-  FrameworkAdapter,
-} from './adapters/types';
-export { createVueAdapter, VueAdapter } from './adapters/vue';
+import type { ContentLoaderOptions } from './types/loader';
+import type { BaseContentrainType, QueryConfig } from './types/model';
+import { ContentLoader } from './loader/content';
+import { ContentrainQueryBuilder } from './query/builder';
+import { QueryExecutor } from './query/executor';
 
-// Builder
-export * from './builder';
-export type {
-  BuildOptions,
-  BuildResult,
-  ContentTransformer,
-  IndexingOptions,
-  SearchOptions,
-} from './builder/types';
-
-// Cache
 export * from './cache';
+export * from './loader/content';
+export * from './query/builder';
+export * from './query/executor';
+export * from './types';
 
-// Query
-export * from './query';
-export type {
-  FilterOperator,
-  OrderByCondition,
-  PaginationOptions,
-  QueryOptions,
-  QueryResult,
-  WhereCondition,
-} from './query/types';
+export class ContentrainSDK {
+  private loader: ContentLoader;
+  private executor: QueryExecutor;
 
-// Runtime
-export * from './runtime';
-export type {
-  RuntimeAdapter,
-  RuntimeContext,
-  RuntimeMetadata,
-  RuntimeOptions,
-  RuntimeResult,
-} from './runtime/types';
+  constructor(options: ContentLoaderOptions) {
+    this.loader = new ContentLoader(options);
+    this.executor = new QueryExecutor(this.loader);
+  }
+
+  query<T extends QueryConfig<BaseContentrainType, string, Record<string, BaseContentrainType>>>(
+    model: string,
+  ): ContentrainQueryBuilder<T['fields'], T['locales'], T['relations']> {
+    return new ContentrainQueryBuilder<T['fields'], T['locales'], T['relations']>(
+      model,
+      this.executor,
+      this.loader,
+    );
+  }
+
+  async load<T extends BaseContentrainType>(model: string) {
+    return this.loader.load<T>(model);
+  }
+}

@@ -1,137 +1,295 @@
-import type { ContentrainBaseModel } from '@contentrain/types';
-import type { RuntimeAdapter, RuntimeResult } from '../../runtime/types';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
-import { createQuery } from '../index';
+import type { BaseContentrainType, ContentrainStatus } from '../../types/model';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { ContentLoader } from '../../loader/content';
+import { ContentrainQueryBuilder } from '../builder';
+import { QueryExecutor } from '../executor';
 
-interface FAQ extends ContentrainBaseModel {
-  question: string
-  answer: string
+interface WorkCategory extends BaseContentrainType {
+  category: string
   order: number
-  scheduled: boolean
 }
 
-async function loadMockData(modelId: string, locale: string = 'en'): Promise<ContentrainBaseModel[]> {
-  try {
-    const filePath = path.join(process.cwd(), '__mocks__/contentrain', modelId, `${locale}.json`);
-    const content = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(content);
+interface WorkItem extends BaseContentrainType {
+  title: string
+  description: string
+  category: string
+  _relations: {
+    category: WorkCategory
   }
-  catch {
-    return [];
-  }
+  image: string
+  link: string
+  order: number
 }
 
-describe('query Builder', () => {
-  const mockRuntime: RuntimeAdapter = {
-    loadModel: vi.fn().mockImplementation(async (modelId: string, options?: { locale?: string }): Promise<RuntimeResult<ContentrainBaseModel>> => {
-      const data = await loadMockData(modelId, options?.locale || 'en');
-      return {
-        data,
-        metadata: {
-          total: data.length,
-          cached: false,
-          buildInfo: {
-            timestamp: Date.now(),
-            version: '1.0.0',
-          },
-        },
-      };
-    }),
-    loadRelation: vi.fn().mockImplementation(async (modelId: string, id: string, options?: { locale?: string }): Promise<ContentrainBaseModel | null> => {
-      const items = await loadMockData(modelId, options?.locale || 'en');
-      return items.find(item => item.ID === id) || null;
-    }),
-    initialize: vi.fn(),
-    cleanup: vi.fn(),
-    invalidateCache: vi.fn(),
-  };
+describe('query', () => {
+  let loader: ContentLoader;
+  let executor: QueryExecutor;
+  let builder: ContentrainQueryBuilder<WorkItem>;
 
-  it('should create a query instance', () => {
-    const query = createQuery(mockRuntime);
-    expect(query).toBeDefined();
+  beforeEach(() => {
+    loader = new ContentLoader({
+      contentDir: join(__dirname, '../../../../../playground/contentrain'),
+      defaultLocale: 'en',
+      cache: true,
+      ttl: 60 * 1000,
+      maxCacheSize: 100,
+    });
+
+    executor = new QueryExecutor(loader);
+    builder = new ContentrainQueryBuilder<WorkItem>('workitems', executor, loader);
   });
 
-  it('should fetch all items from a model', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const results = await query.from('faqitems').get();
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0]).toHaveProperty('question');
-    expect(results[0]).toHaveProperty('answer');
-    expect(results[0]).toHaveProperty('order');
+  afterEach(async () => {
+    await loader.clearCache();
   });
 
-  it('should filter items using where clause', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const results = await query
-      .from('faqitems')
-      .where('order', 'eq', 7)
-      .get();
+  describe('filtering', () => {
+    it('should filter by exact match', async () => {
+      const result = await builder
+        .where('title', 'eq', 'Contentrain')
+        .get();
 
-    expect(results.length).toBeGreaterThan(0);
-    results.forEach((item) => {
-      expect(item.order).toBe(7);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].title).toBe('Contentrain');
+    });
+
+    it('should filter by contains', async () => {
+      const result = await builder
+        .where('description', 'contains', 'platform')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.description.toLowerCase()).toContain('platform');
+      });
+    });
+
+    it('should combine multiple filters', async () => {
+      const result = await builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('order', 'lt', 3)
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.status).toBe('publish');
+        expect(item.order).toBeLessThan(3);
+      });
     });
   });
 
-  it('should sort items using orderBy', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const results = await query
-      .from('faqitems')
-      .orderBy('order', 'asc')
-      .get();
+  describe('sorting', () => {
+    it('should sort by order ascending', async () => {
+      const result = await builder
+        .orderBy('order', 'asc')
+        .get();
 
-    for (let i = 1; i < results.length; i++) {
-      expect(results[i].order).toBeGreaterThanOrEqual(results[i - 1].order);
-    }
-  });
-
-  it('should paginate results', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const pageSize = 2;
-    const results = await query
-      .from('faqitems')
-      .paginate(1, pageSize)
-      .get();
-
-    expect(results.length).toBeLessThanOrEqual(pageSize);
-  });
-
-  it('should handle locale fallback', async () => {
-    const query = createQuery<FAQ>(mockRuntime, {
-      locale: 'tr',
-      fallbackLocale: 'en',
-      fallbackStrategy: 'loose',
+      expect(result.data.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.data.length; i++) {
+        expect(result.data[i].order).toBeGreaterThanOrEqual(result.data[i - 1].order);
+      }
     });
 
-    const results = await query.from('faqitems').get();
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].question).toBeDefined();
+    it('should sort by order descending', async () => {
+      const result = await builder
+        .orderBy('order', 'desc')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.data.length; i++) {
+        expect(result.data[i].order).toBeLessThanOrEqual(result.data[i - 1].order);
+      }
+    });
+
+    it('should support multiple sort fields', async () => {
+      const result = await builder
+        .orderBy('status', 'asc')
+        .orderBy('order', 'desc')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(1);
+    });
   });
 
-  it('should count items', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const count = await query.from('faqitems').count();
-    expect(count).toBeGreaterThan(0);
+  describe('pagination', () => {
+    it('should limit results', async () => {
+      const limit = 2;
+      const result = await builder
+        .limit(limit)
+        .get();
+
+      expect(result.data).toHaveLength(limit);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination?.limit).toBe(limit);
+    });
+
+    it('should offset results', async () => {
+      const offset = 1;
+      const allResults = await builder.get();
+      const offsetResults = await builder
+        .offset(offset)
+        .get();
+
+      expect(offsetResults.data[0]).toEqual(allResults.data[offset]);
+    });
+
+    it('should handle limit and offset together', async () => {
+      const limit = 2;
+      const offset = 1;
+      const result = await builder
+        .limit(limit)
+        .offset(offset)
+        .get();
+
+      expect(result.data).toHaveLength(limit);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination?.limit).toBe(limit);
+      expect(result.pagination?.offset).toBe(offset);
+    });
   });
 
-  it('should get first item', async () => {
-    const query = createQuery<FAQ>(mockRuntime);
-    const item = await query.from('faqitems').first();
-    expect(item).toBeDefined();
-    expect(item?.question).toBeDefined();
-    expect(item?.answer).toBeDefined();
-    expect(item?.order).toBeDefined();
+  describe('relations', () => {
+    it('should load one-to-one relation', async () => {
+      const result = await builder
+        .include('category')
+        .where('title', 'eq', 'Contentrain')
+        .get();
+
+      expect(result.data.length).toBe(1);
+      expect(result.data[0]._relations?.category).toBeDefined();
+      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
+      expect(result.data[0]._relations?.category.category).toBe('Product Development');
+    });
+
+    it('should handle multiple relations', async () => {
+      const result = await builder
+        .include(['category'])
+        .where('title', 'eq', 'Contentrain')
+        .get();
+
+      expect(result.data.length).toBe(1);
+      expect(result.data[0]._relations?.category).toBeDefined();
+      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
+      expect(result.data[0]._relations?.category.category).toBe('Product Development');
+    });
   });
 
-  it('should handle errors gracefully', async () => {
-    const errorRuntime: RuntimeAdapter = {
-      ...mockRuntime,
-      loadModel: vi.fn().mockRejectedValue(new Error('Failed to load model')),
-    };
+  describe('localization', () => {
+    it('should load content in specified locale', async () => {
+      const result = await builder
+        .locale('tr')
+        .get();
 
-    const query = createQuery(errorRuntime);
-    await expect(query.from('invalid').get()).rejects.toThrow();
+      expect(result.data.length).toBeGreaterThan(0);
+    });
+
+    it('should load relations in specified locale', async () => {
+      const result = await builder
+        .locale('tr')
+        .include('category')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.category).toBeDefined();
+      });
+    });
+  });
+
+  describe('cache', () => {
+    it('should use cache by default', async () => {
+      // First query
+      await builder.get();
+      const stats1 = loader.getCacheStats();
+
+      // Second query (should come from cache)
+      await builder.get();
+      const stats2 = loader.getCacheStats();
+
+      expect(stats2.hits).toBeGreaterThan(stats1.hits);
+    });
+
+    it('should respect custom TTL', async () => {
+      // Query with short TTL
+      await builder.cache(100).get();
+
+      // Wait for TTL
+      await new Promise(resolve => setTimeout(resolve, 150));
+
+      // Query again (should be cache miss)
+      await builder.get();
+      const stats = loader.getCacheStats();
+      expect(stats.misses).toBeGreaterThan(0);
+    });
+  });
+
+  describe('advanced filtering', () => {
+    it('should handle multiple AND conditions', async () => {
+      const result = await builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('order', 'lt', 3)
+        .where('title', 'contains', 'Content')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.status).toBe('publish');
+        expect(item.order).toBeLessThan(3);
+        expect(item.title).toContain('Content');
+      });
+    });
+
+    it('should handle array operations with "in" operator', async () => {
+      const validStatuses: ContentrainStatus[] = ['publish', 'draft', 'changed'];
+      const result = await builder
+        .where('status', 'in', validStatuses)
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(validStatuses).toContain(item.status);
+      });
+    });
+
+    it('should handle string operations correctly', async () => {
+      const result = await builder
+        .where('title', 'startsWith', 'Content')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.title).toMatch(/^Content/);
+      });
+    });
+
+    it('should handle numeric comparisons correctly', async () => {
+      const result = await builder
+        .where('order', 'gte', 1)
+        .where('order', 'lte', 5)
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.order).toBeGreaterThanOrEqual(1);
+        expect(item.order).toBeLessThanOrEqual(5);
+      });
+    });
+
+    it('should throw error for invalid operator', async () => {
+      // @ts-expect-error: Testing invalid operator
+      await expect(builder.where('title', 'invalid', 'test').get())
+        .rejects
+        .toThrow();
+    });
+
+    it('should handle empty result sets gracefully', async () => {
+      const result = await builder
+        .where('title', 'eq', 'NonExistentTitle')
+        .get();
+
+      expect(result.data).toHaveLength(0);
+      expect(result.total).toBe(0);
+    });
   });
 });

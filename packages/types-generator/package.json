@@ -1,0 +1,56 @@
+{
+  "name": "@contentrain/types-generator",
+  "version": "0.1.0",
+  "description": "TypeScript types generator for Contentrain SDK, providing type safety for content models",
+  "author": "Contentrain Inc.",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentrain/contentrain-sdk.git",
+    "directory": "packages/types-generator"
+  },
+  "bugs": {
+    "url": "https://github.com/contentrain/contentrain-sdk/issues"
+  },
+  "homepage": "https://github.com/contentrain/contentrain-sdk/tree/main/packages/types-generator#readme",
+  "keywords": [
+    "contentrain",
+    "typescript",
+    "types",
+    "generator",
+    "content-management"
+  ],
+  "type": "module",
+  "bin": {
+    "contentrain-generate": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest watch",
+    "test:run": "vitest run",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@contentrain/query": "workspace:*",
+    "commander": "^11.1.0",
+    "fast-glob": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.3"
+  }
+}

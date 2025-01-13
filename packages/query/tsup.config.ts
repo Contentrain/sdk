@@ -5,21 +5,10 @@ export default defineConfig({
   format: ['cjs', 'esm'],
   dts: true,
   clean: true,
-  splitting: true,
   treeshake: true,
+  splitting: false,
   sourcemap: true,
-  minify: true,
-  external: [
-    '@contentrain/types',
-    'react',
-    'vue',
-    'node:fs',
-    'node:path',
-    'node:process',
-  ],
-  esbuildOptions(options) {
-    options.banner = {
-      js: '"use strict";',
-    };
-  },
+  minify: false,
+  keepNames: true,
+  outDir: 'dist',
 });
