@@ -1,17 +1,10 @@
 {
-  "name": "@contentrain/generator",
-<<<<<<< HEAD
-  "version": "3.1.0",
-=======
-  "version": "3.0.1",
->>>>>>> d34b02b42252f234e40648b4d85d803dbf1c69b1
+  "name": "@contentrain/core",
+  "version": "4.0.0",
   "private": false,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "contentrain-generate": "./dist/cli.js"
-  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -23,8 +16,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@contentrain/types": "workspace:*",
-    "commander": "^12.0.0"
+    "@contentrain/types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

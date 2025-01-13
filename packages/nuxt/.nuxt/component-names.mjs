@@ -1,0 +1,1 @@
+export const componentNames = ["NuxtWelcome","NuxtLayout","NuxtErrorBoundary","ClientOnly","DevOnly","ServerPlaceholder","NuxtLink","NuxtLoadingIndicator","NuxtRouteAnnouncer","NuxtImg","NuxtPicture","NuxtPage","NoScript","Link","Base","Title","Meta","Style","Head","Html","Body","NuxtIsland","NuxtRouteAnnouncer"]

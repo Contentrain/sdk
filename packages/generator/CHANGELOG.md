@@ -1,10 +1,19 @@
 # @contentrain/generator
 
+<<<<<<< HEAD
 ## 3.1.0
 
 ### Minor Changes
 
 - new packages struct
+=======
+## 3.0.1
+
+### Patch Changes
+
+- Updated dependencies [10973d9]
+  - @contentrain/core@4.0.0
+>>>>>>> d34b02b42252f234e40648b4d85d803dbf1c69b1
 
 ## 3.0.0
 
