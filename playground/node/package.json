@@ -1,6 +1,7 @@
 {
     "name": "@contentrain/playground",
     "version": "1.0.0",
+    "private": true,
     "description": "Contentrain SDK Node.js Playground",
     "author": "Contentrain",
     "license": "MIT",
