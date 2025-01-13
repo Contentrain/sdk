@@ -1,6 +1,6 @@
 {
   "name": "@contentrain/nuxt",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Official Nuxt module for Contentrain SDK, providing seamless integration with Contentrain CMS",
   "author": "Contentrain Inc.",
   "license": "MIT",
@@ -46,7 +46,7 @@
   },
   "dependencies": {
     "@nuxt/kit": "^3.15.1",
-    "@contentrain/query": "workspace:*",
+    "@contentrain/query": "^3.0.0",
     "defu": "^6.1.4"
   },
   "devDependencies": {

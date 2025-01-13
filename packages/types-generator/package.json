@@ -1,6 +1,6 @@
 {
   "name": "@contentrain/types-generator",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "TypeScript types generator for Contentrain SDK, providing type safety for content models",
   "author": "Contentrain Inc.",
   "license": "MIT",
@@ -43,7 +43,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@contentrain/query": "workspace:*",
+    "@contentrain/query": "^3.0.0",
     "commander": "^11.1.0",
     "fast-glob": "^3.3.2"
   },
