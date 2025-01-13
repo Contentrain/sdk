@@ -4,11 +4,14 @@ Official Nuxt module for Contentrain CMS. This module integrates Contentrain's c
 
 ## Features
 
-- 🚀 Automatic content synchronization
-- 🔄 Real-time content updates
+- 🚀 Auto-imported composables
+- 🔄 Server API integration
 - 💾 Built-in caching
-- 🎯 Auto-import composables
-- 📦 TypeScript support
+- 📦 Full TypeScript support
+- 🛡️ Error handling
+- ⚡ SSR & SSG support
+- 🌍 Multi-language support
+- 🔍 Type-safe queries
 
 ## Installation
 
@@ -23,131 +26,179 @@ yarn add @contentrain/nuxt
 pnpm add @contentrain/nuxt
 ```
 
-## Configuration
-
-Add the module to your `nuxt.config.ts`:
-
-```typescript
-export default defineNuxtConfig({
-  modules: ['@contentrain/nuxt'],
-  contentrain: {
-    contentDir: './content',
-    // optional configurations
-    cache: true,
-    ttl: 3600000, // 1 hour
-  }
-})
-```
-
-## Usage
-
-### Composables
-
-#### useContentrain
-
-```vue
-<script setup>
-const { data: posts } = await useContentrain('posts')
-  .where('status', 'published')
-  .orderBy('createdAt', 'desc')
-  .get();
-</script>
-
-<template>
-  <div>
-    <article v-for="post in posts" :key="post.ID">
-      <h2>{{ post.title }}</h2>
-      <p>{{ post.excerpt }}</p>
-    </article>
-  </div>
-</template>
-```
-
-#### useContentrainItem
-
-```vue
-<script setup>
-const { data: post } = await useContentrainItem('posts', 'my-first-post');
-</script>
-
-<template>
-  <article v-if="post">
-    <h1>{{ post.title }}</h1>
-    <div v-html="post.content"></div>
-  </article>
-</template>
-```
-
-### Page Routing
-
-```vue
-<script setup>
-// pages/blog/[slug].vue
-const route = useRoute();
-const { data: post } = await useContentrainItem('posts', route.params.slug);
-
-// 404 redirect
-if (!post) {
-  throw createError({ statusCode: 404, message: 'Post not found' });
-}
-</script>
-```
-
-### Related Data
-
-```vue
-<script setup>
-const { data: post } = await useContentrainItem('posts', 'my-first-post')
-  .include('author')
-  .include('categories')
-  .get();
-</script>
-
-<template>
-  <article v-if="post">
-    <h1>{{ post.title }}</h1>
-    <p>Author: {{ post._relations.author.name }}</p>
-    <ul>
-      <li v-for="category in post._relations.categories" :key="category.ID">
-        {{ category.name }}
-      </li>
-    </ul>
-  </article>
-</template>
-```
-
-### SSR and ISR Support
+## Module Configuration
 
 ```typescript
 // nuxt.config.ts
 export default defineNuxtConfig({
   modules: ['@contentrain/nuxt'],
   contentrain: {
-    // For static site generation
-    static: true,
-    // For incremental static regeneration
-    isr: {
-      enabled: true,
-      revalidate: 3600 // 1 hour
+    // Required: Content directory path
+    contentDir: './content',
+
+    // Optional: Default locale (default: 'en')
+    defaultLocale: 'en',
+
+    // Optional: Cache configuration
+    cache: true,
+    ttl: 60 * 1000, // 1 minute
+    maxCacheSize: 1000, // MB
+
+    // Optional: Model-specific TTL
+    modelTTL: {
+      posts: 5 * 60 * 1000, // 5 minutes for posts
+      products: 60 * 60 * 1000 // 1 hour for products
     }
   }
 })
 ```
 
-## API Reference
+## Basic Usage
 
-### Module Configuration
+### Query Operations
 
 ```typescript
-interface ContentrainModuleOptions {
+// Type-safe querying
+interface Post {
+  ID: string
+  title: string
+  content: string
+  status: 'draft' | 'published'
+  authorId: string
+  categoryIds: string[]
+}
+
+interface Author {
+  ID: string
+  name: string
+  email: string
+}
+
+interface Category {
+  ID: string
+  name: string
+  slug: string
+}
+
+// In your component
+const { query } = useContentrain();
+
+// Basic query
+const { data: posts } = await query<Post>('posts')
+  .where('status', 'eq', 'published')
+  .orderBy('createdAt', 'desc')
+  .limit(10)
+  .get();
+
+// With relations
+const { data: post } = await query<
+  Post,
+  'en' | 'tr',
+  {
+    author: Author
+    categories: Category[]
+  }
+>('posts')
+  .where('ID', 'eq', '123')
+  .include('author')
+  .include('categories')
+  .get();
+
+// With locale
+const { data: trPosts } = await query<Post>('posts')
+  .locale('tr')
+  .get();
+```
+
+### Content Loading
+
+```typescript
+// Direct content loading
+const { load } = useContentrain();
+
+// Load all posts
+const { content } = await load<Post>('posts');
+
+// Access localized content
+const enPosts = content.en;
+const trPosts = content.tr;
+```
+
+### Error Handling
+
+```typescript
+// Component level
+try {
+  const { data } = await query<Post>('posts')
+    .where('status', 'eq', 'published')
+    .get();
+} catch (error) {
+  if (error.statusCode === 404) {
+    // Handle not found
+  } else if (error.statusCode === 400) {
+    // Handle validation error
+  } else {
+    // Handle other errors
+  }
+}
+
+// Global error handler
+export default defineNuxtConfig({
+  contentrain: {
+    errorHandler: (error) => {
+      console.error('Contentrain error:', error);
+    }
+  }
+})
+```
+
+### SSR & SSG Support
+
+```typescript
+// pages/blog/[slug].vue
+<script setup lang="ts">
+const route = useRoute();
+const { query } = useContentrain();
+
+// This will be executed on server-side
+const { data: post } = await query<Post>('posts')
+  .where('slug', 'eq', route.params.slug)
+  .include('author')
+  .first();
+
+// Handle 404
+if (!post) {
+  throw createError({
+    statusCode: 404,
+    message: 'Post not found'
+  });
+}
+</script>
+
+<template>
+  <article v-if="post">
+    <h1>{{ post.title }}</h1>
+    <p>By: {{ post._relations.author.name }}</p>
+    <div v-html="post.content" />
+  </article>
+</template>
+```
+
+## API Reference
+
+### Module Options
+
+```typescript
+interface ModuleOptions {
+  // Required
   contentDir: string;
+
+  // Optional
+  defaultLocale?: string;
   cache?: boolean;
   ttl?: number;
-  static?: boolean;
-  isr?: {
-    enabled: boolean;
-    revalidate: number;
-  };
+  maxCacheSize?: number;
+  modelTTL?: Record<string, number>;
 }
 ```
 
@@ -156,28 +207,102 @@ interface ContentrainModuleOptions {
 #### useContentrain
 
 ```typescript
-function useContentrain(collection: string) {
+function useContentrain() {
   return {
-    where: (field: string, value: any) => this;
-    orderBy: (field: string, direction: 'asc' | 'desc') => this;
-    limit: (count: number) => this;
-    offset: (count: number) => this;
-    include: (relation: string | object) => this;
-    get: () => Promise<{ data: any[] }>;
+    // Query builder
+    query<
+      M extends BaseContentrainType,
+      L extends string = string,
+      R extends Record<string, BaseContentrainType> = Record<string, never>
+    >(model: string): QueryBuilder<M, L, R>;
+
+    // Direct content loader
+    load<T extends BaseContentrainType>(
+      model: string
+    ): Promise<LoaderResult<T>>;
   }
 }
 ```
 
-#### useContentrainItem
+#### QueryBuilder
 
 ```typescript
-function useContentrainItem(
-  collection: string,
-  id: string
-) {
-  return {
-    include: (relation: string | object) => this;
-    get: () => Promise<{ data: any }>;
+interface QueryBuilder<M, L, R> {
+  // Filter operations
+  where(
+    field: keyof M | keyof BaseContentrainType,
+    operator: Operator,
+    value: any
+  ): this;
+
+  // Available operators:
+  // 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' |
+  // 'in' | 'nin' | 'contains' | 'startsWith' | 'endsWith'
+
+  // Relations
+  include(relation: keyof R): this;
+
+  // Sorting
+  orderBy(
+    field: keyof M | keyof BaseContentrainType,
+    direction?: 'asc' | 'desc'
+  ): this;
+
+  // Pagination
+  limit(count: number): this;
+  offset(count: number): this;
+
+  // Localization
+  locale(code: L): this;
+
+  // Execution
+  get(): Promise<QueryResult<M>>;
+  first(): Promise<M | null>;
+}
+
+interface QueryResult<T> {
+  data: T[];
+  total: number;
+  pagination?: {
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
+```
+
+### Server API Routes
+
+The module automatically registers these server routes:
+
+- `POST /api/contentrain/query`: Execute queries
+- `POST /api/contentrain/load`: Direct content loading
+
+These routes are for internal use by the composables and shouldn't be called directly.
+
+## TypeScript Support
+
+The module includes built-in type declarations and augments Nuxt's type system:
+
+```typescript
+// Auto-imported composables
+const { query, load } = useContentrain();
+
+// Type-safe configuration
+declare module '@nuxt/schema' {
+  interface ConfigSchema {
+    contentrain?: ModuleOptions;
+  }
+}
+
+// Runtime config types
+declare module 'nuxt/schema' {
+  interface RuntimeConfig {
+    contentrain: {
+      contentDir: string;
+      defaultLocale: string;
+      // ...other options
+    };
   }
 }
 ```

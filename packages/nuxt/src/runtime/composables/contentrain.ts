@@ -1,4 +1,4 @@
-import type { BaseContentrainType, Filter, Include, LoaderResult, Operator, QueryResult, Sort } from '@contentrain/core';
+import type { BaseContentrainType, Filter, Include, LoaderResult, Operator, QueryResult, Sort } from '@contentrain/query';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { useRuntimeConfig } from '#imports';
 

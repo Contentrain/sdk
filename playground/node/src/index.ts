@@ -1,7 +1,7 @@
-import type { BaseContentrainType, QueryConfig } from '@contentrain/core';
+import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ContentrainSDK } from '@contentrain/core';
+import { ContentrainSDK } from '@contentrain/query';
 
 // Base Model Tipleri
 interface IProcessItems extends BaseContentrainType {

@@ -33,33 +33,11 @@ importers:
         specifier: ^5.7.2
         version: 5.7.3
 
-  packages/core:
-    dependencies:
-      tiny-lru:
-        specifier: ^11.2.11
-        version: 11.2.11
-    devDependencies:
-      '@types/node':
-        specifier: ^20.10.6
-        version: 20.17.12
-      '@vitest/coverage-v8':
-        specifier: ^1.1.3
-        version: 1.6.0(vitest@1.6.0)
-      tsup:
-        specifier: ^8.0.1
-        version: 8.3.5(typescript@5.7.3)
-      typescript:
-        specifier: ^5.3.3
-        version: 5.7.3
-      vitest:
-        specifier: ^1.1.3
-        version: 1.6.0(@types/node@20.17.12)
-
   packages/nuxt:
     dependencies:
-      '@contentrain/core':
+      '@contentrain/query':
         specifier: workspace:*
-        version: link:../core
+        version: link:../query
       '@nuxt/kit':
         specifier: ^3.15.1
         version: 3.15.1(magicast@0.3.5)(rollup@3.29.5)
@@ -104,11 +82,33 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0(typescript@5.6.3)
 
+  packages/query:
+    dependencies:
+      tiny-lru:
+        specifier: ^11.2.11
+        version: 11.2.11
+    devDependencies:
+      '@types/node':
+        specifier: ^20.10.6
+        version: 20.17.12
+      '@vitest/coverage-v8':
+        specifier: ^1.1.3
+        version: 1.6.0(vitest@1.6.0)
+      tsup:
+        specifier: ^8.0.1
+        version: 8.3.5(typescript@5.7.3)
+      typescript:
+        specifier: ^5.3.3
+        version: 5.7.3
+      vitest:
+        specifier: ^1.1.3
+        version: 1.6.0(@types/node@20.17.12)
+
   packages/types-generator:
     dependencies:
-      '@contentrain/core':
+      '@contentrain/query':
         specifier: workspace:*
-        version: link:../core
+        version: link:../query
       commander:
         specifier: ^12.0.0
         version: 12.1.0
@@ -128,9 +128,9 @@ importers:
 
   playground/node:
     dependencies:
-      '@contentrain/core':
+      '@contentrain/query':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/query
     devDependencies:
       '@types/node':
         specifier: ^22.10.5
@@ -147,9 +147,9 @@ importers:
 
   playground/nuxt:
     dependencies:
-      '@contentrain/core':
+      '@contentrain/query':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/query
       '@contentrain/nuxt':
         specifier: workspace:*
         version: link:../../packages/nuxt

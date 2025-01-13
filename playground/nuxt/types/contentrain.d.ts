@@ -1,7 +1,7 @@
 // @contentrain/types-generator tarafından otomatik oluşturuldu
 // Bu dosyayı manuel olarak düzenlemeyin
 
-import type { BaseContentrainType, QueryConfig } from '@contentrain/core';
+import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
 
 export interface IFaqItems extends BaseContentrainType {
   question: string
@@ -52,12 +52,12 @@ export interface ITabItems extends BaseContentrainType {
 }
 
 export interface ITestimonailItems extends BaseContentrainType {
-  name: string
-  description: string
-  title: string
-  image: string
+  'name': string
+  'description': string
+  'title': string
+  'image': string
   'creative-work': string
-  _relations?: {
+  '_relations'?: {
     'creative-work': IWorkItems
   }
 }

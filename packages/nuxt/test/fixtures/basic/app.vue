@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BaseContentrainType } from '@contentrain/core';
+import type { BaseContentrainType } from '@contentrain/query';
 import { useAsyncData } from '#app';
 import { useContentrain } from '#imports';
 

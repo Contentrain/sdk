@@ -1,4 +1,4 @@
-import type { BaseContentrainType, Operator, QueryConfig } from '@contentrain/core';
+import type { BaseContentrainType, Operator, QueryConfig } from '@contentrain/query';
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
 import { createError, defineEventHandler, readBody } from 'h3';

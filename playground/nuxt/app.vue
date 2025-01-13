@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { BaseContentrainType, QueryResult } from '@contentrain/core';
+import type { BaseContentrainType, QueryResult } from '@contentrain/query';
 
 // Composable'ı kullan
 const { query } = useContentrain();

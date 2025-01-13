@@ -1,5 +1,5 @@
 {
-    "name": "@contentrain/core",
+    "name": "@contentrain/query",
     "version": "1.0.0",
     "description": "Core package for Contentrain SDK, providing fundamental functionality and types",
     "author": "Contentrain",
@@ -8,7 +8,7 @@
     "keywords": [
         "contentrain",
         "sdk",
-        "core",
+        "query",
         "content-management"
     ],
     "main": "dist/index.js",

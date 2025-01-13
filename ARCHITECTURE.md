@@ -6,14 +6,14 @@ This document details the architectural structure and design decisions of the Co
 
 Contentrain SDK is designed with a modular architecture consisting of three main packages:
 
-1. **Core Package** (`@contentrain/core`)
-   - Provides core SDK functionality
+1. **Core Package** (`@contentrain/query`)
+   - Provides query SDK functionality
    - Framework-agnostic design
    - Forms the foundation for other packages
 
 2. **Nuxt Module** (`@contentrain/nuxt`)
    - Nuxt.js integration
-   - Provides Nuxt-specific features using the core package
+   - Provides Nuxt-specific features using the query package
 
 3. **Type Generator** (`@contentrain/types-generator`)
    - Automatically generates TypeScript type definitions
@@ -26,7 +26,7 @@ Contentrain SDK is designed with a modular architecture consisting of three main
 #### Main Components
 
 ```
-core/
+query/
 ├── src/
 │   ├── loader/       # Content loading engine
 │   ├── query/        # Query processor

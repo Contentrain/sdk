@@ -1,4 +1,4 @@
-import type { BaseContentrainType, QueryResult } from '@contentrain/core';
+import type { BaseContentrainType, QueryResult } from '@contentrain/query';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { $fetch, setup } from '@nuxt/test-utils/e2e';

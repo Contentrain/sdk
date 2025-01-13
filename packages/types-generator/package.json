@@ -19,7 +19,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@contentrain/core": "workspace:*",
+    "@contentrain/query": "workspace:*",
     "commander": "^12.0.0"
   },
   "devDependencies": {

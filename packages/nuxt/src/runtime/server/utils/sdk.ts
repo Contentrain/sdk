@@ -1,6 +1,6 @@
-import type { ContentLoaderOptions } from '@contentrain/core';
+import type { ContentLoaderOptions } from '@contentrain/query';
 import type { RuntimeConfig } from 'nuxt/schema';
-import { ContentrainSDK } from '@contentrain/core';
+import { ContentrainSDK } from '@contentrain/query';
 
 let _sdk: ContentrainSDK | null = null;
 

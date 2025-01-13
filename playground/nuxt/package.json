@@ -11,7 +11,7 @@
     "cr:generate": "contentrain-generate -d"
   },
   "dependencies": {
-    "@contentrain/core": "workspace:*",
+    "@contentrain/query": "workspace:*",
     "@contentrain/nuxt": "workspace:*",
     "@contentrain/types-generator": "workspace:*",
     "nuxt": "^3.15.1",
