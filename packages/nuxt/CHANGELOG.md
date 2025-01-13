@@ -1,5 +1,15 @@
 # @contentrain/nuxt
 
+## 2.1.0
+
+### Minor Changes
+
+- 050484f: - Fix locale parameter handling in query builder
+
+### Patch Changes
+
+- - Fix locale parameter handling in query builder
+
 ## 2.0.0
 
 ### Major Changes
