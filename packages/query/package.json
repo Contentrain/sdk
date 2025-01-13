@@ -1,6 +1,6 @@
 {
     "name": "@contentrain/query",
-    "version": "0.1.0",
+    "version": "3.0.0",
     "description": "Core package for Contentrain SDK, providing fundamental functionality and types",
     "author": "Contentrain Inc.",
     "license": "MIT",

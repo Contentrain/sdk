@@ -1,6 +1,6 @@
 {
   "name": "@contentrain/types-generator",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "TypeScript types generator for Contentrain SDK, providing type safety for content models",
   "author": "Contentrain Inc.",
   "license": "MIT",
