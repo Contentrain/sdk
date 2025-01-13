@@ -1,68 +1,84 @@
 # Dependencies
 node_modules
 .pnpm-store
-reference
+.npmrc
 
 # Build
 dist
+.nuxt
+.output
 build
 src/**/*.js
 src/**/*.js.map
 
+# Cache
+.cache
+.eslintcache
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
 # Misc
 .DS_Store
 *.pem
+.idea
+.fleet
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.eslintcache
-.vscode
 
 # Local env files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-# Dependencies
-node_modules
+.env.*
+!.env.example
 
-# Logs
-*.log*
-
-# Temp directories
-.temp
-.tmp
-.cache
-
-# Yarn
-**/.yarn/cache
-**/.yarn/*state*
-
-# Generated dirs
-dist
-
-# Nuxt
+# Nuxt specific
 .nuxt
 .output
 .data
 .vercel_build_output
 .build-*
 .netlify
-
-# Env
-.env
+.nitro
+*.manifest
+manifest/
+public/_nuxt/
+latest.json
+nitro.json
+nitro.mjs
+tsconfig.json
+playground/nuxt/.nuxt/
+playground/nuxt/.output/
+playground/nuxt/manifest/
+playground/nuxt/public/_nuxt/
+playground/nuxt/.nuxt/**/*
+playground/nuxt/.output/**/*
+**/builds/
+**/chunks/
+**/*.manifest.json
+**/manifest/meta/
+**/manifest/latest.json
 
 # Testing
-reports
 coverage
 *.lcov
 .nyc_output
+reports
 
-# VSCode
+# Yarn
+**/.yarn/cache
+**/.yarn/*state*
+
+# Temp
+.temp
+.tmp
+
+# IDE
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -70,7 +86,7 @@ coverage
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
-# Intellij idea
+# Intellij
 *.iml
 .idea
 
