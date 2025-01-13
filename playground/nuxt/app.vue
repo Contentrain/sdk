@@ -96,6 +96,116 @@ const res = await query<ITestimonialItem, 'en' | 'tr', { 'creative-work': IWorkI
   .get();
 
 console.log(res.data);
+
+// Dil testi için sorgular
+const trFaqData = await query<IFaqItem, 'en' | 'tr'>('faqitems')
+  .where('status', 'eq', 'publish')
+  .locale('tr')
+  .get();
+
+const enFaqData = await query<IFaqItem, 'en' | 'tr'>('faqitems')
+  .where('status', 'eq', 'publish')
+  .locale('en')
+  .get();
+
+// Dil testi için iş öğeleri
+const trWorkData = await query<IWorkItem, 'en' | 'tr', { category: IWorkCategory }>('workitems')
+  .include('category')
+  .where('status', 'eq', 'publish')
+  .locale('tr')
+  .get();
+
+const enWorkData = await query<IWorkItem, 'en' | 'tr', { category: IWorkCategory }>('workitems')
+  .include('category')
+  .where('status', 'eq', 'publish')
+  .locale('en')
+  .get();
+
+// Sonuçları konsola yazdır
+console.log('TR FAQ Data:', trFaqData.data);
+console.log('EN FAQ Data:', enFaqData.data);
+console.log('TR Work Data:', trWorkData.data);
+console.log('EN Work Data:', enWorkData.data);
+
+// Dil karşılaştırması
+if (trFaqData.data.length > 0 && enFaqData.data.length > 0) {
+  console.log('FAQ Dil Karşılaştırması:');
+  console.log('TR Soru:', trFaqData.data[0].question);
+  console.log('EN Soru:', enFaqData.data[0].question);
+}
+
+if (trWorkData.data.length > 0 && enWorkData.data.length > 0) {
+  console.log('Work Items Dil Karşılaştırması:');
+  console.log('TR İçerik:', trWorkData.data[0].description);
+  console.log('EN İçerik:', enWorkData.data[0].description);
+}
+
+// Dil testi için yeni sorgular
+const trMetaData = await query<IMetaTag, 'en' | 'tr'>('meta-tags')
+  .where('name', 'startsWith', 'og')
+  .locale('tr')
+  .get();
+
+const enMetaData = await query<IMetaTag, 'en' | 'tr'>('meta-tags')
+  .where('name', 'startsWith', 'og')
+  .locale('en')
+  .get();
+
+// Meta tag karşılaştırması
+console.log('Meta Tags Dil Karşılaştırması:');
+console.log('TR Meta Tags:', trMetaData.data);
+console.log('EN Meta Tags:', enMetaData.data);
+
+// Mevcut locale'i kontrol et
+const config = useRuntimeConfig();
+console.log('Default Locale:', config.public.contentrain.defaultLocale);
+
+// Doğrudan API istekleri
+
+// Doğrudan API istekleri
+async function fetchContents() {
+  // Süreçler
+  const processes = await $fetch('/api/contentrain/query', {
+    method: 'POST',
+    body: {
+      model: 'processes',
+      locale: 'tr',
+      where: [['status', 'eq', 'publish']],
+      limit: 1,
+    },
+  });
+
+  // SSS
+  const faq = await $fetch('/api/contentrain/query', {
+    method: 'POST',
+    body: {
+      model: 'faqitems',
+      locale: 'tr',
+      where: [['status', 'eq', 'publish']],
+      limit: 1,
+    },
+  });
+
+  // İş öğeleri
+  const workitems = await $fetch('/api/contentrain/query', {
+    method: 'POST',
+    body: {
+      model: 'workitems',
+      locale: 'tr',
+      where: [['status', 'eq', 'publish']],
+      limit: 1,
+    },
+  });
+
+  console.log('API Sonuçları:');
+  console.log('Süreçler:', processes);
+  console.log('SSS:', faq);
+  console.log('İş Öğeleri:', workitems);
+}
+
+onMounted(() => {
+  fetchContents();
+});
 </script>
 
 <template>

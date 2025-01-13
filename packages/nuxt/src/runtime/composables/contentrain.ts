@@ -82,12 +82,12 @@ export class QueryBuilder<
   }
 
   async get(): Promise<QueryResult<M>> {
-    const { model, ...rest } = this.state;
+    const { model, options, ...rest } = this.state;
     return this.fetch('/api/contentrain/query', {
       method: 'POST',
       body: {
         model,
-        defaultLocale: this.defaultLocale,
+        locale: options.locale || this.defaultLocale,
         ...rest,
       },
     });
