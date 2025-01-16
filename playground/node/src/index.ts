@@ -120,7 +120,6 @@ async function main() {
       .query<ITabItemQuery>('tabitems')
       .where('status', 'eq', 'publish')
       .include('category')
-      .orderBy('order', 'asc')
       .get();
     console.log('Tab Öğeleri ve Kategorileri:', tabItems.data.map(t => ({
       description: t.description,

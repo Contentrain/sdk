@@ -3,7 +3,7 @@ import defu from 'defu';
 
 export interface ModuleOptions {
   contentDir: string
-  defaultLocale: string
+  defaultLocale?: string
   cache: boolean
   ttl: number
   maxCacheSize: number
@@ -28,7 +28,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     contentDir: 'contentrain',
-    defaultLocale: 'en',
     cache: true,
     ttl: 60 * 1000,
     maxCacheSize: 1000,
@@ -62,16 +61,17 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Add API handlers
     addServerHandler({
-      route: '/api/contentrain/query',
+      route: '/api/_contentrain/query',
       handler: resolve('./runtime/server/api/query'),
     });
+
     addServerHandler({
-      route: '/api/contentrain/load',
+      route: '/api/_contentrain/load',
       handler: resolve('./runtime/server/api/load'),
     });
 
     addServerHandler({
-      route: '/api/contentrain/cache/clear',
+      route: '/api/_contentrain/cache/clear',
       handler: resolve('./runtime/server/api/cache/clear'),
     });
 

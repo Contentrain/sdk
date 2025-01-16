@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
 import { createError, defineEventHandler, readBody } from 'h3';
-import { getSDK } from '../../../utils/sdk';
+import { getSDK } from '../../utils/sdk';
 
 interface ClearCacheBody {
   model?: string

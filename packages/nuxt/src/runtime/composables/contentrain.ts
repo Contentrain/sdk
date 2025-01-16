@@ -56,13 +56,13 @@ export class QueryBuilder<
     return this;
   }
 
-  include<K extends keyof R>(relation: K | K[]): this {
+  include<K extends M extends { _relations?: infer R } ? keyof R : never>(relation: K | K[]): this {
     if (typeof relation === 'string') {
-      this.state.includes[relation] = {};
+      (this.state.includes as any)[relation] = {};
     }
     else if (Array.isArray(relation)) {
       relation.forEach((r) => {
-        this.state.includes[r] = {};
+        (this.state.includes as any)[r] = {};
       });
     }
     return this;

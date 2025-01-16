@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3';
 import { defineEventHandler, readBody, useRuntimeConfig } from '#imports';
-import { getSDK } from '../../utils/sdk';
+import { getSDK } from '../utils/sdk';
 
 interface LoadBody {
   model: string

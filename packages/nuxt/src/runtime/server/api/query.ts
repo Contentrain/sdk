@@ -1,13 +1,13 @@
-import type { BaseContentrainType, Operator, QueryConfig } from '@contentrain/query';
+import type { BaseContentrainType, Include, Operator, QueryConfig, QueryResult } from '@contentrain/query';
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
 import { createError, defineEventHandler, readBody } from 'h3';
-import { getSDK } from '../../utils/sdk';
+import { getSDK } from '../utils/sdk';
 
 interface QueryBody {
   model: string
   where?: Array<[string, Operator, any]>
-  include?: string[]
+  include?: string[] | Record<string, { fields?: string[], include?: Include }>
   orderBy?: Array<[string, 'asc' | 'desc']>
   limit?: number
   offset?: number
@@ -76,7 +76,26 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // Apply includes
     if (body.include) {
-      query.include(body.include);
+      if (Array.isArray(body.include)) {
+        // Basit include durumu: ['category', 'tags']
+        query.include(body.include as any);
+      }
+      else {
+        // Detaylı include durumu: { category: { fields: ['name'], include: { subcategories: {} } } }
+        Object.entries(body.include).forEach(([relation, config]) => {
+          query.include(relation as any);
+
+          if (config.fields) {
+            // fields özelliği şu an için SDK'da desteklenmiyor
+            console.warn('fields property in include is not supported yet');
+          }
+
+          if (config.include) {
+            // Nested includes şu an için SDK'da desteklenmiyor
+            console.warn('nested includes are not supported yet');
+          }
+        });
+      }
     }
 
     // Apply sorting
