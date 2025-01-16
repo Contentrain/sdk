@@ -43,7 +43,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@contentrain/query": "^3.0.0",
+    "@contentrain/query": "latest",
     "commander": "^11.1.0",
     "fast-glob": "^3.3.2"
   },

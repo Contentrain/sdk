@@ -165,7 +165,7 @@ console.log('Default Locale:', config.public.contentrain.defaultLocale);
 // Doğrudan API istekleri
 async function fetchContents() {
   // Süreçler
-  const processes = await $fetch('/api/contentrain/query', {
+  const processes = await $fetch('/_contentrain/query', {
     method: 'POST',
     body: {
       model: 'processes',
@@ -176,7 +176,7 @@ async function fetchContents() {
   });
 
   // SSS
-  const faq = await $fetch('/api/contentrain/query', {
+  const faq = await $fetch('/_contentrain/query', {
     method: 'POST',
     body: {
       model: 'faqitems',
@@ -187,7 +187,7 @@ async function fetchContents() {
   });
 
   // İş öğeleri
-  const workitems = await $fetch('/api/contentrain/query', {
+  const workitems = await $fetch('/_contentrain/query', {
     method: 'POST',
     body: {
       model: 'workitems',

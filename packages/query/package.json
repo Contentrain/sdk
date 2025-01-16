@@ -31,6 +31,8 @@
     },
     "scripts": {
         "build": "tsup && rm -rf dist/types dist/cache dist/loader dist/query",
+        "dev": "tsup --watch",
+        "dev:watch": "tsup --watch",
         "test": "vitest watch",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",

@@ -27,7 +27,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
-    contentDir: 'content',
+    contentDir: 'contentrain',
     defaultLocale: 'en',
     cache: true,
     ttl: 60 * 1000,
@@ -65,10 +65,14 @@ export default defineNuxtModule<ModuleOptions>({
       route: '/api/contentrain/query',
       handler: resolve('./runtime/server/api/query'),
     });
-
     addServerHandler({
       route: '/api/contentrain/load',
       handler: resolve('./runtime/server/api/load'),
+    });
+
+    addServerHandler({
+      route: '/api/contentrain/cache/clear',
+      handler: resolve('./runtime/server/api/cache/clear'),
     });
 
     // Add types

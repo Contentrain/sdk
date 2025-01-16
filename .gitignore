@@ -6,6 +6,7 @@ node_modules
 # Build
 dist
 .nuxt
+**/.nuxt/**
 .output
 build
 src/**/*.js
@@ -38,7 +39,6 @@ yarn-error.log*
 !.env.example
 
 # Nuxt specific
-.nuxt
 .output
 .data
 .vercel_build_output
@@ -52,17 +52,6 @@ latest.json
 nitro.json
 nitro.mjs
 tsconfig.json
-playground/nuxt/.nuxt/
-playground/nuxt/.output/
-playground/nuxt/manifest/
-playground/nuxt/public/_nuxt/
-playground/nuxt/.nuxt/**/*
-playground/nuxt/.output/**/*
-**/builds/
-**/chunks/
-**/*.manifest.json
-**/manifest/meta/
-**/manifest/latest.json
 
 # Testing
 coverage

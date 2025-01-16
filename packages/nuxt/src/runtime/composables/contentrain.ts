@@ -31,7 +31,6 @@ export class QueryBuilder<
 
   constructor(
     model: string,
-    private fetch: typeof $fetch,
     private defaultLocale: string,
   ) {
     this.state = {
@@ -44,7 +43,11 @@ export class QueryBuilder<
     };
   }
 
-  where(field: keyof M | keyof BaseContentrainType, operator: Operator, value: any): this {
+  where<K extends keyof M | keyof BaseContentrainType>(
+    field: K,
+    operator: Operator,
+    value: K extends keyof M ? M[K] : any,
+  ): this {
     this.state.filters.push({
       field,
       operator,
@@ -53,12 +56,22 @@ export class QueryBuilder<
     return this;
   }
 
-  include(relation: keyof R): this {
-    this.state.includes[relation] = {};
+  include<K extends keyof R>(relation: K | K[]): this {
+    if (typeof relation === 'string') {
+      this.state.includes[relation] = {};
+    }
+    else if (Array.isArray(relation)) {
+      relation.forEach((r) => {
+        this.state.includes[r] = {};
+      });
+    }
     return this;
   }
 
-  orderBy(field: keyof M | keyof BaseContentrainType, direction: 'asc' | 'desc' = 'asc'): this {
+  orderBy<K extends keyof M | keyof BaseContentrainType>(
+    field: K,
+    direction: 'asc' | 'desc' = 'asc',
+  ): this {
     this.state.sorting.push({
       field,
       direction,
@@ -81,9 +94,21 @@ export class QueryBuilder<
     return this;
   }
 
+  cache(ttl?: number): this {
+    this.state.options.cache = true;
+    if (ttl)
+      this.state.options.ttl = ttl;
+    return this;
+  }
+
+  noCache(): this {
+    this.state.options.cache = false;
+    return this;
+  }
+
   async get(): Promise<QueryResult<M>> {
     const { model, options, ...rest } = this.state;
-    return this.fetch('/api/contentrain/query', {
+    return $fetch<QueryResult<M>>('/api/_contentrain/query', {
       method: 'POST',
       body: {
         model,
@@ -98,9 +123,30 @@ export class QueryBuilder<
     const result = await this.get();
     return result.data[0] || null;
   }
+
+  async count(): Promise<number> {
+    const result = await this.get();
+    return result.total;
+  }
 }
 
-export function useContentrain() {
+export interface ContentrainComposable<
+  M extends BaseContentrainType = BaseContentrainType,
+  L extends string = string,
+  R extends Record<string, BaseContentrainType> = Record<string, BaseContentrainType>,
+> {
+  query: <
+    TFields extends M = M,
+    TLocales extends L = L,
+    TRelations extends R = R,
+  >(
+    model: string
+  ) => QueryBuilder<TFields, TLocales, TRelations>
+  load: <T extends BaseContentrainType = M>(model: string) => Promise<LoaderResult<T>>
+  clearCache: (model?: string) => Promise<void>
+}
+
+export function useContentrain(): ContentrainComposable {
   const config = useRuntimeConfig() as RuntimeConfig & {
     public: {
       contentrain: {
@@ -114,11 +160,11 @@ export function useContentrain() {
     L extends string = string,
     R extends Record<string, BaseContentrainType> = Record<string, BaseContentrainType>,
   >(model: string): QueryBuilder<M, L, R> {
-    return new QueryBuilder<M, L, R>(model, $fetch, config.public.contentrain.defaultLocale);
+    return new QueryBuilder<M, L, R>(model, config.public.contentrain.defaultLocale);
   }
 
   async function load<T extends BaseContentrainType>(model: string): Promise<LoaderResult<T>> {
-    return $fetch('/api/contentrain/load', {
+    return $fetch<LoaderResult<T>>('/api/_contentrain/load', {
       method: 'POST',
       body: {
         model,
@@ -126,8 +172,16 @@ export function useContentrain() {
     });
   }
 
+  async function clearCache(model?: string): Promise<void> {
+    return $fetch('/api/_contentrain/cache/clear', {
+      method: 'POST',
+      body: { model },
+    });
+  }
+
   return {
     query,
     load,
+    clearCache,
   };
 }

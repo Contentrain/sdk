@@ -33,4 +33,16 @@ export class ContentrainSDK {
   async load<T extends BaseContentrainType>(model: string) {
     return this.loader.load<T>(model);
   }
+
+  async clearCache(): Promise<void> {
+    return this.loader.clearCache();
+  }
+
+  async refreshCache(model: string): Promise<void> {
+    return this.loader.refreshCache(model);
+  }
+
+  getCacheStats() {
+    return this.loader.getCacheStats();
+  }
 }

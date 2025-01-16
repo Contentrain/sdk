@@ -275,8 +275,8 @@ interface QueryResult<T> {
 
 The module automatically registers these server routes:
 
-- `POST /api/contentrain/query`: Execute queries
-- `POST /api/contentrain/load`: Direct content loading
+- `POST /_contentrain/query`: Execute queries
+- `POST /_contentrain/load`: Direct content loading
 
 These routes are for internal use by the composables and shouldn't be called directly.
 

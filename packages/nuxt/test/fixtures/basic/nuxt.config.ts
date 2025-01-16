@@ -1,14 +1,13 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import MyModule from '../../../src/module';
+import { defineNuxtConfig } from 'nuxt/config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(__dirname, '../../../../../playground/contentrain');
 
 export default defineNuxtConfig({
-  modules: [
-    MyModule,
-  ],
+  modules: ['../../../src/module'],
+
   contentrain: {
     contentDir,
     defaultLocale: 'tr',
@@ -16,4 +15,10 @@ export default defineNuxtConfig({
     ttl: 60 * 1000,
     maxCacheSize: 1000,
   },
+
+  imports: {
+    dirs: ['../../../src/runtime/composables'],
+  },
+
+  compatibilityDate: '2025-01-16',
 });
