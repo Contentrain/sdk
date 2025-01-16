@@ -1,2 +1,0 @@
-import { CapoPlugin } from "/Users/ahmetbayramoglu/Desktop/Projects/contentrain-sdk/node_modules/.pnpm/@unhead+vue@1.11.15_vue@3.5.13/node_modules/@unhead/vue/dist/index.mjs";
-export default import.meta.server ? [CapoPlugin({ track: true })] : [];
