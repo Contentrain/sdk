@@ -1,110 +1,77 @@
 
-    # --- Türkçe İş Öğeleri (Sıralı ve Limitli) ---
-    - Contentrain, Git ve serverless platformları birleştiren, ölçeklenebilir bir içerik yönetim platformudur.
+# Contentrain SDK Test Sonuçları
 
-Tüm proje iş akışını planladık, yazılım mimarisini tasarladık, frontend ve backend geliştirmelerini yaptık, veritabanını yapılandırdık ve tüm bileşenleri dağıtımdan önce entegre ettik.
-- Bloom & Fresh, çiçek aranjmanları ve hediyeler konusunda uzmanlaşmış bir e-ticaret platformudur.
+## 1. Temel Sorgular
+### Filtreleme ve Sıralama
+- Contentrain (Sıra: 1)
+- Bloom and Fresh (Sıra: 2)
+- Wordify (Sıra: 3)
+- Popile (Sıra: 4)
 
-Frontend kısmını Vue.js ve Nuxt.js ile modernize ettik ve bunu müşterinin mevcut Backend sistemiyle entegre ettik.
-- Wordify'ın Squarespace tabanlı web sitesini Jamstack mimarisini kullanarak özel bir siteye dönüştürdük. Bu yükseltme Wordify'a pürüzsüz bir görünüm, gelişmiş performans, ölçeklenebilirlik ve iyileştirilmiş kullanıcı deneyimi sağladı.
-- Popile, influencer pazarlamasında veri ve yaratıcılığın buluşma noktasıdır. Frontend tarafında Vue.js ile iyileştirmeler yaptık, ödeme sistemi entegrasyonlarında destek sağladık ve backend tarafında performans optimizasyonları gerçekleştirdik.
-- Visivi, hem mobil hem de web portalları olan bir İK platformudur.
+### Sayfalama
+- Popile
+- Contentrain
+- Bloom and Fresh
+Sayfalama: Limit 3, Offset 1
 
-Mobil uygulamayı React Native ile geliştirdik ve hem iOS hem de Android için çapraz platform haline getirdik. Web portalı için Nuxt.js ve Vue.js kullandık.
-    # --- İngilizce İş Öğeleri (Kategorileriyle) ---
-    - Pazardan is an online marketplace for ordering vegetables and fruits from local groceries. 
+## 2. İlişki Sorguları
+### Bire-Bir İlişki
+- CEO, Popile -> Popile
+- Co-Founder, Bloom and Fresh -> Bloom and Fresh
+- Founder, Visivi -> Visivi
 
-We developed the mobile application with React Native, making it cross-platform for iOS and Android. The web platform was developed with React.js and Next.js.
-- Popile is the meeting point of data and creativity in influencer marketing. We made improvements on the frontend using Vue.js, supported payment system integrations, and optimized the backend for better performance.
-- Contentrain is a scalable content management platform combining Git and serverless platforms.
+### Bire-Çok İlişki
+- Adobe Photoshop is a widely used graphic design and image editing software developed by Adobe. It is primarily used for editing photos, creating digital artwork, and designing graphics for both print and web. -> UI/UX Design
+- Vue.js is a progressive JavaScript framework used for building user interfaces, especially single-page applications. It is designed to be incrementally adoptable and integrates well with other libraries. -> UI/UX Design, Frontend Development
+- React.js is a JavaScript library for building user interfaces or UI components. It is maintained by Facebook and a large community of developers. React is known for its fast rendering and virtual DOM. -> UI/UX Design, Frontend Development
+- Nuxt.js is a framework built on top of Vue.js that simplifies the development of server-rendered applications and static websites. It offers powerful features like SSR, static site generation, and improved SEO support. -> UI/UX Design, Frontend Development
+- Next.js is a React framework that enables functionality such as server-side rendering and static website generation for building high-performance, SEO-friendly applications. -> UI/UX Design, Frontend Development
+- Astro is a new frontend framework for building fast, content-focused websites. It uses an innovative approach to page rendering called partial hydration, which makes websites faster by reducing the JavaScript sent to the browser. -> UI/UX Design, Frontend Development
+- Svelte is a modern JavaScript framework that shifts much of the work to the compile step instead of the runtime. This results in smaller bundle sizes and faster load times, making it an excellent choice for building fast web applications. -> UI/UX Design, Frontend Development
+- Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine. It allows you to run JavaScript on the server, enabling you to build scalable and high-performance applications. -> UI/UX Design, Backend Development
+- Express.js is a minimal and flexible Node.js web application framework that provides a robust set of features for building web and mobile applications. It is designed to create APIs and web servers quickly and easily. -> UI/UX Design, Backend Development
+- Nest.js is a progressive Node.js framework for building efficient, reliable, and scalable server-side applications. It uses TypeScript and is heavily inspired by Angular, providing a solid architectural design for your applications. -> UI/UX Design, Backend Development
+- Koa.js is a modern web framework for Node.js that aims to be smaller, more expressive, and more robust. It uses async functions to eliminate callbacks and increase error-handling capabilities. -> UI/UX Design, Backend Development
+- GraphQL is a query language for APIs and a runtime for executing those queries. It provides a more efficient and powerful alternative to REST by allowing clients to request only the data they need. -> UI/UX Design, Backend Development
+- Figma is the leading collaborative design tool for building meaningful products. Seamlessly design, prototype, develop, and collect feedback in a single platform. -> UI/UX Design
+- Sketch is a design software suite that helps you create beautiful products at scale, whether you’re working alone or collaboratively. -> UI/UX Design
+- Adobe Illustrator is a vector-based graphic design software developed by Adobe, primarily used for creating scalable graphics such as logos, illustrations, icons, typography, and complex illustrations. -> UI/UX Design
 
-We planned the entire project workflow, designed the software architecture, developed the frontend and backend, structured the database, and integrated all components before deployment.
-- Bloom & Fresh is an eCommerce platform specializing in floral arrangements and gifts.
+## 3. Gelişmiş Sorgular
+### Çoklu Filtreler
+- Visivi (Sıra: 5) - Visivi is an HR platform with both mobile and web portals. 
 
-We modernized the frontend with Vue.js and Nuxt.js, integrating it with the client's existing backend system.
-- We transformed Wordify's Squarespace-based website into a custom site using Jamstack architecture. This upgrade provided Wordify with a smooth look, enhanced performance, scalability, and improved user experience.
-- Visivi is an HR platform with both mobile and web portals. 
+We developed the mobile application wit...
 
-We developed the mobile application with React Native, making it cross-platform for both iOS and Android. For the web portal, we used Nuxt.js and Vue.js.
-- DXP360 is an RFP (Request for Proposal) portal that aggregates RFPs from various sources, simplifying the proposal discovery and submission process for enterprises and agencies.
+### Dizi Operatörleri
+- Pazardan (publish)
+- Popile (publish)
+- Contentrain (publish)
+- Bloom and Fresh (publish)
+- Wordify (publish)
+- Visivi (publish)
+- DXP 360 (publish)
 
-We designed the project plan based on client briefs, developed the frontend and backend, structured the database, and deployed the project.
-    # --- Referanslar ve İlişkili İçerikler ---
-    - CEO, Popile
-- Co-Founder, Bloom and Fresh
-- Kurucu, Visiv
-    # --- Filtrelenmiş ve Sıralı Tab Öğeleri ---
-    - 3
-- 3, 1
-- 3, 1
-- 3, 1
-- 3, 1
-- 3, 1
-- 3, 1
-- 3, 2
-- 3, 2
-- 3, 2
-- 3, 2
-- 3, 2
-- 3
-- 3
-- 3
-    # --- Sayfalanmış Servis Öğeleri ---
-    - Web Uygulama Geliştirme
-- Mobil Uygulama Geliştirme
-- MVP Geliştirme
-    # --- İçerikte Metin Arama ---
-    
-    # --- Model Metadata ve Assets ---
-    [object Object]
-    48
-    # --- Assets ---
-    - public/1727359111545_1724068521380_kahvedunyasi.svg
-- public/1727359111545_1724068521380_popile.png
-- public/1727359111545_1624068421380_hero.png
-- public/1728078857706_pazardan-logo.8e05f16c 1.svg
-- public/1728394832510_Visivi.svg
-- public/1728394858114_Bloom&fresh.svg
-- public/1728394876736_Contentrain.svg
-- public/1728394892554_pazardan.svg
-- public/1728394907608_Popile.svg
-- public/1728458840475_Bloomandfresh.svg
-- public/1728463995414_ertugrul.jpeg
-- public/1728464446315_ege.jpeg
-- public/1728486206324_rezme.svg
-- public/1728541493988_vuejs.svg
-- public/1728541679333_react.svg
-- public/1728541702569_nuxt.svg
-- public/1728541725437_next.svg
-- public/1728541750606_astro.svg
-- public/1728541774910_svelte.svg
-- public/1728542310638_nodejs.svg
-- public/1728542335115_expressjs.svg
-- public/1728542360382_nestjs.svg
-- public/1728542379255_koajs.svg
-- public/1728542406152_graphql.svg
-- public/1728543425884_contentrain.svg
-- public/1728543947037_contentrain1.svg
-- public/1728546399074_contentrain2.svg
-- public/1728898720249_figma.svg
-- public/1728898732629_sketch.svg
-- public/1728898743656_xd.svg
-- public/1728898754502_Illustrator.svg
-- public/1728898765927_Photoshop.svg
-- public/1729065603135_denemecontentrain.svg
-- public/1729066309718_wordify.svg
-- public/1729074133746_visivi.svg
-- public/1729074312031_dxp360.svg
-- public/1729077149989_profil.png
-- public/1729164933955_murat.png
-- public/1729765510539_Mobileapp.svg
-- public/1729767526420_MVP.svg
-- public/1729844595854_SaaS.svg
-- public/1729849903212_ProductDesign.svg
-- public/1729856262454_Webdesign.svg
-- public/1729867496804_Headless.svg
-- public/1729868379116_Webapp.svg
-- public/1729874043253_Bloomandfresh.svg
-- public/1729874670881_popile.svg
-- public/1729875780702_pazardan.svg
-    
+## 4. Çoklu Dil Desteği
+### Lokalize İçerik
+- TR: Yazılım geliştirme çözümlerimize göz atın
+- EN: Explore our expertise in outsourced Development Services
+
+### Lokalize Olmayan İçerik
+- ri-instagram-line: https://www.instagram.com/lanistasoftware/
+- ri-linkedin-line: https://www.linkedin.com/company/lanista-software
+- ri-twitter-line: https://x.com/lanistasoftware
+
+## 5. Önbellek Yönetimi
+- Bypass Sonuçları: 11 öğe
+
+## 6. Metadata ve Assets
+- Model: {
+  "name": "WorkItems",
+  "modelId": "workitems",
+  "localization": true,
+  "type": "JSON",
+  "createdBy": "user",
+  "isServerless": false
+}
+- Assets: 48 adet

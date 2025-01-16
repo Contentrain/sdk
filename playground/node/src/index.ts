@@ -1,5 +1,5 @@
 import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 import { ContentrainSDK } from '@contentrain/query';
@@ -13,7 +13,8 @@ interface IWorkItem extends BaseContentrainType {
   link: string
   order: number
 }
-interface IWorkCategories extends BaseContentrainType {
+
+interface IWorkCategory extends BaseContentrainType {
   category: string
   order: number
 }
@@ -23,13 +24,12 @@ interface ITabItem extends BaseContentrainType {
   description: string
   order: number
   category: string[]
-  _relations: {
-    category: IWorkCategories[]
+  _relations?: {
+    category: IWorkCategory[]
   }
 }
 
 interface IFaqItem extends BaseContentrainType {
-  title: string
   question: string
   answer: string
   order: number
@@ -41,118 +41,210 @@ interface ITestimonialItem extends BaseContentrainType {
   'title': string
   'image': string
   'creative-work': string
+  '_relations'?: {
+    'creative-work': IWorkItem
+  }
+}
+
+interface ISection extends BaseContentrainType {
+  title: string
+  description: string
+  buttonText?: string
+  buttonLink?: string
+  name: string
+  subtitle?: string
+}
+
+interface ISocialLink extends BaseContentrainType {
+  icon: string
+  link: string
 }
 
 // Query Config tipleri
-interface IWorkItemQuery extends QueryConfig<IWorkItem, 'en' | 'tr', { category: IWorkItem }> {}
-interface ITabItemQuery extends QueryConfig<ITabItem, 'en' | 'tr', { category: IWorkItem }> {}
+interface IWorkItemQuery extends QueryConfig<IWorkItem, 'en' | 'tr', { category: IWorkCategory }> {}
+interface ITabItemQuery extends QueryConfig<ITabItem, 'en' | 'tr', { category: IWorkCategory }> {}
 interface IFaqItemQuery extends QueryConfig<IFaqItem, 'en' | 'tr'> {}
 interface ITestimonialItemQuery extends QueryConfig<ITestimonialItem, 'en' | 'tr', { 'creative-work': IWorkItem }> {}
+interface ISectionQuery extends QueryConfig<ISection, 'en' | 'tr'> {}
+interface ISocialLinkQuery extends QueryConfig<ISocialLink> {}
 
 // SDK'yı başlat
 const sdk = new ContentrainSDK({
   contentDir: join(__dirname, '../../contentrain'),
   defaultLocale: 'tr',
+  cache: true,
+  ttl: 60 * 1000,
+  maxCacheSize: 100,
 });
 
 async function main() {
   try {
-    // 1. Temel Sorgular - Türkçe İçerik
-    console.log('\n--- Türkçe İş Öğeleri (Sıralı ve Limitli) ---');
+    console.log('\n=== 1. Temel Sorgular ===');
+
+    // 1.1 Filtreleme ve Sıralama
+    console.log('\n--- Filtreleme ve Sıralama ---');
     const workItems = await sdk
       .query<IWorkItemQuery>('workitems')
       .where('status', 'eq', 'publish')
+      .where('order', 'lt', 5)
       .orderBy('order', 'asc')
-      .limit(5)
-      .locale('tr')
       .get();
-    console.log('Türkçe İş Öğeleri:', workItems.data.length);
+    console.log('Filtrelenmiş İş Öğeleri:', workItems.data.length);
 
-    // 2. İngilizce İçerik ve İlişkiler
-    console.log('\n--- İngilizce İş Öğeleri (Kategorileriyle) ---');
-    const workItemsWithCategories = await sdk
+    // 1.2 Sayfalama
+    console.log('\n--- Sayfalama ---');
+    const pagedItems = await sdk
       .query<IWorkItemQuery>('workitems')
-      .where('status', 'eq', 'publish')
-      .include('category')
-      .locale('en')
+      .limit(3)
+      .offset(1)
       .get();
-    console.log('İngilizce İş Öğeleri ve Kategorileri:', workItemsWithCategories.data.length);
+    console.log('Sayfalanmış Öğeler:', pagedItems.data.length);
+    console.log('Sayfalama Bilgisi:', pagedItems.pagination);
 
-    // 3. İç İçe İlişkiler
-    console.log('\n--- Referanslar ve İlişkili İçerikler ---');
+    console.log('\n=== 2. İlişki Sorguları ===');
+
+    // 2.1 Bire-Bir İlişki
+    console.log('\n--- Bire-Bir İlişki ---');
     const testimonials = await sdk
       .query<ITestimonialItemQuery>('testimonail-items')
-      .include(['creative-work'])
-      .locale('tr')
+      .include('creative-work')
       .get();
-    console.log('Referanslar:', testimonials.data.length);
+    console.log('Referanslar ve İlişkili İşler:', testimonials.data.map(t => ({
+      title: t.title,
+      work: t._relations?.['creative-work']?.title,
+    })));
 
-    // 4. Çoklu Filtre ve Sıralama
-    console.log('\n--- Filtrelenmiş ve Sıralı Tab Öğeleri ---');
+    // 2.2 Bire-Çok İlişki
+    console.log('\n--- Bire-Çok İlişki ---');
     const tabItems = await sdk
       .query<ITabItemQuery>('tabitems')
       .where('status', 'eq', 'publish')
-      .orderBy('order', 'asc')
       .include('category')
-      .locale('tr')
+      .orderBy('order', 'asc')
       .get();
-    console.log('Tab Öğeleri:', tabItems.data[0]._relations);
+    console.log('Tab Öğeleri ve Kategorileri:', tabItems.data.map(t => ({
+      description: t.description,
+      categories: t._relations?.category?.map(c => c.category),
+    })));
 
-    // 5. Sayfalama ile Sorgu
-    console.log('\n--- Sayfalanmış Servis Öğeleri ---');
-    const services = await sdk
-      .query<IWorkItemQuery>('services')
+    console.log('\n=== 3. Gelişmiş Sorgular ===');
+
+    // 3.1 Çoklu Filtreler
+    console.log('\n--- Çoklu Filtreler ---');
+    const filteredServices = await sdk
+      .query<IWorkItemQuery>('workitems')
       .where('status', 'eq', 'publish')
-      .offset(0)
-      .limit(3)
-      .locale('tr')
+      .where('order', 'gt', 2)
+      .where('order', 'lt', 6)
+      .where('description', 'contains', 'platform')
+      .orderBy('order', 'asc')
       .get();
-    console.log('Servisler:', services.data.length);
+    console.log('Filtrelenmiş İş Öğeleri:', filteredServices.data.length);
 
-    // 6. Metin Arama
-    console.log('\n--- İçerikte Metin Arama ---');
-    const searchResults = await sdk
+    // 3.2 Dizi Operatörleri
+    console.log('\n--- Dizi Operatörleri ---');
+    const statusFiltered = await sdk
+      .query<IWorkItemQuery>('workitems')
+      .where('status', 'in', ['publish', 'draft'])
+      .get();
+    console.log('Durum Filtrelenmiş Öğeler:', statusFiltered.data.length);
+
+    console.log('\n=== 4. Çoklu Dil Desteği ===');
+
+    // 4.1 Farklı Dillerde İçerik
+    console.log('\n--- Farklı Dillerde İçerik ---');
+    const trContent = await sdk
+      .query<ISectionQuery>('sections')
+      .locale('tr')
+      .first();
+    const enContent = await sdk
+      .query<ISectionQuery>('sections')
+      .locale('en')
+      .first();
+    console.log('TR Başlık:', trContent?.title);
+    console.log('EN Başlık:', enContent?.title);
+
+    // 4.2 Lokalize Olmayan Model
+    console.log('\n--- Lokalize Olmayan Model ---');
+    const socialLinks = await sdk
+      .query<ISocialLinkQuery>('sociallinks')
+      .where('status', 'eq', 'publish')
+      .orderBy('icon', 'asc')
+      .get();
+    console.log('Sosyal Medya Linkleri:', socialLinks.data.length);
+
+    console.log('\n=== 5. Önbellek Yönetimi ===');
+
+    // 5.1 Önbellek Bypass
+    console.log('\n--- Önbellek Bypass ---');
+    const bypassCache = await sdk
       .query<IFaqItemQuery>('faqitems')
-      .where('title', 'contains', 'nasıl')
-      .locale('tr')
+      .bypassCache()
       .get();
-    console.log('Arama Sonuçları:', searchResults.data.length);
+    console.log('Önbellek Bypass ile Alınan Öğeler:', bypassCache.data.length);
 
-    // 7. Metadata ve Assets
-    console.log('\n--- Model Metadata ve Assets ---');
+    console.log('\n=== 6. Metadata ve Assets ===');
+
+    // 6.1 Model Metadata
+    console.log('\n--- Model Metadata ---');
     const modelData = await sdk.load('workitems');
     console.log('Model Metadata:', modelData.model.metadata);
+
+    // 6.2 Assets
+    console.log('\n--- Assets ---');
     console.log('Assets Sayısı:', modelData.assets?.length);
 
+    // Sonuçları dosyaya yaz
     const markdownContent = `
-    # --- Türkçe İş Öğeleri (Sıralı ve Limitli) ---
-    ${workItems.data.map(item => `- ${item.description}`).join('\n')}
-    # --- İngilizce İş Öğeleri (Kategorileriyle) ---
-    ${workItemsWithCategories.data.map(item => `- ${item.description}`).join('\n')}
-    # --- Referanslar ve İlişkili İçerikler ---
-    ${testimonials.data.map(item => `- ${item.title}`).join('\n')}
-    # --- Filtrelenmiş ve Sıralı Tab Öğeleri ---
-    ${tabItems.data.map(item => `- ${item._relations.category.map(category => category.order).join(', ')}`).join('\n')}
-    # --- Sayfalanmış Servis Öğeleri ---
-    ${services.data.map(item => `- ${item.title}`).join('\n')}
-    # --- İçerikte Metin Arama ---
-    ${searchResults.data.map(item => `- ${item.title}`).join('\n')}
-    # --- Model Metadata ve Assets ---
-    ${modelData.model.metadata}
-    ${modelData.assets?.length}
-    # --- Assets ---
-    ${modelData.assets?.map(asset => `- ${asset.path}`).join('\n')}
-    `;
+# Contentrain SDK Test Sonuçları
+
+## 1. Temel Sorgular
+### Filtreleme ve Sıralama
+${workItems.data.map(item => `- ${item.title} (Sıra: ${item.order})`).join('\n')}
+
+### Sayfalama
+${pagedItems.data.map(item => `- ${item.title}`).join('\n')}
+Sayfalama: Limit ${pagedItems.pagination?.limit}, Offset ${pagedItems.pagination?.offset}
+
+## 2. İlişki Sorguları
+### Bire-Bir İlişki
+${testimonials.data.map(t => `- ${t.title} -> ${t._relations?.['creative-work']?.title}`).join('\n')}
+
+### Bire-Çok İlişki
+${tabItems.data.map(t => `- ${t.description} -> ${t._relations?.category?.map(c => c.category).join(', ')}`).join('\n')}
+
+## 3. Gelişmiş Sorgular
+### Çoklu Filtreler
+${filteredServices.data.map(s => `- ${s.title} (Sıra: ${s.order}) - ${s.description.slice(0, 100)}...`).join('\n')}
+
+### Dizi Operatörleri
+${statusFiltered.data.map(item => `- ${item.title} (${item.status})`).join('\n')}
+
+## 4. Çoklu Dil Desteği
+### Lokalize İçerik
+- TR: ${trContent?.title}
+- EN: ${enContent?.title}
+
+### Lokalize Olmayan İçerik
+${socialLinks.data.map(link => `- ${link.icon}: ${link.link}`).join('\n')}
+
+## 5. Önbellek Yönetimi
+- Bypass Sonuçları: ${bypassCache.data.length} öğe
+
+## 6. Metadata ve Assets
+- Model: ${JSON.stringify(modelData.model.metadata, null, 2)}
+- Assets: ${modelData.assets?.length} adet
+`;
+
     await writeFile(join(__dirname, './output.md'), markdownContent);
+    console.log('\nSonuçlar output.md dosyasına yazıldı.');
   }
   catch (error) {
     console.error('Hata:', error);
   }
 }
 
-// Promise zincirini düzelt
 void main().catch((error) => {
   console.error('Beklenmeyen hata:', error);
-  // Hata durumunda programı sonlandır
   exit(1);
 });
