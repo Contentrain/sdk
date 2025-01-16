@@ -1,20 +1,15 @@
-export type Operator =
-  | 'eq'
-  | 'ne'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'in'
-  | 'nin'
-  | 'contains'
-  | 'startsWith'
-  | 'endsWith';
+import type { BaseContentrainType, ContentrainLocales } from './model';
 
-export interface Filter {
+export type StringOperator = 'eq' | 'ne' | 'contains' | 'startsWith' | 'endsWith';
+export type NumericOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte';
+export type ArrayOperator = 'in' | 'nin';
+
+export type Operator = StringOperator | NumericOperator | ArrayOperator;
+
+export interface Filter<T = any> {
   field: string
   operator: Operator
-  value: any
+  value: T extends Array<infer U> ? (ArrayOperator extends 'in' | 'nin' ? U[] : U) : T
 }
 
 export interface Sort {
@@ -48,4 +43,13 @@ export interface QueryResult<T> {
     offset: number
     hasMore: boolean
   }
+}
+export interface QueryConfig<
+  TFields extends BaseContentrainType,
+  TLocales extends ContentrainLocales = 'en' | 'tr',
+  TRelations extends Record<string, BaseContentrainType> = Record<string, never>,
+> {
+  fields: TFields
+  locales: TLocales
+  relations: TRelations
 }

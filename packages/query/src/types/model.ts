@@ -101,22 +101,4 @@ export interface FieldValidations {
   }
 }
 
-export interface AssetMetadata {
-  path: string
-  size: number
-  type: string
-  createdAt: string
-  updatedAt: string
-}
-
 export type ContentrainLocales = string;
-
-export interface QueryConfig<
-  TFields extends BaseContentrainType,
-  TLocales extends ContentrainLocales,
-  TRelations extends Record<string, BaseContentrainType>,
-> {
-  fields: TFields
-  locales: TLocales
-  relations: TRelations
-}

@@ -22,11 +22,27 @@ export interface ContentFile<T extends BaseContentrainType = BaseContentrainType
   data: T[]
 }
 
+export interface AssetMetadata {
+  path: string
+  mimetype: string
+  size: number
+  alt: string
+  meta: {
+    user: {
+      name: string
+      email: string
+      avatar: string
+    }
+    createdAt: string
+  }
+}
+
 export interface LoaderResult<T extends BaseContentrainType = BaseContentrainType> {
   model: ModelConfig
   content: {
     [locale: string]: T[]
   }
+  assets?: AssetMetadata[]
 }
 
 export interface RelationConfig {
@@ -47,4 +63,9 @@ export interface CacheEntry<T> {
   expireAt: number
   size: number
   createdAt: number
+}
+
+export interface MemoryCacheOptions {
+  maxSize?: number // MB cinsinden
+  defaultTTL?: number // milisaniye cinsinden
 }

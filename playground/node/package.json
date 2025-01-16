@@ -12,9 +12,6 @@
         "start": "ts-node src/index.ts",
         "dev": "ts-node-dev --respawn --transpile-only src/index.ts"
     },
-    "dependencies": {
-        "@contentrain/query": "workspace:*"
-    },
     "devDependencies": {
         "@types/node": "^22.10.5",
         "ts-node": "^10.9.2",

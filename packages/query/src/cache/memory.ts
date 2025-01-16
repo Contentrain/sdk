@@ -1,10 +1,5 @@
-import type { CacheEntry, CacheStats } from '../types/loader';
+import type { CacheEntry, CacheStats, MemoryCacheOptions } from '../types/loader';
 import { lru } from 'tiny-lru';
-
-export interface MemoryCacheOptions {
-  maxSize?: number // MB cinsinden
-  defaultTTL?: number // ms cinsinden
-}
 
 export class MemoryCache {
   private cache;

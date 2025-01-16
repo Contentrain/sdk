@@ -1,8 +1,8 @@
 import type { ContentFile, ContentLoaderOptions, LoaderResult, ModelConfig, RelationConfig } from '../types/loader';
 import type { BaseContentrainType, FieldMetadata, ModelMetadata } from '../types/model';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { MemoryCache } from '../cache';
+import { MemoryCache } from '../cache/memory';
 
 export class ContentLoader {
   private options: ContentLoaderOptions;
@@ -65,18 +65,6 @@ export class ContentLoader {
       const modelContent = await readFile(modelPath, 'utf-8');
       const modelFields = JSON.parse(modelContent) as FieldMetadata[];
 
-      // Field'ların geçerli olduğunu kontrol et
-      if (!Array.isArray(modelFields)) {
-        throw new TypeError(`Invalid field configuration for model ${model}: Expected an array of fields`);
-      }
-
-      // Field'ların tiplerini kontrol et
-      modelFields.forEach((field, index) => {
-        if (!field.fieldId || !field.fieldType || !field.componentId) {
-          throw new Error(`Invalid field at index ${index} for model ${model}: Missing required properties`);
-        }
-      });
-
       return {
         metadata: modelMetadata,
         fields: modelFields,
@@ -89,26 +77,34 @@ export class ContentLoader {
 
   private async loadContentFile<T extends BaseContentrainType>(
     model: string,
-    locale?: string,
+    locale: string = 'default',
   ): Promise<ContentFile<T>> {
     try {
-      // İçerik dosyasının yolunu belirle
+      const modelConfig = await this.loadModelConfig(model);
       let contentPath: string;
-      if (locale) {
+
+      if (modelConfig.metadata.localization) {
+        if (!locale || locale === 'default') {
+          if (!this.options.defaultLocale) {
+            throw new Error(`Default locale is required for localized model "${model}"`);
+          }
+          locale = this.options.defaultLocale;
+        }
         contentPath = join(this.options.contentDir, model, `${locale}.json`);
       }
       else {
-        // Non-lokalize içerikler için modelId.json formatını kullan
+        if (locale !== 'default') {
+          console.warn(`Locale "${locale}" specified for non-localized model "${model}". This parameter will be ignored.`);
+        }
         contentPath = join(this.options.contentDir, model, `${model}.json`);
       }
 
-      // Dosyayı oku ve parse et
       const content = await readFile(contentPath, 'utf-8');
       try {
         const data = JSON.parse(content) as T[];
         return {
           model,
-          locale,
+          locale: modelConfig.metadata.localization ? locale : undefined,
           data,
         };
       }
@@ -162,8 +158,41 @@ export class ContentLoader {
     }
   }
 
+  private async getModelLocales(model: string, modelConfig: ModelConfig): Promise<string[]> {
+    try {
+      if (!modelConfig.metadata.localization) {
+        return ['default'];
+      }
+
+      const modelDir = join(this.options.contentDir, model);
+      const files = await readdir(modelDir);
+
+      // .json uzantılı dosyaları filtrele ve uzantıyı kaldır
+      const locales = files
+        .filter(file => file.endsWith('.json'))
+        .map(file => file.replace('.json', ''))
+        .filter(locale => locale !== model); // model.json dosyasını hariç tut
+
+      if (locales.length === 0) {
+        if (!this.options.defaultLocale) {
+          throw new Error(`No locale files found for localized model "${model}" and no default locale specified`);
+        }
+        return [this.options.defaultLocale];
+      }
+
+      return locales;
+    }
+    catch (error: any) {
+      if (!this.options.defaultLocale) {
+        throw new Error(`Failed to read locales for model ${model} and no default locale specified: ${error?.message}`);
+      }
+      console.warn(`Failed to read locales for model ${model}: ${error?.message}`);
+      return [this.options.defaultLocale];
+    }
+  }
+
   async load<T extends BaseContentrainType>(model: string): Promise<LoaderResult<T>> {
-    const cacheKey = this.getCacheKey(model);
+    const cacheKey = `${model}`;
 
     // Cache kontrolü
     if (this.options.cache) {
@@ -172,7 +201,7 @@ export class ContentLoader {
         return cached;
     }
 
-    // Model config'i yükle
+    // Model konfigürasyonunu yükle
     const modelConfig = await this.loadModelConfig(model);
     this.modelConfigs.set(model, modelConfig);
 
@@ -184,13 +213,21 @@ export class ContentLoader {
     const content: { [locale: string]: T[] } = {};
 
     if (modelConfig.metadata.localization) {
-      // Tüm dilleri yükle
-      // TODO: Dil listesini al
-      const locales = ['en', 'tr'];
+      // Dil listesini dizinden al
+      const locales = await this.getModelLocales(model, modelConfig);
 
       for (const locale of locales) {
-        const file = await this.loadContentFile<T>(model, locale);
-        content[locale] = file.data;
+        try {
+          const file = await this.loadContentFile<T>(model, locale);
+          content[locale] = file.data;
+        }
+        catch (error: any) {
+          console.warn(`Failed to load content for locale ${locale}: ${error?.message}`);
+          // Eğer default locale yüklenemezse hata fırlat
+          if (locale === this.options.defaultLocale) {
+            throw error;
+          }
+        }
       }
     }
     else {
@@ -199,9 +236,22 @@ export class ContentLoader {
       content.default = file.data;
     }
 
+    // Assets dosyasını yükle
+    let assets;
+    try {
+      const assetsPath = join(this.options.contentDir, 'assets.json');
+      const assetsContent = await readFile(assetsPath, 'utf-8');
+      assets = JSON.parse(assetsContent);
+    }
+    catch (error) {
+      // Assets dosyası yoksa veya okunamazsa boş geç
+      console.warn('Assets file not found or cannot be read:', error);
+    }
+
     const result: LoaderResult<T> = {
       model: modelConfig,
       content,
+      assets,
     };
 
     // Cache'e kaydet
@@ -247,22 +297,24 @@ export class ContentLoader {
         });
       }
       else {
-        // Çoka bir ilişki
-        return data.flatMap((item) => {
-          const ids = Array.isArray(item[relationField])
-            ? item[relationField]
-            : [item[relationField]];
+        // Çoka bir ilişki - tekrarlanan öğeleri önle
+        const uniqueIds = new Set(
+          data.flatMap(item =>
+            Array.isArray(item[relationField])
+              ? item[relationField]
+              : [item[relationField]],
+          ),
+        );
 
-          const items = ids
-            .map(id => relatedData.find(r => r.ID === id))
-            .filter(Boolean) as R[];
+        const items = Array.from(uniqueIds)
+          .map(id => relatedData.find(r => r.ID === id))
+          .filter(Boolean) as R[];
 
-          if (items.length !== ids.length) {
-            throw new Error('Failed to resolve relation: Some related items not found');
-          }
+        if (items.length !== uniqueIds.size) {
+          throw new Error('Failed to resolve relation: Some related items not found');
+        }
 
-          return items;
-        });
+        return items;
       }
     }
     catch (error: any) {

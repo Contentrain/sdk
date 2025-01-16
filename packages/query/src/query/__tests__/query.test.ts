@@ -276,13 +276,6 @@ describe('query', () => {
       });
     });
 
-    it('should throw error for invalid operator', async () => {
-      // @ts-expect-error: Testing invalid operator
-      await expect(builder.where('title', 'invalid', 'test').get())
-        .rejects
-        .toThrow();
-    });
-
     it('should handle empty result sets gracefully', async () => {
       const result = await builder
         .where('title', 'eq', 'NonExistentTitle')
@@ -290,6 +283,239 @@ describe('query', () => {
 
       expect(result.data).toHaveLength(0);
       expect(result.total).toBe(0);
+    });
+
+    it('should handle case-sensitive string operations', async () => {
+      const result = await builder
+        .where('title', 'contains', 'content')
+        .get();
+
+      const caseSensitiveResult = await builder
+        .where('title', 'eq', 'Contentrain')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      expect(caseSensitiveResult.data.length).toBe(1);
+      // Case-sensitive eşleşme kontrolü
+      caseSensitiveResult.data.forEach((item) => {
+        expect(item.title).toBe('Contentrain');
+      });
+
+      // Büyük/küçük harf duyarsız aramada daha fazla sonuç olmalı
+      const caseInsensitiveResult = await builder
+        .where('title', 'contains', 'CONTENT')
+        .get();
+
+      expect(caseInsensitiveResult.data.length).toBeGreaterThan(0);
+    });
+
+    it('should handle multiple conditions on same field', async () => {
+      const result = await builder
+        .where('order', 'gt', 2)
+        .where('order', 'lt', 5)
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.order).toBeGreaterThan(2);
+        expect(item.order).toBeLessThan(5);
+      });
+    });
+  });
+
+  describe('relation filtering', () => {
+    it('should filter by related field value', async () => {
+      const result = await builder
+        .include('category')
+        .where('category', 'eq', 'cab37361e7e6')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item._relations?.category).toBeDefined();
+        expect(item._relations?.category.ID).toBe('cab37361e7e6');
+      });
+    });
+
+    it('should handle multiple relation includes', async () => {
+      interface ExtendedWorkItem extends WorkItem {
+        category: string
+        _relations: {
+          category: WorkCategory
+        }
+      }
+
+      const extendedBuilder = new ContentrainQueryBuilder<ExtendedWorkItem>('workitems', executor, loader);
+      const result = await extendedBuilder
+        .include('category')
+        .where('category', 'eq', 'cab37361e7e6')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item._relations.category).toBeDefined();
+        expect(item._relations.category.ID).toBe('cab37361e7e6');
+      });
+    });
+
+    it('should handle nested relation filtering', async () => {
+      interface CategoryWithOrder extends WorkCategory {
+        order: number
+      }
+
+      const categoryBuilder = new ContentrainQueryBuilder<CategoryWithOrder>('workcategories', executor, loader);
+      const result = await categoryBuilder
+        .where('order', 'gt', 1)
+        .orderBy('order', 'asc')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item, index) => {
+        expect(item.order).toBeGreaterThan(1);
+        if (index > 0) {
+          expect(item.order).toBeGreaterThanOrEqual(result.data[index - 1].order);
+        }
+      });
+    });
+  });
+
+  describe('localization and cache behavior', () => {
+    it('should handle fallback locale', async () => {
+      const result = await builder
+        .locale('invalid-locale' as any)
+        .get()
+        .catch(() => null);
+
+      expect(result).toBeNull();
+    });
+
+    it('should maintain cache for different locales separately', async () => {
+      // Cache'i temizle
+      await loader.clearCache();
+
+      // EN sorgusu
+      await builder.locale('en').get();
+
+      // Cache'i temizle
+      await loader.clearCache();
+
+      // TR sorgusu - farklı bir sorgu yap
+      await builder
+        .locale('tr')
+        .where('order', 'gt', 1)
+        .where('order', 'lt', 5)
+        .get();
+      const statsAfterTr = loader.getCacheStats();
+
+      expect(statsAfterTr.hits).toBe(0);
+      expect(statsAfterTr.misses).toBeGreaterThan(0);
+    });
+
+    it('should bypass cache when explicitly requested', async () => {
+      // Cache'i temizle
+      await loader.clearCache();
+
+      // İlk sorgu - cache'e yaz
+      await builder.get();
+
+      // Cache'i temizle
+      await loader.clearCache();
+
+      // Cache'i bypass et ve farklı bir sorgu yap
+      await builder
+        .bypassCache()
+        .where('order', 'gt', 1)
+        .where('order', 'lt', 5)
+        .get();
+      const statsAfterBypass = loader.getCacheStats();
+
+      expect(statsAfterBypass.hits).toBe(0);
+      expect(statsAfterBypass.misses).toBeGreaterThan(0);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle invalid model gracefully', async () => {
+      const invalidBuilder = new ContentrainQueryBuilder('invalid-model', executor, loader);
+      await expect(invalidBuilder.get()).rejects.toThrow();
+    });
+
+    it('should handle invalid relation field', async () => {
+      await expect(
+        builder.include('invalidRelation' as any).get(),
+      ).rejects.toThrow();
+    });
+
+    it('should handle invalid filter operator', async () => {
+      // @ts-expect-error: Testing invalid operator
+      await expect(builder.where('title', 'invalid', 'test').get())
+        .rejects
+        .toThrow();
+    });
+
+    it('should handle invalid sort field', async () => {
+      await expect(
+        builder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .orderBy('nonexistentField' as any, 'asc')
+          .get(),
+      ).rejects.toThrow('Invalid sort field');
+    });
+  });
+
+  describe('utility methods', () => {
+    it('should get first item correctly', async () => {
+      const item = await builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .orderBy('order', 'asc')
+        .first();
+
+      expect(item).toBeDefined();
+      if (item) {
+        expect(item.status).toBe('publish');
+      }
+    });
+
+    it('should return null for first() when no results', async () => {
+      const item = await builder
+        .where('title', 'eq', 'NonExistent')
+        .first();
+
+      expect(item).toBeNull();
+    });
+
+    it('should count results correctly', async () => {
+      const total = await builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .count();
+
+      const result = await builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .get();
+
+      expect(total).toBe(result.total);
+    });
+
+    it('should serialize query to JSON correctly', () => {
+      const query = builder
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .include('category')
+        .orderBy('order', 'desc')
+        .limit(5)
+        .offset(2)
+        .locale('en')
+        .cache(1000);
+
+      const json = query.toJSON();
+
+      expect(json).toMatchObject({
+        model: 'workitems',
+        filters: [{ field: 'status', operator: 'eq', value: 'publish' }],
+        includes: { category: {} },
+        sorting: [{ field: 'order', direction: 'desc' }],
+        pagination: { limit: 5, offset: 2 },
+        options: { locale: 'en', cache: true, ttl: 1000 },
+      });
     });
   });
 });

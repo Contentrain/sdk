@@ -1,5 +1,6 @@
 import type { ContentLoaderOptions } from './types/loader';
-import type { BaseContentrainType, QueryConfig } from './types/model';
+import type { BaseContentrainType } from './types/model';
+import type { QueryConfig } from './types/query';
 import { ContentLoader } from './loader/content';
 import { ContentrainQueryBuilder } from './query/builder';
 import { QueryExecutor } from './query/executor';

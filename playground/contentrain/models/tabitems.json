@@ -97,5 +97,27 @@
       }
     },
     "fieldType": "media"
+  },
+  {
+    "name": "category",
+    "fieldId": "category",
+    "modelId": "workitems",
+    "componentId": "one-to-many",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "workcategories"
+          }
+        }
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "relation"
   }
 ]

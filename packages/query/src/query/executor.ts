@@ -1,6 +1,6 @@
 import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType } from '../types/model';
-import type { Filter, Include, QueryOptions, QueryResult, Sort } from '../types/query';
+import type { ArrayOperator, Filter, Include, NumericOperator, QueryOptions, QueryResult, Sort, StringOperator } from '../types/query';
 
 export class QueryExecutor {
   private loader: ContentLoader;
@@ -11,56 +11,79 @@ export class QueryExecutor {
 
   private applyFilters<T extends BaseContentrainType>(data: T[], filters: Filter[]): T[] {
     return data.filter((item) => {
-      return filters.every((filter) => {
-        const value = item[filter.field as keyof T];
+      return filters.every(({ field, operator, value }) => {
+        const itemValue = item[field as keyof T];
 
-        // Operatör validasyonu
+        // Geçersiz operatör kontrolü
         const validOperators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains', 'startsWith', 'endsWith'];
-        if (!validOperators.includes(filter.operator)) {
-          throw new Error(`Invalid operator: ${filter.operator}`);
+        if (!validOperators.includes(operator)) {
+          throw new Error(`Invalid operator: ${operator}`);
         }
 
-        switch (filter.operator) {
-          case 'eq':
-            return value === filter.value;
-          case 'ne':
-            return value !== filter.value;
-          case 'gt':
-            return value > filter.value;
-          case 'gte':
-            return value >= filter.value;
-          case 'lt':
-            return value < filter.value;
-          case 'lte':
-            return value <= filter.value;
-          case 'in':
-            return Array.isArray(filter.value) && filter.value.includes(value);
-          case 'nin':
-            return Array.isArray(filter.value) && !filter.value.includes(value);
-          case 'contains':
-            return typeof value === 'string' && value.includes(filter.value);
-          case 'startsWith':
-            return typeof value === 'string' && value.startsWith(filter.value);
-          case 'endsWith':
-            return typeof value === 'string' && value.endsWith(filter.value);
-          default:
-            return false;
+        if (typeof itemValue === 'string' && typeof value === 'string') {
+          return this.applyStringOperation(itemValue, operator as StringOperator, value);
         }
+
+        if (Array.isArray(value)) {
+          switch (operator as ArrayOperator) {
+            case 'in':
+              return (value as unknown[]).includes(itemValue);
+            case 'nin':
+              return !(value as unknown[]).includes(itemValue);
+            default:
+              throw new Error(`Invalid array operator: ${operator}`);
+          }
+        }
+
+        if (Array.isArray(itemValue)) {
+          switch (operator as ArrayOperator) {
+            case 'in':
+              return (value as unknown[]).some((v: unknown) => itemValue.includes(v));
+            case 'nin':
+              return !(value as unknown[]).some((v: unknown) => itemValue.includes(v));
+            default:
+              throw new Error(`Invalid array operator: ${operator}`);
+          }
+        }
+
+        if (typeof itemValue === 'number' && typeof value === 'number') {
+          switch (operator as NumericOperator) {
+            case 'eq':
+              return itemValue === value;
+            case 'ne':
+              return itemValue !== value;
+            case 'gt':
+              return itemValue > value;
+            case 'gte':
+              return itemValue >= value;
+            case 'lt':
+              return itemValue < value;
+            case 'lte':
+              return itemValue <= value;
+          }
+        }
+
+        return false;
       });
     });
   }
 
   private applySorting<T extends BaseContentrainType>(data: T[], sorting: Sort[]): T[] {
     return [...data].sort((a, b) => {
-      for (const sort of sorting) {
-        const aValue = a[sort.field as keyof T];
-        const bValue = b[sort.field as keyof T];
+      for (const { field, direction } of sorting) {
+        // Sıralama alanı validasyonu
+        if (!(field in a)) {
+          throw new Error(`Invalid sort field: ${field}`);
+        }
+
+        const aValue = a[field as keyof T];
+        const bValue = b[field as keyof T];
 
         if (aValue === bValue)
           continue;
 
-        const direction = sort.direction === 'asc' ? 1 : -1;
-        return aValue > bValue ? direction : -direction;
+        const compareResult = aValue < bValue ? -1 : 1;
+        return direction === 'asc' ? compareResult : -compareResult;
       }
       return 0;
     });
@@ -117,6 +140,25 @@ export class QueryExecutor {
     }
 
     return result;
+  }
+
+  private applyStringOperation(value: string, operator: StringOperator, searchValue: string): boolean {
+    switch (operator) {
+      case 'eq':
+        return value === searchValue;
+      case 'ne':
+        return value !== searchValue;
+      case 'contains':
+        return value.toLowerCase().includes(searchValue.toLowerCase());
+      case 'startsWith':
+        return value.toLowerCase().startsWith(searchValue.toLowerCase());
+      case 'endsWith':
+        return value.toLowerCase().endsWith(searchValue.toLowerCase());
+      default: {
+        const _exhaustiveCheck: never = operator;
+        return _exhaustiveCheck;
+      }
+    }
   }
 
   async execute<T extends BaseContentrainType>({

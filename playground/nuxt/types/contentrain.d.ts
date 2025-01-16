@@ -49,6 +49,10 @@ export interface ITabItems extends BaseContentrainType {
   link: string
   description: string
   image: string
+  category: string
+  _relations: {
+    category: IWorkItems[]
+  }
 }
 
 export interface ITestimonailItems extends BaseContentrainType {

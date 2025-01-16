@@ -1,6 +1,6 @@
 import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType, ContentrainLocales } from '../types/model';
-import type { Filter, Include, Operator, QueryOptions, QueryResult, Sort } from '../types/query';
+import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
 import type { QueryExecutor } from './executor';
 
 export class ContentrainQueryBuilder<
@@ -12,10 +12,7 @@ export class ContentrainQueryBuilder<
   private filters: Filter[] = [];
   private includes: Include = {};
   private sorting: Sort[] = [];
-  private pagination: {
-    limit?: number
-    offset?: number
-  } = {};
+  private pagination: Pagination = {};
 
   private options: QueryOptions = {};
   private executor: QueryExecutor;
@@ -106,7 +103,26 @@ export class ContentrainQueryBuilder<
 
   async get(): Promise<QueryResult<TFields>> {
     const result = await this.loader.load<TFields>(this.model);
-    const data = this.options.locale ? result.content[this.options.locale] : result.content.en;
+    const modelConfig = result.model;
+
+    // Locale kontrolü ve veri seçimi
+    let data: TFields[];
+    if (modelConfig.metadata.localization) {
+      // Localize edilmiş model için locale kontrolü
+      const locale = this.options.locale || 'en'; // Default locale
+      data = result.content[locale];
+
+      if (!data) {
+        throw new Error(`Content not found for locale: ${locale}`);
+      }
+    }
+    else {
+      // Localize edilmemiş model için default içerik
+      if (!result.content.default) {
+        throw new Error(`Content not found for model: ${this.model}`);
+      }
+      data = result.content.default;
+    }
 
     return this.executor.execute({
       model: this.model,

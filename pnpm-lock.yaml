@@ -133,10 +133,6 @@ importers:
         version: 1.6.0(@types/node@20.17.12)
 
   playground/node:
-    dependencies:
-      '@contentrain/query':
-        specifier: workspace:*
-        version: link:../../packages/query
     devDependencies:
       '@types/node':
         specifier: ^22.10.5
