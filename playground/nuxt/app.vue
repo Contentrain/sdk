@@ -141,6 +141,12 @@ const { data: socialLinks } = await useAsyncData('social-links', () =>
     .orderBy('icon', 'asc')
     .get());
 
+const { data: socialLinks2 } = await useAsyncData('social-links', () =>
+  query<ISocialLink>('sociallinks')
+    .where('icon', 'eq', 'ri-instagram-line')
+    .orderBy('icon', 'asc')
+    .get());
+console.log(socialLinks2.value?.data, 'socialLinks2');
 // === 5. Önbellek Yönetimi ===
 // 5.1 Önbellek Bypass
 const { data: bypassCacheItems } = await useAsyncData('bypass-cache-items', () =>
@@ -156,7 +162,7 @@ const { data: bypassCacheItems } = await useAsyncData('bypass-cache-items', () =
     <!-- 1. Temel Sorgular -->
     <section class="mb-12">
       <h2 class="text-2xl font-semibold mb-6 pb-2 border-b">1. Temel Sorgular</h2>
-
+      {{ socialLinks2 }}
       <!-- 1.1 Filtreleme ve Sıralama -->
       <div class="mb-8">
         <h3 class="text-xl font-medium mb-4">1.1 Filtreleme ve Sıralama</h3>

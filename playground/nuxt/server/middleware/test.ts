@@ -1,4 +1,5 @@
 import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
+import type { ISocialLinks, ISocialLinksQuery } from '~/types/contentrain';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ContentrainSDK } from '@contentrain/query';
@@ -34,7 +35,7 @@ export default defineEventHandler(async () => {
     maxCacheSize: 1000,
   });
   const res = await sdk.query<ITabItemsQuery>('tabitems')
-    .where('status', 'eq', 'publish')
+    .where('ID', 'eq', '9ab7dcca9d1d')
     .include('category')
     .get();
   console.log(res.data.map((item) => {
@@ -43,4 +44,9 @@ export default defineEventHandler(async () => {
       category: item._relations?.category.map(category => category.category),
     };
   }), 'res');
+  const res2 = await sdk.query<ISocialLinksQuery>('sociallinks')
+    .where('icon', 'eq', 'ri-instagram-line')
+    .orderBy('icon', 'asc')
+    .get();
+  console.log(res2.data, 'res2');
 });

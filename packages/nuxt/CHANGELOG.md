@@ -1,5 +1,11 @@
 # @contentrain/nuxt
 
+## 2.2.1
+
+### Patch Changes
+
+- Where query bug.
+
 ## 2.2.0
 
 ### Minor Changes

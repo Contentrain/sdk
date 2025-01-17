@@ -107,12 +107,13 @@ export class QueryBuilder<
   }
 
   async get(): Promise<QueryResult<M>> {
-    const { model, options, ...rest } = this.state;
+    const { model, options, filters, ...rest } = this.state;
     return $fetch<QueryResult<M>>('/api/_contentrain/query', {
       method: 'POST',
       body: {
         model,
         locale: options.locale || this.defaultLocale,
+        where: filters.map(filter => [filter.field, filter.operator, filter.value]),
         ...rest,
       },
     });
