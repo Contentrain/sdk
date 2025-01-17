@@ -107,14 +107,24 @@ export class QueryBuilder<
   }
 
   async get(): Promise<QueryResult<M>> {
-    const { model, options, filters, ...rest } = this.state;
+    const { model, options, filters, sorting, includes, pagination } = this.state;
+
+    const formattedIncludes = Object.keys(includes).length > 0
+      ? Object.keys(includes).map(key => key.toString())
+      : undefined;
+
     return $fetch<QueryResult<M>>('/api/_contentrain/query', {
       method: 'POST',
       body: {
         model,
         locale: options.locale || this.defaultLocale,
         where: filters.map(filter => [filter.field, filter.operator, filter.value]),
-        ...rest,
+        orderBy: sorting.map(sort => [sort.field, sort.direction]),
+        include: formattedIncludes,
+        limit: pagination.limit,
+        offset: pagination.offset,
+        cache: options.cache,
+        ttl: options.ttl,
       },
     });
   }

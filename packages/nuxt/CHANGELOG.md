@@ -1,5 +1,11 @@
 # @contentrain/nuxt
 
+## 2.2.2
+
+### Patch Changes
+
+- Query params type bug.
+
 ## 2.2.1
 
 ### Patch Changes

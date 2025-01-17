@@ -99,7 +99,7 @@ const { data: tabItemsWithFetch } = await useAsyncData('tab-items-with-fetch', (
       model: 'tabitems',
       locale: 'tr',
       where: [['status', 'eq', 'publish']],
-      include: 'category',
+      include: ['category'],
     },
   }));
 

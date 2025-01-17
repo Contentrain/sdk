@@ -4,9 +4,23 @@ import { useRuntimeConfig } from '#imports';
 import { createError, defineEventHandler, readBody } from 'h3';
 import { getSDK } from '../utils/sdk';
 
+const VALID_OPERATORS: Operator[] = [
+  'eq',
+  'ne',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'in',
+  'nin',
+  'contains',
+  'startsWith',
+  'endsWith',
+];
+
 interface QueryBody {
   model: string
-  where?: Array<[string, Operator, any]>
+  where?: Array<[string, Operator, unknown]>
   include?: string[] | Record<string, { fields?: string[], include?: Include }>
   orderBy?: Array<[string, 'asc' | 'desc']>
   limit?: number
@@ -22,6 +36,90 @@ function validateQueryBody(body: QueryBody): void {
       statusCode: 400,
       message: 'Model is required',
     });
+  }
+
+  // Validate where conditions
+  if (body.where) {
+    if (!Array.isArray(body.where)) {
+      throw createError({
+        statusCode: 400,
+        message: 'where must be an array',
+      });
+    }
+    body.where.forEach(([field, operator, _value]) => {
+      if (typeof field !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'where field must be a string',
+        });
+      }
+      if (!VALID_OPERATORS.includes(operator)) {
+        throw createError({
+          statusCode: 400,
+          message: `Invalid operator: ${operator}. Valid operators are: ${VALID_OPERATORS.join(', ')}`,
+        });
+      }
+    });
+  }
+
+  // Validate orderBy
+  if (body.orderBy) {
+    if (!Array.isArray(body.orderBy)) {
+      throw createError({
+        statusCode: 400,
+        message: 'orderBy must be an array',
+      });
+    }
+    body.orderBy.forEach(([field, direction]) => {
+      if (typeof field !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'orderBy field must be a string',
+        });
+      }
+      if (direction !== 'asc' && direction !== 'desc') {
+        throw createError({
+          statusCode: 400,
+          message: 'orderBy direction must be either "asc" or "desc"',
+        });
+      }
+    });
+  }
+
+  // Validate includes
+  if (body.include) {
+    if (Array.isArray(body.include)) {
+      body.include.forEach((relation) => {
+        if (typeof relation !== 'string') {
+          throw createError({
+            statusCode: 400,
+            message: 'include items must be strings',
+          });
+        }
+      });
+    }
+    else if (typeof body.include === 'object') {
+      Object.entries(body.include).forEach(([relation, config]) => {
+        if (typeof relation !== 'string') {
+          throw createError({
+            statusCode: 400,
+            message: 'include relation must be a string',
+          });
+        }
+        if (config.fields && !Array.isArray(config.fields)) {
+          throw createError({
+            statusCode: 400,
+            message: 'include fields must be an array',
+          });
+        }
+      });
+    }
+    else {
+      throw createError({
+        statusCode: 400,
+        message: 'include must be an array or an object',
+      });
+    }
   }
 
   if (body.limit !== undefined && (typeof body.limit !== 'number' || body.limit < 0)) {
@@ -42,6 +140,20 @@ function validateQueryBody(body: QueryBody): void {
     throw createError({
       statusCode: 400,
       message: 'Invalid TTL value',
+    });
+  }
+
+  if (body.locale !== undefined && typeof body.locale !== 'string') {
+    throw createError({
+      statusCode: 400,
+      message: 'locale must be a string',
+    });
+  }
+
+  if (body.cache !== undefined && typeof body.cache !== 'boolean') {
+    throw createError({
+      statusCode: 400,
+      message: 'cache must be a boolean',
     });
   }
 }
@@ -77,7 +189,9 @@ export default defineEventHandler(async (event: H3Event) => {
     // Apply includes
     if (body.include) {
       if (Array.isArray(body.include)) {
-        query.include(body.include[0]);
+        body.include.forEach((relation) => {
+          query.include(relation);
+        });
       }
       else if (typeof body.include === 'string') {
         query.include(body.include);
@@ -87,12 +201,10 @@ export default defineEventHandler(async (event: H3Event) => {
           query.include(relation);
 
           if (config.fields) {
-            // fields özelliği şu an için SDK'da desteklenmiyor
             console.warn('fields property in include is not supported yet');
           }
 
           if (config.include) {
-            // Nested includes şu an için SDK'da desteklenmiyor
             console.warn('nested includes are not supported yet');
           }
         });
@@ -124,7 +236,7 @@ export default defineEventHandler(async (event: H3Event) => {
     if (body.cache === false) {
       query.noCache();
     }
-    else if (body.ttl) {
+    else if (body.cache !== undefined || body.ttl) {
       query.cache(body.ttl);
     }
 
