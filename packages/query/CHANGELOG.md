@@ -1,5 +1,11 @@
 # @contentrain/query
 
+## 3.1.0
+
+### Minor Changes
+
+- Relation and localization fix.
+
 ## 2.0.0
 
 ### Major Changes

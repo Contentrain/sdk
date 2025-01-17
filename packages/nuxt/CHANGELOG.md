@@ -1,5 +1,11 @@
 # @contentrain/nuxt
 
+## 2.2.0
+
+### Minor Changes
+
+- Relation and localization fix.
+
 ## 2.1.0
 
 ### Minor Changes
