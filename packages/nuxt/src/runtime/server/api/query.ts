@@ -77,13 +77,14 @@ export default defineEventHandler(async (event: H3Event) => {
     // Apply includes
     if (body.include) {
       if (Array.isArray(body.include)) {
-        // Basit include durumu: ['category', 'tags']
-        query.include(body.include as any);
+        query.include(body.include[0]);
+      }
+      else if (typeof body.include === 'string') {
+        query.include(body.include);
       }
       else {
-        // Detaylı include durumu: { category: { fields: ['name'], include: { subcategories: {} } } }
         Object.entries(body.include).forEach(([relation, config]) => {
-          query.include(relation as any);
+          query.include(relation);
 
           if (config.fields) {
             // fields özelliği şu an için SDK'da desteklenmiyor
