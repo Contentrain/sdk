@@ -6,7 +6,8 @@
     "status": "publish",
     "link": "https://www.linkedin.com/company/lanista-software",
     "icon": "ri-linkedin-line",
-    "scheduled": false
+    "scheduled": false,
+    "service": "50d81f2a3baf"
   },
   {
     "ID": "2aa54f9e7eb1",
@@ -15,7 +16,8 @@
     "status": "publish",
     "link": "https://x.com/lanistasoftware",
     "icon": "ri-twitter-line",
-    "scheduled": false
+    "scheduled": false,
+    "service": "9450777bee2f"
   },
   {
     "ID": "2aa54f9e7eb2",
@@ -24,6 +26,7 @@
     "status": "publish",
     "link": "https://www.instagram.com/lanistasoftware/",
     "icon": "ri-instagram-line",
-    "scheduled": false
+    "scheduled": false,
+    "service": "d00761480436"
   }
 ]

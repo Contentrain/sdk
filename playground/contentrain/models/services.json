@@ -97,5 +97,23 @@
     "options": {},
     "validations": {},
     "fieldType": "media"
+  },
+  {
+    "name": "reference",
+    "fieldId": "reference",
+    "modelId": "services",
+    "componentId": "one-to-one",
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "references"
+          }
+        }
+      }
+    },
+    "validations": {},
+    "fieldType": "relation"
   }
 ]

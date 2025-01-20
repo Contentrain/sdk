@@ -7,7 +7,8 @@
     "title": "Web Uygulama Geliştirme",
     "description": "Konseptten lansmana kadar güvenli, ölçeklenebilir ve iş ihtiyaçlarınızı karşılayacak şekilde tasarlanmış özel web uygulamaları geliştiriyoruz.",
     "image": "public/1729868379116_Webapp.svg",
-    "scheduled": false
+    "scheduled": false,
+    "reference": "34e63b4829f0"
   },
   {
     "ID": "9450777bee2f",
@@ -17,7 +18,8 @@
     "title": "Mobil Uygulama Geliştirme",
     "description": "Müşterilerimizin fikirlerini gerçek mobil deneyimlere dönüştürebilmek için özel IOS ve Android uygulamalar geliştiriyoruz.",
     "image": "public/1729765510539_Mobileapp.svg",
-    "scheduled": false
+    "scheduled": false,
+    "reference": "5c5955d57da8"
   },
   {
     "ID": "d00761480436",
@@ -27,7 +29,8 @@
     "title": "MVP Geliştirme",
     "description": "Startuplara, fikirlerini hayata geçirebilmeleri için deneyimli bir ekiple birlikte MVP geliştirme hizmeti sunuyoruz.",
     "image": "public/1729767526420_MVP.svg",
-    "scheduled": false
+    "scheduled": false,
+    "reference": "7fa159ae4aaf"
   },
   {
     "ID": "d00761480437",

@@ -270,26 +270,83 @@ export class ContentLoader {
     locale?: string,
   ): Promise<R[]> {
     try {
+      console.log('Debug - resolveRelation başladı:', {
+        model,
+        relationField,
+        dataLength: data.length,
+        locale,
+      });
+
       const relations = this.relations.get(model);
+      console.log('Debug - İlişkiler:', relations);
+
       if (!relations)
         throw new Error(`No relations found for model: ${model}`);
 
       const relation = relations.find(r => r.foreignKey === relationField);
+      console.log('Debug - Bulunan ilişki:', relation);
+
       if (!relation)
         throw new Error(`No relation found for field: ${String(relationField)}`);
 
       // İlişkili modeli yükle
+      console.log('Debug - İlişkili model yükleniyor:', relation.model);
       const relatedContent = await this.load<R>(relation.model);
-      const relatedData = locale ? relatedContent.content[locale] : relatedContent.content.en;
+      console.log('Debug - İlişkili model yüklendi:', {
+        model: relation.model,
+        metadata: relatedContent.model.metadata,
+        contentKeys: Object.keys(relatedContent.content),
+      });
+
+      let relatedData: R[];
+
+      // Lokalizasyonsuz modeller için doğrudan content'i kullan
+      if (relatedContent.model.metadata.localization) {
+        console.log('Debug - Lokalizasyonlu model işleniyor');
+        const localizedContent = locale ? relatedContent.content[locale] : relatedContent.content.en;
+        console.log('Debug - Lokalize içerik:', {
+          locale: locale || 'en',
+          contentType: typeof localizedContent,
+          isArray: Array.isArray(localizedContent),
+        });
+
+        if (!Array.isArray(localizedContent)) {
+          throw new TypeError(`Invalid content format for localized model ${relation.model}`);
+        }
+        relatedData = localizedContent;
+      }
+      else {
+        console.log('Debug - Lokalizasyonsuz model işleniyor');
+        const nonLocalizedContent = relatedContent.content.default;
+        console.log('Debug - Ham içerik:', {
+          contentType: typeof nonLocalizedContent,
+          isArray: Array.isArray(nonLocalizedContent),
+          content: nonLocalizedContent,
+        });
+
+        if (!Array.isArray(nonLocalizedContent)) {
+          throw new TypeError(`Invalid content format for non-localized model ${relation.model}`);
+        }
+        relatedData = nonLocalizedContent;
+      }
+
+      console.log('Debug - İlişkili veri hazır:', {
+        dataLength: relatedData.length,
+        firstItem: relatedData[0],
+      });
 
       if (!relatedData) {
         throw new Error(`Failed to resolve relation: No data found for model ${relation.model}`);
       }
 
       if (relation.type === 'one-to-one') {
-        // Birebir ilişki
-        return data.map((item) => {
-          const relatedItem = relatedData.find(r => r.ID === item[relationField]);
+        console.log('Debug - Bire-bir ilişki işleniyor');
+        // Birebir ilişki - sadece ilişki alanı olan öğeleri işle
+        const itemsWithRelation = data.filter(item => item[relationField] !== undefined);
+        console.log('Debug - İlişkisi olan öğe sayısı:', itemsWithRelation.length);
+
+        return itemsWithRelation.map((item) => {
+          const relatedItem = relatedData.find((r: R) => r.ID === item[relationField]);
           if (!relatedItem) {
             throw new Error(`Failed to resolve relation: No matching item found for ID ${String(item[relationField])}`);
           }
@@ -297,18 +354,25 @@ export class ContentLoader {
         });
       }
       else {
-        // Çoka bir ilişki - tekrarlanan öğeleri önle
+        console.log('Debug - Çoka-bir ilişki işleniyor');
+        // Çoka bir ilişki - tekrarlanan öğeleri önle ve undefined değerleri filtrele
         const uniqueIds = new Set(
           data.flatMap(item =>
-            Array.isArray(item[relationField])
-              ? item[relationField]
-              : [item[relationField]],
+            item[relationField] !== undefined
+              ? (Array.isArray(item[relationField])
+                  ? item[relationField]
+                  : [item[relationField]])
+              : [],
           ),
         );
 
+        console.log('Debug - Benzersiz ID\'ler:', Array.from(uniqueIds));
+
         const items = Array.from(uniqueIds)
-          .map(id => relatedData.find(r => r.ID === id))
+          .map(id => relatedData.find((r: R) => r.ID === id))
           .filter(Boolean) as R[];
+
+        console.log('Debug - Eşleşen öğeler:', items.length);
 
         if (items.length !== uniqueIds.size) {
           throw new Error('Failed to resolve relation: Some related items not found');
@@ -318,6 +382,7 @@ export class ContentLoader {
       }
     }
     catch (error: any) {
+      console.error('Debug - Hata oluştu:', error);
       throw new Error(`Failed to resolve relation: ${error.message}`);
     }
   }

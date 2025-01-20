@@ -1,8 +1,12 @@
 import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { exit } from 'node:process';
-import { ContentrainSDK } from '@contentrain/query';
+import { fileURLToPath } from 'node:url';
+import { ContentLoader, ContentrainSDK } from '@contentrain/query';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Model tipleri
 interface IWorkItem extends BaseContentrainType {
@@ -55,9 +59,26 @@ interface ISection extends BaseContentrainType {
   subtitle?: string
 }
 
+interface IReference extends BaseContentrainType {
+  logo: string
+}
+
+interface IService extends BaseContentrainType {
+  title: string
+  description: string
+  reference: string
+  _relations?: {
+    reference: IReference
+  }
+}
+
 interface ISocialLink extends BaseContentrainType {
   icon: string
   link: string
+  service?: string
+  _relations?: {
+    service: IService
+  }
 }
 
 // Query Config tipleri
@@ -66,7 +87,8 @@ interface ITabItemQuery extends QueryConfig<ITabItem, 'en' | 'tr', { category: I
 interface IFaqItemQuery extends QueryConfig<IFaqItem, 'en' | 'tr'> {}
 interface ITestimonialItemQuery extends QueryConfig<ITestimonialItem, 'en' | 'tr', { 'creative-work': IWorkItem }> {}
 interface ISectionQuery extends QueryConfig<ISection, 'en' | 'tr'> {}
-interface ISocialLinkQuery extends QueryConfig<ISocialLink> {}
+interface ISocialLinkQuery extends QueryConfig<ISocialLink, never, { service: IService }> {}
+interface IServiceQuery extends QueryConfig<IService, 'en' | 'tr', { reference: IReference }> {}
 
 // SDK'yı başlat
 const sdk = new ContentrainSDK({
@@ -75,6 +97,12 @@ const sdk = new ContentrainSDK({
   cache: true,
   ttl: 60 * 1000,
   maxCacheSize: 100,
+});
+
+const loader = new ContentLoader({
+  contentDir: join(__dirname, '../../contentrain'),
+  defaultLocale: 'en',
+  cache: true,
 });
 
 async function main() {
@@ -148,7 +176,7 @@ async function main() {
       .get();
     console.log('Durum Filtrelenmiş Öğeler:', statusFiltered.data.length);
 
-    console.log('\n=== 4. Çoklu Dil Desteği ===');
+    console.log('\n=== 4. Çoklu Dil ve İlişki Senaryoları ===');
 
     // 4.1 Farklı Dillerde İçerik
     console.log('\n--- Farklı Dillerde İçerik ---');
@@ -163,14 +191,54 @@ async function main() {
     console.log('TR Başlık:', trContent?.title);
     console.log('EN Başlık:', enContent?.title);
 
-    // 4.2 Lokalize Olmayan Model
-    console.log('\n--- Lokalize Olmayan Model ---');
+    // 4.2 Lokalizasyonlu -> Lokalizasyonsuz İlişki (Services -> References)
+    console.log('\n--- Services -> References İlişkisi ---');
+    const services = await sdk
+      .query<IServiceQuery>('services')
+      .where('status', 'eq', 'publish')
+      .include('reference')
+      .get();
+    console.log('Servisler ve Referansları:', services.data.map(s => ({
+      service: s.title,
+      referenceLogo: s._relations?.reference?.logo,
+    })));
+
+    // 4.3 Lokalizasyonsuz -> Lokalizasyonlu İlişki (Sociallinks -> Services)
+    console.log('\n--- Sociallinks -> Services İlişkisi ---');
     const socialLinks = await sdk
       .query<ISocialLinkQuery>('sociallinks')
       .where('status', 'eq', 'publish')
-      .orderBy('icon', 'asc')
+      .include('service')
       .get();
-    console.log('Sosyal Medya Linkleri:', socialLinks.data.length);
+    console.log('Sosyal Medya ve Servisler:', socialLinks.data.map(s => ({
+      platform: s.icon,
+      link: s.link,
+      relatedService: s._relations?.service?.title,
+    })));
+
+    // 4.4 Lokalizasyonlu İlişkili İçerik - TR
+    console.log('\n--- TR Dili İçin İlişkili İçerik ---');
+    const trServices = await sdk
+      .query<IServiceQuery>('services')
+      .locale('tr')
+      .include('reference')
+      .get();
+    console.log('TR Servisler ve Referansları:', trServices.data.map(s => ({
+      service: s.title,
+      referenceLogo: s._relations?.reference?.logo,
+    })));
+
+    // 4.5 Lokalizasyonlu İlişkili İçerik - EN
+    console.log('\n--- EN Dili İçin İlişkili İçerik ---');
+    const enServices = await sdk
+      .query<IServiceQuery>('services')
+      .locale('en')
+      .include('reference')
+      .get();
+    console.log('EN Servisler ve Referansları:', enServices.data.map(s => ({
+      service: s.title,
+      referenceLogo: s._relations?.reference?.logo,
+    })));
 
     console.log('\n=== 5. Önbellek Yönetimi ===');
 
@@ -192,6 +260,14 @@ async function main() {
     // 6.2 Assets
     console.log('\n--- Assets ---');
     console.log('Assets Sayısı:', modelData.assets?.length);
+
+    // Test için services modelini yükleyelim
+    const servicesModel = await loader.load<IService>('services');
+    console.log('Services:', servicesModel);
+
+    // İlişkileri test edelim
+    const references = await loader.resolveRelation<IService, IReference>('services', 'reference', servicesModel.content.en);
+    console.log('References:', references);
 
     // Sonuçları dosyaya yaz
     const markdownContent = `
@@ -219,13 +295,22 @@ ${filteredServices.data.map(s => `- ${s.title} (Sıra: ${s.order}) - ${s.descrip
 ### Dizi Operatörleri
 ${statusFiltered.data.map(item => `- ${item.title} (${item.status})`).join('\n')}
 
-## 4. Çoklu Dil Desteği
-### Lokalize İçerik
+## 4. Çoklu Dil ve İlişki Senaryoları
+### Farklı Dillerde İçerik
 - TR: ${trContent?.title}
 - EN: ${enContent?.title}
 
-### Lokalize Olmayan İçerik
-${socialLinks.data.map(link => `- ${link.icon}: ${link.link}`).join('\n')}
+### Services -> References İlişkisi
+${services.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
+
+### Sociallinks -> Services İlişkisi
+${socialLinks.data.map(s => `- ${s.icon} (${s.link}) -> ${s._relations?.service?.title}`).join('\n')}
+
+### TR Dili İçin İlişkili İçerik
+${trServices.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
+
+### EN Dili İçin İlişkili İçerik
+${enServices.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
 
 ## 5. Önbellek Yönetimi
 - Bypass Sonuçları: ${bypassCache.data.length} öğe

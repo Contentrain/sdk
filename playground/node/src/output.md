@@ -52,15 +52,42 @@ We developed the mobile application wit...
 - Visivi (publish)
 - DXP 360 (publish)
 
-## 4. Çoklu Dil Desteği
-### Lokalize İçerik
+## 4. Çoklu Dil ve İlişki Senaryoları
+### Farklı Dillerde İçerik
 - TR: Yazılım geliştirme çözümlerimize göz atın
 - EN: Explore our expertise in outsourced Development Services
 
-### Lokalize Olmayan İçerik
-- ri-instagram-line: https://www.instagram.com/lanistasoftware/
-- ri-linkedin-line: https://www.linkedin.com/company/lanista-software
-- ri-twitter-line: https://x.com/lanistasoftware
+### Services -> References İlişkisi
+- Web App. Development -> public/1728394907608_Popile.svg
+- Mobile App. Development -> public/1728394892554_pazardan.svg
+- MVP Development -> public/1728394876736_Contentrain.svg
+- SaaS Platform Development -> undefined
+- Product Design -> undefined
+- Web Design & Development -> undefined
+- Headless CMS Solutions -> undefined
+
+### Sociallinks -> Services İlişkisi
+- ri-linkedin-line (https://www.linkedin.com/company/lanista-software) -> Web App. Development
+- ri-twitter-line (https://x.com/lanistasoftware) -> Mobile App. Development
+- ri-instagram-line (https://www.instagram.com/lanistasoftware/) -> MVP Development
+
+### TR Dili İçin İlişkili İçerik
+- Web Uygulama Geliştirme -> public/1728394907608_Popile.svg
+- Mobil Uygulama Geliştirme -> public/1728394892554_pazardan.svg
+- MVP Geliştirme -> public/1728394876736_Contentrain.svg
+- SaaS Platform Geliştirme -> undefined
+- Ürün Tasarımı -> undefined
+- Web Tasarımı & Geliştirme -> undefined
+- Headless CMS Çözümleri -> undefined
+
+### EN Dili İçin İlişkili İçerik
+- Web App. Development -> public/1728394907608_Popile.svg
+- Mobile App. Development -> public/1728394892554_pazardan.svg
+- MVP Development -> public/1728394876736_Contentrain.svg
+- SaaS Platform Development -> undefined
+- Product Design -> undefined
+- Web Design & Development -> undefined
+- Headless CMS Solutions -> undefined
 
 ## 5. Önbellek Yönetimi
 - Bypass Sonuçları: 11 öğe
