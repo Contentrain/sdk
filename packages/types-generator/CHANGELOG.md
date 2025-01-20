@@ -1,5 +1,11 @@
 # @contentrain/types-generator
 
+## 2.1.0
+
+### Minor Changes
+
+- Fix lint error and enhance types generator functionality
+
 ## 2.0.0
 
 ### Major Changes
