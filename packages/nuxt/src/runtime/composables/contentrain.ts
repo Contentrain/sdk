@@ -1,4 +1,4 @@
-import type { BaseContentrainType, Filter, Include, LoaderResult, Operator, QueryResult, Sort } from '@contentrain/query';
+import type { BaseContentrainType, Filter, Include, LoaderResult, Operator, QueryConfig, QueryResult, Sort } from '@contentrain/query';
 import type { RuntimeConfig } from 'nuxt/schema';
 import { useRuntimeConfig } from '#imports';
 
@@ -43,10 +43,16 @@ export class QueryBuilder<
     };
   }
 
-  where<K extends keyof M | keyof BaseContentrainType>(
+  where<K extends keyof M | keyof BaseContentrainType, O extends Operator>(
     field: K,
-    operator: Operator,
-    value: K extends keyof M ? M[K] : any,
+    operator: O,
+    value: O extends 'in' | 'nin'
+      ? K extends keyof M
+        ? M[K][]
+        : any[]
+      : K extends keyof M
+        ? M[K]
+        : any,
   ): this {
     this.state.filters.push({
       field,
@@ -141,19 +147,11 @@ export class QueryBuilder<
   }
 }
 
-export interface ContentrainComposable<
-  M extends BaseContentrainType = BaseContentrainType,
-  L extends string = string,
-  R extends Record<string, BaseContentrainType> = Record<string, BaseContentrainType>,
-> {
-  query: <
-    TFields extends M = M,
-    TLocales extends L = L,
-    TRelations extends R = R,
-  >(
+export interface ContentrainComposable {
+  query: <T extends QueryConfig<BaseContentrainType, string, Record<string, BaseContentrainType>>>(
     model: string
-  ) => QueryBuilder<TFields, TLocales, TRelations>
-  load: <T extends BaseContentrainType = M>(model: string) => Promise<LoaderResult<T>>
+  ) => QueryBuilder<T['fields'], T['locales'], T['relations']>
+  load: <T extends BaseContentrainType>(model: string) => Promise<LoaderResult<T>>
   clearCache: (model?: string) => Promise<void>
 }
 
@@ -166,12 +164,13 @@ export function useContentrain(): ContentrainComposable {
     }
   };
 
-  function query<
-    M extends BaseContentrainType,
-    L extends string = string,
-    R extends Record<string, BaseContentrainType> = Record<string, BaseContentrainType>,
-  >(model: string): QueryBuilder<M, L, R> {
-    return new QueryBuilder<M, L, R>(model, config.public.contentrain.defaultLocale);
+  function query<T extends QueryConfig<BaseContentrainType, string, Record<string, BaseContentrainType>>>(
+    model: string,
+  ): QueryBuilder<T['fields'], T['locales'], T['relations']> {
+    return new QueryBuilder<T['fields'], T['locales'], T['relations']>(
+      model,
+      config.public.contentrain.defaultLocale,
+    );
   }
 
   async function load<T extends BaseContentrainType>(model: string): Promise<LoaderResult<T>> {

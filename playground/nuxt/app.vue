@@ -1,64 +1,15 @@
 <script setup lang="ts">
-import type { BaseContentrainType, QueryResult } from '@contentrain/query';
+import type { IFaqItemsQuery, ISocialLinksQuery, ITabItemsQuery, ITestimonailItemsQuery, IWorkItemsQuery } from './types/contentrain';
 
 // Composable'ı kullan
 const { query } = useContentrain();
-
-interface IWorkCategory extends BaseContentrainType {
-  category: string
-  order: number
-}
-
-interface IWorkItem extends BaseContentrainType {
-  title: string
-  description: string
-  image: string
-  category: string
-  link: string
-  order: number
-  _relations?: {
-    category: IWorkCategory
-  }
-}
-
-interface IFaqItem extends BaseContentrainType {
-  question: string
-  answer: string
-  order: number
-}
-
-interface ITestimonialItem extends BaseContentrainType {
-  'name': string
-  'description': string
-  'title': string
-  'image': string
-  'creative-work': string
-  '_relations'?: {
-    'creative-work': IWorkItem
-  }
-}
-
-interface ITabItem extends BaseContentrainType {
-  title: string
-  description: string
-  order: number
-  category: string[]
-  _relations?: {
-    category: IWorkCategory[]
-  }
-}
-
-interface ISocialLink extends BaseContentrainType {
-  icon: string
-  link: string
-}
 
 // Süreçleri çek
 
 // === 1. Temel Sorgular ===
 // 1.1 Filtreleme ve Sıralama
 const { data: filteredWorkItems } = await useAsyncData('filtered-work-items', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .where('status', 'eq', 'publish')
     .where('order', 'lt', 5)
     .orderBy('order', 'asc')
@@ -66,21 +17,22 @@ const { data: filteredWorkItems } = await useAsyncData('filtered-work-items', ()
 
 // 1.2 Sayfalama
 const { data: pagedWorkItems } = await useAsyncData('paged-work-items', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .limit(3)
     .offset(1)
     .get());
 
 // === 2. İlişki Sorguları ===
 // 2.1 Bire-Bir İlişki
+
 const { data: testimonials } = await useAsyncData('testimonials', () =>
-  query<ITestimonialItem, 'en' | 'tr', { 'creative-work': IWorkItem }>('testimonail-items')
+  query<ITestimonailItemsQuery>('testimonail-items')
     .include('creative-work')
     .get());
 
 // 2.2 Bire-Çok İlişki
 const { data: tabItems } = await useAsyncData('tab-items', () =>
-  query<ITabItem, 'en' | 'tr', { category: IWorkCategory }>('tabitems')
+  query<ITabItemsQuery>('tabitems')
     .where('status', 'eq', 'publish')
     .include('category')
     .get());
@@ -108,7 +60,7 @@ console.log(tabItemsWithFetch.value?.data, 'tabItemsWithFetch');
 // === 3. Gelişmiş Sorgular ===
 // 3.1 Çoklu Filtreler
 const { data: advancedFilteredItems } = await useAsyncData('advanced-filtered-items', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .where('status', 'eq', 'publish')
     .where('order', 'gt', 2)
     .where('order', 'lt', 6)
@@ -118,31 +70,39 @@ const { data: advancedFilteredItems } = await useAsyncData('advanced-filtered-it
 
 // 3.2 Dizi Operatörleri
 const { data: arrayFilteredItems } = await useAsyncData('array-filtered-items', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .where('status', 'ne', 'changed')
+    .get());
+
+// 3.3 Array Operatörü Örneği
+const { data: specificSocialLinks } = await useAsyncData('specific-social-links', () =>
+  query<ISocialLinksQuery>('sociallinks')
+    .where('icon', 'in', ['ri-twitter-line', 'ri-instagram-line', 'ri-linkedin-line'])
+    .where('status', 'eq', 'publish')
+    .orderBy('icon', 'asc')
     .get());
 
 // === 4. Çoklu Dil Desteği ===
 // 4.1 Farklı Dillerde İçerik
 const { data: trContent } = await useAsyncData('tr-content', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .locale('tr')
     .first());
 
 const { data: enContent } = await useAsyncData('en-content', () =>
-  query<IWorkItem, 'en' | 'tr'>('workitems')
+  query<IWorkItemsQuery>('workitems')
     .locale('en')
     .first());
 
 // 4.2 Lokalize Olmayan Model
 const { data: socialLinks } = await useAsyncData('social-links', () =>
-  query<ISocialLink>('sociallinks')
+  query<ISocialLinksQuery>('sociallinks')
     .where('status', 'eq', 'publish')
     .orderBy('icon', 'asc')
     .get());
 
 const { data: socialLinks2 } = await useAsyncData('social-links', () =>
-  query<ISocialLink>('sociallinks')
+  query<ISocialLinksQuery>('sociallinks')
     .where('icon', 'eq', 'ri-instagram-line')
     .orderBy('icon', 'asc')
     .get());
@@ -150,7 +110,7 @@ console.log(socialLinks2.value?.data, 'socialLinks2');
 // === 5. Önbellek Yönetimi ===
 // 5.1 Önbellek Bypass
 const { data: bypassCacheItems } = await useAsyncData('bypass-cache-items', () =>
-  query<IFaqItem, 'en' | 'tr'>('faqitems')
+  query<IFaqItemsQuery>('faqitems')
     .noCache()
     .get());
 </script>
@@ -280,6 +240,24 @@ const { data: bypassCacheItems } = await useAsyncData('bypass-cache-items', () =
               }">
                 {{ item.status }}
               </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3.3 Array Operatörü Örneği -->
+      <div class="mb-8">
+        <h3 class="text-xl font-medium mb-4">3.3 Array Operatörü Örneği (Sosyal Medya)</h3>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div v-if="specificSocialLinks?.data" class="grid gap-4">
+            <div v-for="item in specificSocialLinks.data" :key="item.ID"
+              class="border p-4 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex items-center gap-4">
+                <span class="text-2xl">{{ item.icon }}</span>
+                <a :href="item.link" target="_blank" class="text-blue-600 hover:underline">
+                  {{ item.link }}
+                </a>
+              </div>
             </div>
           </div>
         </div>
