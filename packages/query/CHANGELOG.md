@@ -1,5 +1,11 @@
 # @contentrain/query
 
+## 3.2.0
+
+### Minor Changes
+
+- Relational queries lang error.
+
 ## 3.1.0
 
 ### Minor Changes
