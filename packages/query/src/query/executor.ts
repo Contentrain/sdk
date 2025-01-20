@@ -11,7 +11,7 @@ export class QueryExecutor {
   }
 
   private applyFilters<T extends BaseContentrainType>(data: T[], filters: Filter[]): T[] {
-    logger.debug('Filtre uygulama başladı:', {
+    logger.debug('Starting to apply filters:', {
       dataLength: data.length,
       filters,
     });
@@ -20,10 +20,10 @@ export class QueryExecutor {
       return filters.every(({ field, operator, value }) => {
         const itemValue = item[field as keyof T];
 
-        // Geçersiz operatör kontrolü
+        // Invalid operator check
         const validOperators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains', 'startsWith', 'endsWith'];
         if (!validOperators.includes(operator)) {
-          logger.error('Geçersiz operatör:', operator);
+          logger.error('Invalid operator:', operator);
           throw new Error(`Invalid operator: ${operator}`);
         }
 
@@ -38,7 +38,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).includes(itemValue);
             default:
-              logger.error('Geçersiz dizi operatörü:', operator);
+              logger.error('Invalid array operator:', operator);
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -50,7 +50,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).some((v: unknown) => itemValue.includes(v));
             default:
-              logger.error('Geçersiz dizi operatörü:', operator);
+              logger.error('Invalid array operator:', operator);
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -76,9 +76,9 @@ export class QueryExecutor {
       });
     });
 
-    logger.debug('Filtre uygulama tamamlandı:', {
-      başlangıçSayısı: data.length,
-      sonuçSayısı: result.length,
+    logger.debug('Filter application completed:', {
+      initialCount: data.length,
+      resultCount: result.length,
     });
 
     return result;
@@ -117,7 +117,7 @@ export class QueryExecutor {
     includes: Include,
     options: QueryOptions,
   ): Promise<T[]> {
-    logger.debug('İlişki çözümleme başladı:', {
+    logger.debug('Starting to resolve relations:', {
       model,
       dataLength: data.length,
       includes,
@@ -127,9 +127,9 @@ export class QueryExecutor {
     const result = [...data];
 
     for (const [field, config] of Object.entries(includes)) {
-      logger.debug(`"${field}" ilişkisi çözümleniyor`);
+      logger.debug(`Resolving relation "${field}"`);
 
-      // İlişkiyi çöz
+      // Resolve relation
       const relations = await this.loader.resolveRelation(
         model,
         field as keyof T,
@@ -137,13 +137,13 @@ export class QueryExecutor {
         options.locale,
       );
 
-      logger.debug(`"${field}" ilişkisi çözümlendi:`, {
-        bulunanİlişkiSayısı: relations.length,
+      logger.debug(`Relation "${field}" resolved:`, {
+        foundRelationsCount: relations.length,
       });
 
-      // Alt ilişkileri çöz
+      // Resolve nested relations
       if (config.include && relations.length) {
-        logger.debug(`"${field}" için alt ilişkiler çözümleniyor:`, config.include);
+        logger.debug(`Resolving nested relations for "${field}":`, config.include);
         await this.resolveIncludes(
           field,
           relations,
@@ -152,7 +152,7 @@ export class QueryExecutor {
         );
       }
 
-      // İlişkili verileri ekle
+      // Add related data
       result.forEach((item) => {
         const value = item[field as keyof T];
         const relatedItems = relations.filter((r) => {
@@ -168,7 +168,7 @@ export class QueryExecutor {
         item._relations[field] = Array.isArray(value) ? relatedItems : relatedItems[0];
       });
 
-      logger.debug(`"${field}" ilişkisi için veriler eklendi`);
+      logger.debug(`Data added for relation "${field}"`);
     }
 
     return result;
@@ -210,7 +210,7 @@ export class QueryExecutor {
     pagination?: { limit?: number, offset?: number }
     options?: QueryOptions
   }): Promise<QueryResult<T>> {
-    logger.debug('Execute başladı:', {
+    logger.debug('Starting execution:', {
       model,
       dataLength: data.length,
       filterCount: filters.length,
@@ -221,29 +221,29 @@ export class QueryExecutor {
     });
 
     let result = [...data];
-    // Filtreleri uygula
+    // Apply filters
     if (filters.length) {
-      logger.debug('Filtreler uygulanıyor:', filters);
+      logger.debug('Applying filters:', filters);
       result = this.applyFilters(result, filters);
-      logger.debug('Filtre sonrası kalan öğe sayısı:', result.length);
+      logger.debug('Remaining items after filtering:', result.length);
     }
 
-    // İlişkileri çöz
+    // Resolve relations
     if (Object.keys(includes).length) {
-      logger.debug('İlişkiler çözülüyor:', includes);
+      logger.debug('Resolving relations:', includes);
       result = await this.resolveIncludes(model, result, includes, options);
-      logger.debug('İlişki çözümleme sonrası öğe sayısı:', result.length);
+      logger.debug('Items after relation resolution:', result.length);
     }
 
-    // Sıralama yap
+    // Apply sorting
     if (sorting.length) {
-      logger.debug('Sıralama uygulanıyor:', sorting);
+      logger.debug('Applying sorting:', sorting);
       result = this.applySorting(result, sorting);
     }
 
-    // Sayfalama yap
+    // Apply pagination
     const paginatedData = this.applyPagination(result, pagination.limit, pagination.offset);
-    logger.debug('Sayfalama sonrası:', {
+    logger.debug('After pagination:', {
       totalCount: result.length,
       pageSize: paginatedData.length,
       offset: pagination.offset || 0,

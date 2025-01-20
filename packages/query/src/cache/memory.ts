@@ -29,19 +29,19 @@ export class MemoryCache {
   }
 
   async set<T>(key: string, data: T, ttl?: number): Promise<void> {
-    logger.debug('Cache\'e veri kaydediliyor:', {
+    logger.debug('Saving data to cache:', {
       key,
       ttl,
     });
 
-    // Önce temizlik yap
+    // Cleanup first
     await this.cleanupCache();
 
     const size = this.calculateSize(data);
     const now = Date.now();
     const expireAt = now + (ttl || this.options.defaultTTL);
 
-    // Yeni girişin boyutu limiti aşıyorsa, eski girişleri temizle
+    // Clear old entries if new entry size exceeds limit
     while (size + this.stats.size > this.options.maxSize * 1024 * 1024) {
       const oldestKey = this.findOldestKey();
       if (!oldestKey)
@@ -56,19 +56,19 @@ export class MemoryCache {
       createdAt: now,
     };
 
-    // Önce eski girişi sil
+    // Delete old entry first
     const oldEntry = this.cache.get(key) as CacheEntry<unknown> | undefined;
     if (oldEntry) {
       this.stats.size -= oldEntry.size;
     }
 
-    // Yeni girişi ekle
+    // Add new entry
     this.cache.set(key, entry);
     this.stats.size += size;
 
-    logger.debug('Cache\'e veri kaydedildi:', {
+    logger.debug('Data saved to cache:', {
       key,
-      expiry: expireAt ? new Date(expireAt).toISOString() : 'süresiz',
+      expiry: expireAt ? new Date(expireAt).toISOString() : 'no expiry',
     });
   }
 
@@ -88,42 +88,42 @@ export class MemoryCache {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    logger.debug('Cache\'den veri alınıyor:', { key });
+    logger.debug('Getting data from cache:', { key });
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
 
     if (!entry) {
-      logger.debug('Cache\'de veri bulunamadı:', { key });
+      logger.debug('Data not found in cache:', { key });
       this.stats.misses++;
       return null;
     }
 
-    // TTL kontrolü
+    // TTL check
     if (Date.now() >= entry.expireAt) {
       await this.delete(key);
       this.stats.misses++;
       return null;
     }
 
-    logger.debug('Cache\'den veri alındı:', {
+    logger.debug('Data retrieved from cache:', {
       key,
-      expiry: entry.expireAt ? new Date(entry.expireAt).toISOString() : 'süresiz',
+      expiry: entry.expireAt ? new Date(entry.expireAt).toISOString() : 'no expiry',
     });
     this.stats.hits++;
     return entry.data;
   }
 
   async delete(key: string): Promise<void> {
-    logger.debug('Cache\'den veri siliniyor:', { key });
+    logger.debug('Deleting data from cache:', { key });
     const entry = this.cache.get(key) as CacheEntry<unknown> | undefined;
     if (entry) {
       this.stats.size -= entry.size;
       this.cache.delete(key);
     }
-    logger.debug('Cache\'den veri silindi:', { key });
+    logger.debug('Data deleted from cache:', { key });
   }
 
   async clear(): Promise<void> {
-    logger.debug('Cache temizleniyor');
+    logger.debug('Clearing cache');
     this.cache.clear();
     this.stats = {
       hits: 0,
@@ -131,7 +131,7 @@ export class MemoryCache {
       size: 0,
       lastCleanup: Date.now(),
     };
-    logger.debug('Cache temizlendi');
+    logger.debug('Cache cleared');
   }
 
   private async cleanupCache(): Promise<void> {
@@ -139,7 +139,7 @@ export class MemoryCache {
     const expiredKeys: string[] = [];
     let totalSize = 0;
 
-    // Süresi dolmuş girişleri bul
+    // Find expired entries
     for (const key of this.cache.keys()) {
       const entry = this.cache.get(key) as CacheEntry<unknown>;
       if (entry.expireAt <= now) {
@@ -150,12 +150,12 @@ export class MemoryCache {
       }
     }
 
-    // Süresi dolmuş girişleri sil
+    // Delete expired entries
     for (const key of expiredKeys) {
       await this.delete(key);
     }
 
-    // Boyut hala limiti aşıyorsa, en eski girişleri sil
+    // Size limit check if it exceeds default oldest entry
     while (totalSize > this.options.maxSize * 1024 * 1024) {
       const oldestKey = this.findOldestKey();
       if (!oldestKey)

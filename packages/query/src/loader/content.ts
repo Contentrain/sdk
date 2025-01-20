@@ -1,4 +1,4 @@
-import type { ContentFile, ContentLoaderOptions, LoaderResult, ModelConfig, RelationConfig } from '../types/loader';
+import type { AssetMetadata, ContentFile, ContentLoaderOptions, LoaderResult, ModelConfig, RelationConfig } from '../types/loader';
 import type { BaseContentrainType, FieldMetadata, ModelMetadata } from '../types/model';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -15,7 +15,7 @@ export class ContentLoader {
     this.options = {
       defaultLocale: 'en',
       cache: true,
-      ttl: 60 * 1000, // 1 dakika
+      ttl: 60 * 1000, // 1 minute
       maxCacheSize: 100, // 100 MB
       ...options,
     };
@@ -50,18 +50,22 @@ export class ContentLoader {
 
   private async loadModelConfig(model: string): Promise<ModelConfig> {
     try {
-      // Önce genel metadata'yı oku
+      // First read general metadata
       const metadataPath = join(this.options.contentDir, 'models', 'metadata.json');
       const metadataContent = await readFile(metadataPath, 'utf-8');
       const allMetadata = JSON.parse(metadataContent);
 
-      // Model özel metadata'sını bul
+      // Find model specific metadata
       const modelMetadata = allMetadata.find((m: ModelMetadata) => m.modelId === model);
       if (!modelMetadata) {
+        logger.error('Model metadata not found:', {
+          model,
+          metadataPath,
+        });
         throw new Error(`Model metadata not found for ${model}`);
       }
 
-      // Model field'larını oku
+      // Read model fields
       const modelPath = join(this.options.contentDir, 'models', `${model}.json`);
       const modelContent = await readFile(modelPath, 'utf-8');
       const modelFields = JSON.parse(modelContent) as FieldMetadata[];
@@ -72,6 +76,10 @@ export class ContentLoader {
       };
     }
     catch (error: any) {
+      logger.error('Failed to load model config:', {
+        model,
+        error: error?.message || 'Unknown error',
+      });
       throw new Error(`Failed to load model config for ${model}: ${error?.message || 'Unknown error'}`);
     }
   }
@@ -87,6 +95,9 @@ export class ContentLoader {
       if (modelConfig.metadata.localization) {
         if (!locale || locale === 'default') {
           if (!this.options.defaultLocale) {
+            logger.error('Default locale is required for localized model:', {
+              model,
+            });
             throw new Error(`Default locale is required for localized model "${model}"`);
           }
           locale = this.options.defaultLocale;
@@ -110,11 +121,20 @@ export class ContentLoader {
         };
       }
       catch {
+        logger.error('Failed to load content:', {
+          model,
+          locale,
+          contentPath,
+        });
         throw new Error(`Failed to load content: Invalid JSON format in ${contentPath}`);
       }
     }
     catch (error: any) {
       if (error.message.includes('Invalid JSON format')) {
+        logger.error('Failed to load content:', {
+          model,
+          locale,
+        });
         throw error;
       }
       throw new Error(
@@ -127,18 +147,18 @@ export class ContentLoader {
 
   private async loadRelations(model: string): Promise<RelationConfig[]> {
     try {
-      // Model config'i al
+      // Get model config
       const modelConfig = this.modelConfigs.get(model);
       if (!modelConfig) {
         throw new Error(`Model config not found for ${model}`);
       }
 
-      // İlişki field'larını bul
+      // Find relation fields
       const relationFields = modelConfig.fields.filter((field) => {
         return field.fieldType === 'relation';
       });
 
-      // İlişki config'lerini oluştur
+      // Create relation configs
       return relationFields.map((field) => {
         const options = field.options;
         const reference = options?.reference?.form?.reference?.value;
@@ -168,11 +188,11 @@ export class ContentLoader {
       const modelDir = join(this.options.contentDir, model);
       const files = await readdir(modelDir);
 
-      // .json uzantılı dosyaları filtrele ve uzantıyı kaldır
+      // Filter .json files and remove extension
       const locales = files
         .filter(file => file.endsWith('.json'))
         .map(file => file.replace('.json', ''))
-        .filter(locale => locale !== model); // model.json dosyasını hariç tut
+        .filter(locale => locale !== model); // exclude model.json file
 
       if (locales.length === 0) {
         if (!this.options.defaultLocale) {
@@ -195,26 +215,26 @@ export class ContentLoader {
   async load<T extends BaseContentrainType>(model: string): Promise<LoaderResult<T>> {
     const cacheKey = `${model}`;
 
-    // Cache kontrolü
+    // Check cache
     if (this.options.cache) {
       const cached = await this.cache.get<LoaderResult<T>>(cacheKey);
       if (cached)
         return cached;
     }
 
-    // Model konfigürasyonunu yükle
+    // Load model configuration
     const modelConfig = await this.loadModelConfig(model);
     this.modelConfigs.set(model, modelConfig);
 
-    // İlişkileri yükle
+    // Load relations
     const relations = await this.loadRelations(model);
     this.relations.set(model, relations);
 
-    // İçeriği yükle
+    // Load content
     const content: { [locale: string]: T[] } = {};
 
     if (modelConfig.metadata.localization) {
-      // Dil listesini dizinden al
+      // Get locale list from directory
       const locales = await this.getModelLocales(model, modelConfig);
 
       for (const locale of locales) {
@@ -224,7 +244,7 @@ export class ContentLoader {
         }
         catch (error: any) {
           console.warn(`Failed to load content for locale ${locale}: ${error?.message}`);
-          // Eğer default locale yüklenemezse hata fırlat
+          // Throw error if default locale fails to load
           if (locale === this.options.defaultLocale) {
             throw error;
           }
@@ -232,20 +252,20 @@ export class ContentLoader {
       }
     }
     else {
-      // Tek dosyayı yükle
+      // Load single file
       const file = await this.loadContentFile<T>(model);
       content.default = file.data;
     }
 
-    // Assets dosyasını yükle
-    let assets;
+    // Load assets file
+    let assets: AssetMetadata[] = [];
     try {
       const assetsPath = join(this.options.contentDir, 'assets.json');
       const assetsContent = await readFile(assetsPath, 'utf-8');
       assets = JSON.parse(assetsContent);
     }
     catch (error) {
-      // Assets dosyası yoksa veya okunamazsa boş geç
+      // Skip if assets file doesn't exist or can't be read
       console.warn('Assets file not found or cannot be read:', error);
     }
 
@@ -255,7 +275,7 @@ export class ContentLoader {
       assets,
     };
 
-    // Cache'e kaydet
+    // Save to cache
     if (this.options.cache) {
       const ttl = this.getModelTTL(model);
       await this.cache.set(cacheKey, result, ttl);
@@ -271,7 +291,7 @@ export class ContentLoader {
     locale?: string,
   ): Promise<R[]> {
     try {
-      logger.debug('Debug - resolveRelation başladı:', {
+      logger.debug('Debug - Starting relation resolution:', {
         model,
         relationField,
         dataLength: data.length,
@@ -279,19 +299,19 @@ export class ContentLoader {
       });
 
       const relations = this.relations.get(model);
-      logger.debug('Debug - İlişkiler:', relations);
+      logger.debug('Debug - Relations:', relations);
 
       if (!relations)
         throw new Error(`No relations found for model: ${model}`);
 
       const relation = relations.find(r => r.foreignKey === relationField);
-      logger.debug('Debug - Bulunan ilişki:', relation);
+      logger.debug('Debug - Found relation:', relation);
 
       if (!relation)
         throw new Error(`No relation found for field: ${String(relationField)}`);
 
       // İlişkili modeli yükle
-      logger.debug('Debug - İlişkili model yükleniyor:', relation.model);
+      logger.debug('Debug - Related model loading:', relation.model);
       const relatedContent = await this.load<R>(relation.model);
       logger.debug('Debug - İlişkili model yüklendi:', {
         model: relation.model,
@@ -301,11 +321,11 @@ export class ContentLoader {
 
       let relatedData: R[];
 
-      // Lokalizasyonsuz modeller için doğrudan content'i kullan
+      // Process content based on localization
       if (relatedContent.model.metadata.localization) {
-        logger.debug('Debug - Lokalizasyonlu model işleniyor');
+        logger.debug('Debug - Processing localized model');
         const localizedContent = locale ? relatedContent.content[locale] : relatedContent.content.en;
-        logger.debug('Debug - Lokalize içerik:', {
+        logger.debug('Debug - Localized content:', {
           locale: locale || 'en',
           contentType: typeof localizedContent,
           isArray: Array.isArray(localizedContent),
@@ -317,9 +337,9 @@ export class ContentLoader {
         relatedData = localizedContent;
       }
       else {
-        logger.debug('Debug - Lokalizasyonsuz model işleniyor');
+        logger.debug('Debug - Processing non-localized model');
         const nonLocalizedContent = relatedContent.content.default;
-        logger.debug('Debug - Ham içerik:', {
+        logger.debug('Debug - Raw content:', {
           contentType: typeof nonLocalizedContent,
           isArray: Array.isArray(nonLocalizedContent),
           content: nonLocalizedContent,
@@ -331,7 +351,7 @@ export class ContentLoader {
         relatedData = nonLocalizedContent;
       }
 
-      logger.debug('Debug - İlişkili veri hazır:', {
+      logger.debug('Debug - Related data ready:', {
         dataLength: relatedData.length,
         firstItem: relatedData[0],
       });
@@ -340,11 +360,12 @@ export class ContentLoader {
         throw new Error(`Failed to resolve relation: No data found for model ${relation.model}`);
       }
 
+      // Process relation type
       if (relation.type === 'one-to-one') {
-        logger.debug('Debug - Bire-bir ilişki işleniyor');
-        // Birebir ilişki - sadece ilişki alanı olan öğeleri işle
+        logger.debug('Debug - Processing one-to-one relation');
+        // For one-to-one relations, process only items with relation field
         const itemsWithRelation = data.filter(item => item[relationField] !== undefined);
-        logger.debug('Debug - İlişkisi olan öğe sayısı:', itemsWithRelation.length);
+        logger.debug('Debug - Items with relations:', itemsWithRelation.length);
 
         return itemsWithRelation.map((item) => {
           const relatedItem = relatedData.find((r: R) => r.ID === item[relationField]);
@@ -355,8 +376,8 @@ export class ContentLoader {
         });
       }
       else {
-        logger.debug('Debug - Çoka-bir ilişki işleniyor');
-        // Çoka bir ilişki - tekrarlanan öğeleri önle ve undefined değerleri filtrele
+        logger.debug('Debug - Processing one-to-many relation');
+        // For one-to-many relations, prevent duplicates and filter undefined values
         const uniqueIds = new Set(
           data.flatMap(item =>
             item[relationField] !== undefined
@@ -367,13 +388,13 @@ export class ContentLoader {
           ),
         );
 
-        logger.debug('Debug - Benzersiz ID\'ler:', Array.from(uniqueIds));
+        logger.debug('Debug - Unique IDs:', Array.from(uniqueIds));
 
         const items = Array.from(uniqueIds)
           .map(id => relatedData.find((r: R) => r.ID === id))
           .filter(Boolean) as R[];
 
-        logger.debug('Debug - Eşleşen öğeler:', items.length);
+        logger.debug('Debug - Matching items:', items.length);
 
         if (items.length !== uniqueIds.size) {
           throw new Error('Failed to resolve relation: Some related items not found');
@@ -383,7 +404,7 @@ export class ContentLoader {
       }
     }
     catch (error: any) {
-      logger.error('Debug - Hata oluştu:', error);
+      logger.error('Debug - Error occurred:', error);
       throw new Error(`Failed to resolve relation: ${error.message}`);
     }
   }
