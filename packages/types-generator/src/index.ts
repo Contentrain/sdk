@@ -8,10 +8,28 @@ export interface GeneratorConfig {
   modelsDir: string
   outputDir: string
   contentDir: string
+  lint?: boolean
 }
 
 export class ContentrainTypesGenerator {
   private config: GeneratorConfig;
+
+  // Config dosyasını recursive olarak arar
+  private findConfigFile(startPath: string): string | null {
+    const configNames = ['contentrain-config.json', '.contentrain/config.json', '.config/contentrain.json'];
+    let currentPath = startPath;
+
+    while (currentPath !== path.parse(currentPath).root) {
+      for (const configName of configNames) {
+        const configPath = path.join(currentPath, configName);
+        if (fs.existsSync(configPath)) {
+          return configPath;
+        }
+      }
+      currentPath = path.dirname(currentPath);
+    }
+    return null;
+  }
 
   constructor(config?: Partial<GeneratorConfig>) {
     const defaultConfig: GeneratorConfig = {
@@ -20,7 +38,31 @@ export class ContentrainTypesGenerator {
       contentDir: path.join(process.cwd(), 'contentrain'),
     };
 
-    // If config parameter is provided, use it directly without searching for files
+    const fileConfig: Partial<GeneratorConfig> = {};
+
+    // 1. Önce config dosyasını ara
+    const configPath = this.findConfigFile(process.cwd());
+    if (configPath) {
+      try {
+        console.log(`Found config file at: ${configPath}`);
+        const fileContent = fs.readFileSync(configPath, 'utf-8');
+        const parsedConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
+
+        // Yolları mutlak yola çevir
+        if (parsedConfig.modelsDir)
+          fileConfig.modelsDir = path.resolve(path.dirname(configPath), parsedConfig.modelsDir);
+        if (parsedConfig.outputDir)
+          fileConfig.outputDir = path.resolve(path.dirname(configPath), parsedConfig.outputDir);
+        if (parsedConfig.contentDir)
+          fileConfig.contentDir = path.resolve(path.dirname(configPath), parsedConfig.contentDir);
+
+        console.log('Config from file:', fileConfig);
+      }
+      catch (error) {
+        console.warn(`Warning: Failed to parse config file at ${configPath}:`, error);
+      }
+    }
+
     if (config) {
       const cliConfig: Partial<GeneratorConfig> = {};
       if (config.modelsDir)
@@ -30,62 +72,30 @@ export class ContentrainTypesGenerator {
       if (config.contentDir)
         cliConfig.contentDir = path.resolve(process.cwd(), config.contentDir);
 
+      console.log('CLI config:', cliConfig);
       this.config = {
         ...defaultConfig,
+        ...fileConfig,
         ...cliConfig,
       };
     }
     else {
-      // Search for config file
-      const possibleConfigPaths = [
-        path.join(process.cwd(), 'contentrain-config.json'),
-        path.join(process.cwd(), '.contentrain/config.json'),
-        path.join(process.cwd(), '.config/contentrain.json'),
-      ];
-
-      const fileConfig: Partial<GeneratorConfig> = {};
-      for (const configPath of possibleConfigPaths) {
-        if (fs.existsSync(configPath)) {
-          try {
-            const fileContent = fs.readFileSync(configPath, 'utf-8');
-            const parsedConfig = JSON.parse(fileContent) as Partial<GeneratorConfig>;
-
-            console.log('Read configuration:', parsedConfig);
-
-            // Convert paths to absolute paths
-            if (parsedConfig.modelsDir)
-              fileConfig.modelsDir = path.resolve(process.cwd(), parsedConfig.modelsDir);
-            if (parsedConfig.outputDir)
-              fileConfig.outputDir = path.resolve(process.cwd(), parsedConfig.outputDir);
-            if (parsedConfig.contentDir)
-              fileConfig.contentDir = path.resolve(process.cwd(), parsedConfig.contentDir);
-
-            console.log('Resolved configuration:', fileConfig);
-            console.log(`✓ Configuration file read: ${configPath}`);
-            break;
-          }
-          catch (error) {
-            // Throw error if file exists but JSON is invalid
-            if (error instanceof SyntaxError) {
-              console.warn(`! Failed to read configuration file: ${configPath}`, error);
-              throw new Error('Failed to read configuration file');
-            }
-            // For other errors, just warn and continue
-            console.warn(`! Failed to read configuration file: ${configPath}`, error);
-          }
-        }
-      }
-
       this.config = {
         ...defaultConfig,
         ...fileConfig,
       };
     }
 
-    console.log('Merged configuration:', this.config);
+    console.log('Final merged configuration:', this.config);
 
-    if (!this.config.modelsDir || !this.config.contentDir || !this.config.outputDir) {
-      throw new Error('Invalid configuration: modelsDir, contentDir and outputDir are required');
+    if (!fs.existsSync(this.config.modelsDir)) {
+      console.warn(`Warning: Models directory does not exist: ${this.config.modelsDir}`);
+    }
+
+    // Output dizinini oluştur
+    if (!fs.existsSync(this.config.outputDir)) {
+      fs.mkdirSync(this.config.outputDir, { recursive: true });
+      console.log(`Created output directory: ${this.config.outputDir}`);
     }
   }
 
@@ -95,7 +105,7 @@ export class ContentrainTypesGenerator {
   }
 
   // Ana tip üretme metodu
-  generate(): void {
+  async generate(): Promise<void> {
     try {
       console.log('Reading model files...');
       const modelFiles = this.getModelFiles();
@@ -116,12 +126,69 @@ export class ContentrainTypesGenerator {
       typeDefinitions += queryTypes;
 
       console.log('Writing type definitions...');
+      const outputPath = path.join(this.config.outputDir, 'contentrain.d.ts');
       this.writeTypeDefinitions(typeDefinitions);
-      console.log('✨ Type definitions successfully generated:', path.join(this.config.outputDir, 'contentrain.d.ts'));
+
+      // Linting opsiyonel
+      if (this.config.lint) {
+        console.log('Running linter...');
+        try {
+          await this.runLinter(outputPath);
+        }
+        catch (error) {
+          console.warn('⚠️ Linting failed:', error instanceof Error ? error.message : String(error));
+          // Linting hatası olsa bile devam et
+        }
+      }
+
+      console.log('✨ Type definitions successfully generated:', outputPath);
     }
     catch (error) {
       console.error('❌ Error details:', error instanceof Error ? error.cause : error);
       throw new Error('Type generation failed', { cause: error });
+    }
+  }
+
+  // Linter çalıştırma
+  private async runLinter(filePath: string): Promise<void> {
+    try {
+      // ESLint ile düzeltme
+      console.log('Running ESLint fix...');
+      const { ESLint } = await import('eslint');
+      const eslint = new ESLint({
+        fix: true,
+        useEslintrc: false, // Proje config'ini kullanma
+        baseConfig: {
+          extends: ['eslint:recommended'],
+          rules: {
+            'semi': ['error', 'always'],
+            'quotes': ['error', 'double'],
+            'quote-props': ['error', 'consistent-as-needed'],
+          },
+        },
+      } as any); // ESLint'in tip sorunlarını geçici olarak bypass ediyoruz
+
+      const results = await eslint.lintFiles([filePath]);
+      await ESLint.outputFixes(results);
+
+      // Prettier ile formatlama
+      console.log('Running Prettier...');
+      const prettier = await import('prettier');
+      const config = await prettier.resolveConfig(process.cwd());
+
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      const formatted = await prettier.format(content, {
+        ...config,
+        parser: 'typescript',
+      });
+
+      await fs.promises.writeFile(filePath, formatted, 'utf-8');
+
+      console.log('✓ Linting completed');
+    }
+    catch (error) {
+      console.warn('⚠️ Linting failed:', error instanceof Error ? error.message : String(error));
+      // Linting hatası olsa bile process'i durdurmuyoruz
     }
   }
 
@@ -215,6 +282,7 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/query';\n\n`
   ): { typeDefinition: string, relations: Record<string, { model: string, type: string }> } {
     let typeDefinition = '{\n';
     const relations: Record<string, { model: string, type: string }> = {};
+    const relationFields: string[] = [];
 
     modelFields.forEach((field) => {
       if (!['ID', 'createdAt', 'updatedAt', 'status'].includes(field.fieldId)) {
@@ -229,27 +297,29 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/query';\n\n`
               type: field.componentId,
             };
 
-            // İlişki alanını ekle
-            typeDefinition += `  ${this.formatPropertyName(field.fieldId)}: string${field.componentId === 'one-to-many' ? '[]' : ''}\n`;
-
-            // _relations nesnesini ekle
-            if (Object.keys(relations).length === 1) {
-              typeDefinition += '  _relations?: {\n';
-            }
-            typeDefinition += `    ${this.formatPropertyName(field.fieldId)}: ${relatedInterfaceName}${field.componentId === 'one-to-many' ? '[]' : ''}\n`;
-            if (Object.keys(relations).length === Object.keys(modelFields.filter(f => f.fieldType === 'relation')).length) {
-              typeDefinition += '  }\n';
-            }
+            // İlişki ID'lerini tutan property'yi ekle
+            typeDefinition += `  "${this.formatPropertyName(field.fieldId)}": string${field.componentId === 'one-to-many' ? '[]' : ''};\n`;
+            relationFields.push(field.fieldId);
           }
         }
         else {
           const fieldType = this.determineTypeScriptType(field);
           const isRequired = this.isFieldRequired(field);
           const propertyName = this.formatPropertyName(field.fieldId);
-          typeDefinition += `  ${propertyName}${isRequired ? '' : '?'}: ${fieldType}\n`;
+          typeDefinition += `  "${propertyName}"${isRequired ? '' : '?'}: ${fieldType};\n`;
         }
       }
     });
+
+    // İlişkiler varsa _relations nesnesini ekle
+    if (relationFields.length > 0) {
+      typeDefinition += '\n  "_relations"?: {\n';
+      relationFields.forEach((fieldId) => {
+        const relation = relations[fieldId];
+        typeDefinition += `    "${this.formatPropertyName(fieldId)}": ${relation.model}${relation.type === 'one-to-many' ? '[]' : ''};\n`;
+      });
+      typeDefinition += '  };\n';
+    }
 
     typeDefinition += '}';
     return { typeDefinition, relations };
@@ -265,17 +335,17 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/query';\n\n`
     const hasRelations = Object.keys(relations).length > 0;
     const relationsType = hasRelations
       ? `{\n    ${Object.entries(relations)
-        .map(([key]) => `${this.formatPropertyName(key)}: ${relations[key].model}`)
-        .join(',\n    ')}\n  }`
+        .map(([key]) => `"${this.formatPropertyName(key)}": ${relations[key].model}`)
+        .join(';\n    ')}\n  }`
       : 'Record<string, never>';
 
     const locales = modelMetadata.localization ? '\'en\' | \'tr\'' : 'never';
 
-    return `export interface ${queryInterfaceName} extends QueryConfig<
+    return `export type ${queryInterfaceName} = QueryConfig<
   ${interfaceName},
   ${locales},
   ${relationsType}
-> {}\n\n`;
+>;\n\n`;
   }
 
   // TypeScript tipini belirleme
@@ -294,8 +364,8 @@ import type { BaseContentrainType, QueryConfig } from '@contentrain/query';\n\n`
 
   // Property ismini formatla
   private formatPropertyName(name: string): string {
-    // Sadece özel karakter içeren property'ler için tırnak kullan
-    return /[-\s]/.test(name) ? `'${name}'` : name;
+    // Tüm property'ler için orijinal ismi döndür, tırnak işaretleri generateTypeForModel'de ekleniyor
+    return name;
   }
 
   // Arayüz adını formatlama
