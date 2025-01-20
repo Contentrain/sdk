@@ -265,10 +265,6 @@ async function main() {
     const servicesModel = await loader.load<IService>('services');
     console.log('Services:', servicesModel);
 
-    // İlişkileri test edelim
-    const references = await loader.resolveRelation<IService, IReference>('services', 'reference', servicesModel.content.en);
-    console.log('References:', references);
-
     // Sonuçları dosyaya yaz
     const markdownContent = `
 # Contentrain SDK Test Sonuçları

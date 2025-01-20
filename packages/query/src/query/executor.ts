@@ -1,6 +1,7 @@
 import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType } from '../types/model';
 import type { ArrayOperator, Filter, Include, NumericOperator, QueryOptions, QueryResult, Sort, StringOperator } from '../types/query';
+import { logger } from '../utils/logger';
 
 export class QueryExecutor {
   private loader: ContentLoader;
@@ -10,13 +11,19 @@ export class QueryExecutor {
   }
 
   private applyFilters<T extends BaseContentrainType>(data: T[], filters: Filter[]): T[] {
-    return data.filter((item) => {
+    logger.debug('Filtre uygulama başladı:', {
+      dataLength: data.length,
+      filters,
+    });
+
+    const result = data.filter((item) => {
       return filters.every(({ field, operator, value }) => {
         const itemValue = item[field as keyof T];
 
         // Geçersiz operatör kontrolü
         const validOperators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains', 'startsWith', 'endsWith'];
         if (!validOperators.includes(operator)) {
+          logger.error('Geçersiz operatör:', operator);
           throw new Error(`Invalid operator: ${operator}`);
         }
 
@@ -31,6 +38,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).includes(itemValue);
             default:
+              logger.error('Geçersiz dizi operatörü:', operator);
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -42,6 +50,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).some((v: unknown) => itemValue.includes(v));
             default:
+              logger.error('Geçersiz dizi operatörü:', operator);
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -66,6 +75,13 @@ export class QueryExecutor {
         return false;
       });
     });
+
+    logger.debug('Filtre uygulama tamamlandı:', {
+      başlangıçSayısı: data.length,
+      sonuçSayısı: result.length,
+    });
+
+    return result;
   }
 
   private applySorting<T extends BaseContentrainType>(data: T[], sorting: Sort[]): T[] {
@@ -101,9 +117,18 @@ export class QueryExecutor {
     includes: Include,
     options: QueryOptions,
   ): Promise<T[]> {
+    logger.debug('İlişki çözümleme başladı:', {
+      model,
+      dataLength: data.length,
+      includes,
+      options,
+    });
+
     const result = [...data];
 
     for (const [field, config] of Object.entries(includes)) {
+      logger.debug(`"${field}" ilişkisi çözümleniyor`);
+
       // İlişkiyi çöz
       const relations = await this.loader.resolveRelation(
         model,
@@ -112,8 +137,13 @@ export class QueryExecutor {
         options.locale,
       );
 
+      logger.debug(`"${field}" ilişkisi çözümlendi:`, {
+        bulunanİlişkiSayısı: relations.length,
+      });
+
       // Alt ilişkileri çöz
       if (config.include && relations.length) {
+        logger.debug(`"${field}" için alt ilişkiler çözümleniyor:`, config.include);
         await this.resolveIncludes(
           field,
           relations,
@@ -137,6 +167,8 @@ export class QueryExecutor {
         }
         item._relations[field] = Array.isArray(value) ? relatedItems : relatedItems[0];
       });
+
+      logger.debug(`"${field}" ilişkisi için veriler eklendi`);
     }
 
     return result;
@@ -178,24 +210,45 @@ export class QueryExecutor {
     pagination?: { limit?: number, offset?: number }
     options?: QueryOptions
   }): Promise<QueryResult<T>> {
+    logger.debug('Execute başladı:', {
+      model,
+      dataLength: data.length,
+      filterCount: filters.length,
+      includeCount: Object.keys(includes).length,
+      sortingCount: sorting.length,
+      pagination,
+      options,
+    });
+
     let result = [...data];
     // Filtreleri uygula
     if (filters.length) {
+      logger.debug('Filtreler uygulanıyor:', filters);
       result = this.applyFilters(result, filters);
+      logger.debug('Filtre sonrası kalan öğe sayısı:', result.length);
     }
 
     // İlişkileri çöz
     if (Object.keys(includes).length) {
+      logger.debug('İlişkiler çözülüyor:', includes);
       result = await this.resolveIncludes(model, result, includes, options);
+      logger.debug('İlişki çözümleme sonrası öğe sayısı:', result.length);
     }
 
     // Sıralama yap
     if (sorting.length) {
+      logger.debug('Sıralama uygulanıyor:', sorting);
       result = this.applySorting(result, sorting);
     }
 
     // Sayfalama yap
     const paginatedData = this.applyPagination(result, pagination.limit, pagination.offset);
+    logger.debug('Sayfalama sonrası:', {
+      totalCount: result.length,
+      pageSize: paginatedData.length,
+      offset: pagination.offset || 0,
+      hasMore: (pagination.offset || 0) + paginatedData.length < result.length,
+    });
 
     return {
       data: paginatedData,

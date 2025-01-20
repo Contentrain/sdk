@@ -10,6 +10,7 @@ export * from './loader/content';
 export * from './query/builder';
 export * from './query/executor';
 export * from './types';
+export * from './utils/logger';
 
 export class ContentrainSDK {
   private loader: ContentLoader;

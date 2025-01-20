@@ -2,6 +2,7 @@ import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType, ContentrainLocales } from '../types/model';
 import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
 import type { QueryExecutor } from './executor';
+import { logger } from '../utils/logger';
 
 export class ContentrainQueryBuilder<
   TFields extends BaseContentrainType,
@@ -29,6 +30,12 @@ export class ContentrainQueryBuilder<
     operator: O,
     value: O extends 'in' ? TFields[K][] : TFields[K],
   ): this {
+    logger.debug('Filtre ekleniyor:', {
+      field,
+      operator,
+      value,
+    });
+
     this.filters.push({
       field: field as string,
       operator,
@@ -38,6 +45,8 @@ export class ContentrainQueryBuilder<
   }
 
   include<K extends keyof TRelations>(relation: K | K[]): this {
+    logger.debug('İlişki ekleniyor:', relation);
+
     if (typeof relation === 'string') {
       this.includes[relation] = {};
     }
@@ -50,6 +59,11 @@ export class ContentrainQueryBuilder<
   }
 
   orderBy<K extends keyof TFields>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
+    logger.debug('Sıralama ekleniyor:', {
+      field,
+      direction,
+    });
+
     this.sorting.push({
       field: field as string,
       direction,
@@ -58,21 +72,28 @@ export class ContentrainQueryBuilder<
   }
 
   limit(count: number): this {
+    logger.debug('Limit ekleniyor:', count);
     this.pagination.limit = count;
     return this;
   }
 
   offset(count: number): this {
+    logger.debug('Offset ekleniyor:', count);
     this.pagination.offset = count;
     return this;
   }
 
   locale(code: TLocales): this {
+    logger.debug('Locale ayarlanıyor:', code);
     this.options.locale = code;
     return this;
   }
 
   cache(ttl?: number): this {
+    logger.debug('Cache ayarlanıyor:', {
+      enabled: true,
+      ttl,
+    });
     this.options.cache = true;
     if (ttl)
       this.options.ttl = ttl;
@@ -80,11 +101,13 @@ export class ContentrainQueryBuilder<
   }
 
   noCache(): this {
+    logger.debug('Cache kapatılıyor');
     this.options.cache = false;
     return this;
   }
 
   bypassCache(): this {
+    logger.debug('Cache bypass ediliyor');
     this.options.cache = false;
     this.options.ttl = 0;
     return this;
@@ -102,27 +125,67 @@ export class ContentrainQueryBuilder<
   }
 
   async get(): Promise<QueryResult<TFields>> {
+    logger.debug('Query başlatılıyor:', {
+      model: this.model,
+      filterCount: this.filters.length,
+      includeCount: Object.keys(this.includes).length,
+      sortingCount: this.sorting.length,
+      pagination: this.pagination,
+      options: this.options,
+    });
+
     const result = await this.loader.load<TFields>(this.model);
     const modelConfig = result.model;
+
+    logger.debug('Model yüklendi:', {
+      model: this.model,
+      metadata: modelConfig.metadata,
+      contentKeys: Object.keys(result.content),
+    });
 
     // Locale kontrolü ve veri seçimi
     let data: TFields[];
     if (modelConfig.metadata.localization) {
       // Localize edilmiş model için locale kontrolü
       const locale = this.options.locale || 'en'; // Default locale
+      logger.debug('Lokalizasyonlu model için içerik seçiliyor:', {
+        model: this.model,
+        requestedLocale: locale,
+        availableLocales: Object.keys(result.content),
+      });
+
       data = result.content[locale];
 
       if (!data) {
+        logger.error('İçerik bulunamadı:', {
+          model: this.model,
+          locale,
+          availableLocales: Object.keys(result.content),
+        });
         throw new Error(`Content not found for locale: ${locale}`);
       }
     }
     else {
       // Localize edilmemiş model için default içerik
+      logger.debug('Lokalizasyonsuz model için içerik seçiliyor:', {
+        model: this.model,
+        contentKeys: Object.keys(result.content),
+      });
+
       if (!result.content.default) {
+        logger.error('İçerik bulunamadı:', {
+          model: this.model,
+          contentKeys: Object.keys(result.content),
+        });
         throw new Error(`Content not found for model: ${this.model}`);
       }
       data = result.content.default;
     }
+
+    logger.debug('Sorgu yürütülüyor:', {
+      model: this.model,
+      dataLength: data.length,
+    });
 
     return this.executor.execute({
       model: this.model,

@@ -1,5 +1,6 @@
 import type { CacheEntry, CacheStats, MemoryCacheOptions } from '../types/loader';
 import { lru } from 'tiny-lru';
+import { logger } from '../utils/logger';
 
 export class MemoryCache {
   private cache;
@@ -28,6 +29,11 @@ export class MemoryCache {
   }
 
   async set<T>(key: string, data: T, ttl?: number): Promise<void> {
+    logger.debug('Cache\'e veri kaydediliyor:', {
+      key,
+      ttl,
+    });
+
     // Önce temizlik yap
     await this.cleanupCache();
 
@@ -59,6 +65,11 @@ export class MemoryCache {
     // Yeni girişi ekle
     this.cache.set(key, entry);
     this.stats.size += size;
+
+    logger.debug('Cache\'e veri kaydedildi:', {
+      key,
+      expiry: expireAt ? new Date(expireAt).toISOString() : 'süresiz',
+    });
   }
 
   private findOldestKey(): string | null {
@@ -77,9 +88,11 @@ export class MemoryCache {
   }
 
   async get<T>(key: string): Promise<T | null> {
+    logger.debug('Cache\'den veri alınıyor:', { key });
     const entry = this.cache.get(key) as CacheEntry<T> | undefined;
 
     if (!entry) {
+      logger.debug('Cache\'de veri bulunamadı:', { key });
       this.stats.misses++;
       return null;
     }
@@ -91,19 +104,26 @@ export class MemoryCache {
       return null;
     }
 
+    logger.debug('Cache\'den veri alındı:', {
+      key,
+      expiry: entry.expireAt ? new Date(entry.expireAt).toISOString() : 'süresiz',
+    });
     this.stats.hits++;
     return entry.data;
   }
 
   async delete(key: string): Promise<void> {
+    logger.debug('Cache\'den veri siliniyor:', { key });
     const entry = this.cache.get(key) as CacheEntry<unknown> | undefined;
     if (entry) {
       this.stats.size -= entry.size;
       this.cache.delete(key);
     }
+    logger.debug('Cache\'den veri silindi:', { key });
   }
 
   async clear(): Promise<void> {
+    logger.debug('Cache temizleniyor');
     this.cache.clear();
     this.stats = {
       hits: 0,
@@ -111,6 +131,7 @@ export class MemoryCache {
       size: 0,
       lastCleanup: Date.now(),
     };
+    logger.debug('Cache temizlendi');
   }
 
   private async cleanupCache(): Promise<void> {
