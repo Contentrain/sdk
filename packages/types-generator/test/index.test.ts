@@ -113,8 +113,8 @@ describe('contentrainTypesGenerator Tests', () => {
   });
 
   describe('dosya İşlemleri', () => {
-    it('tip tanımlarını doğru şekilde yazmalı', () => {
-      generator.generate();
+    it('tip tanımlarını doğru şekilde yazmalı', async () => {
+      await generator.generate();
 
       const outputPath = path.join(mockPaths.output, 'contentrain.d.ts');
       expect(fs.existsSync(outputPath)).toBe(true);

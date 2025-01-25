@@ -1,0 +1,601 @@
+# Contentrain SQLite Generator Cursor Rules
+
+## 📁 Proje Yapısı
+
+```
+@contentrain/sqlite-generator/
+├── src/
+│   ├── index.ts           # Ana generator sınıfı
+│   ├── cli.ts             # CLI arayüzü
+│   └── core/
+│       ├── database/      # Veritabanı işlemleri
+│       │   ├── connection.ts  # Read-only DB bağlantı yönetimi
+│       │   ├── schema.ts      # Optimize edilmiş şema yönetimi
+│       │   └── table.ts       # Tablo işlemleri ve indeksler
+│       ├── generator/     # Tablo ve ilişki üretici
+│       │   ├── table.ts       # Tablo generator
+│       │   └── relation.ts    # İlişki yönetimi
+│       ├── validator/     # Model ve içerik doğrulayıcı
+│       │   ├── model.ts       # Model validasyonu
+│       │   └── content.ts     # İçerik validasyonu
+│       ├── optimizer/     # Veritabanı optimizasyonları
+│       │   ├── index.ts       # İndeks optimizasyonu
+│       │   └── query.ts       # Sorgu optimizasyonu
+│       └── localization/  # Çoklu dil desteği
+│           └── manager.ts     # Lokalizasyon yönetimi
+├── test/                  # Test dosyaları
+│   └── generator.test.ts  # Generator testleri
+└── package.json
+
+# Root dizinde Ornek Contentrain Projesi
+/contentrain-sdk/
+└── playground/
+    └── contentrain/
+        ├── models/        # Model JSON dosyaları
+        │   ├── metadata.json     # Model tanımlamaları
+        │   └── [modelId].json    # Model alan tanımlamaları
+        └── content/       # İçerik JSON dosyaları
+            ├── [modelId1]/       # localization: true için
+            │   ├── [code1].json  # Lokalizasyon içerikler
+            │   └── [code2].json  # Lokalizasyon içerikler
+            └── [modelId2]/       # localization: false için
+                └── [modelId2].json # İçerikler
+```
+
+## 🔄 İş Akışı ve Optimizasyonlar
+
+### 1. Model Metadata Okuma
+```typescript
+class ContentrainSQLiteGenerator {
+  async readModelMetadata(): Promise<ModelMetadata[]> {
+    // playground/contentrain/models/metadata.json dosyasını oku
+    const metadataPath = path.join(this.config.modelsDir, 'metadata.json');
+    const metadata = await fs.readJson(metadataPath);
+
+    // Her model için:
+    // - name: PascalCase model adı
+    // - modelId: kebab-case benzersiz ID
+    // - localization: Çoklu dil desteği
+    // - type: Veri tipi
+    // - isServerless: Sunucusuz mod durumu
+    return metadata;
+  }
+}
+```
+
+### 2. Model Field Okuma
+```typescript
+class ContentrainSQLiteGenerator {
+  async readModelFields(modelId: string): Promise<ModelField[]> {
+    // playground/contentrain/models/[modelId].json dosyasını oku
+    const fieldPath = path.join(this.config.modelsDir, `${modelId}.json`);
+    const fields = await fs.readJson(fieldPath);
+
+    // Her field için:
+    // - name: Görünen ad
+    // - fieldId: camelCase benzersiz ID
+    // - componentId: Alan tipi
+    // - fieldType: Veri tipi
+    // - validations: Doğrulama kuralları
+    // - options: Alan seçenekleri
+    return fields;
+  }
+}
+```
+
+### 3. Lokalizasyon Dil Kodları Okuma
+```typescript
+class ContentrainSQLiteGenerator {
+  async readLocalizationCodes(modelId: string): Promise<string[]> {
+    // Model lokalize edilmiş mi kontrol et
+    const metadata = await this.readModelMetadata();
+    const model = metadata.find(m => m.modelId === modelId);
+
+    if (!model.localization) return [];
+
+    // playground/contentrain/content/[modelId]/ dizinindeki dil dosyalarını oku
+    // Örnek: tr.json, en.json
+    const contentPath = path.join(this.config.contentDir, modelId);
+    const files = await fs.readdir(contentPath);
+
+    return files
+      .filter(f => f.endsWith('.json'))
+      .map(f => path.basename(f, '.json'));
+  }
+}
+```
+
+### 4. Tablo ve İlişki Oluşturma
+```typescript
+class ContentrainSQLiteGenerator {
+  async createTables(): Promise<void> {
+    const metadata = await this.readModelMetadata();
+
+    for (const model of metadata) {
+      // Model fields oku
+      const fields = await this.readModelFields(model.modelId);
+
+      // Ana tabloyu oluştur
+      await this.createMainTable(model.modelId, fields);
+
+      // Lokalizasyon tablosu gerekli mi?
+      if (model.localization) {
+        const localizableFields = this.getLocalizableFields(fields);
+        await this.createLocalizationTable(model.modelId, localizableFields);
+      }
+
+      // İlişki tablolarını oluştur
+      const relations = this.getRelationFields(fields);
+      await this.createRelations(model.modelId, relations);
+    }
+  }
+}
+```
+
+### 5. İçerik Aktarımı
+```typescript
+class ContentrainSQLiteGenerator {
+  async importContent(): Promise<void> {
+    const metadata = await this.readModelMetadata();
+
+    for (const model of metadata) {
+      // Model lokalize mi?
+      if (model.localization) {
+        // Dil kodlarını oku
+        const languages = await this.readLocalizationCodes(model.modelId);
+
+        // Her dil için içerik aktar
+        for (const lang of languages) {
+          const content = await this.readLocalizedContent(model.modelId, lang);
+          await this.importLocalizedContent(model.modelId, lang, content);
+        }
+      } else {
+        // Tekil içeriği aktar
+        const content = await this.readContent(model.modelId);
+        await this.importContent(model.modelId, content);
+      }
+    }
+  }
+}
+```
+
+### 6. Veritabanı Optimizasyonu ve Hazırlık
+```typescript
+class ContentrainSQLiteGenerator {
+  async finalizeDatabase(): Promise<void> {
+    // İndeksleri oluştur
+    await this.createIndexes();
+
+    // Veritabanını optimize et
+    await this.optimizeDatabase();
+
+    // Read-only moda geç
+    await this.setReadOnlyMode();
+
+    // Belirlenen dizine kopyala
+    await this.moveToTargetDir();
+  }
+}
+```
+
+### Ana İş Akışı
+```typescript
+class ContentrainSQLiteGenerator {
+  async generate(): Promise<void> {
+    try {
+      // 1. Model metadata oku
+      const metadata = await this.readModelMetadata();
+
+      // 2. Her model için field bilgilerini oku
+      for (const model of metadata) {
+        const fields = await this.readModelFields(model.modelId);
+
+        // 3. Lokalize modeller için dil kodlarını oku
+        if (model.localization) {
+          const languages = await this.readLocalizationCodes(model.modelId);
+        }
+      }
+
+      // 4. Tabloları ve ilişkileri oluştur
+      await this.createTables();
+
+      // 5. İçerikleri aktar
+      await this.importContent();
+
+      // 6. Veritabanını hazırla ve hedef dizine taşı
+      await this.finalizeDatabase();
+
+    } catch (error) {
+      throw new ContentrainError('SQLite generation failed', error.message);
+    }
+  }
+}
+```
+
+## 🔒 Güvenlik ve Optimizasyon
+
+### Read-Only Mod Ayarları
+```typescript
+async setReadOnlyMode(): Promise<void> {
+  await this.db.exec(`
+    PRAGMA query_only = ON;   -- Sadece sorgu modu
+    PRAGMA read_only = ON;    -- Read-only mod
+  `);
+
+  // Dosya izinlerini read-only yap
+  await fs.chmod(this.config.dbPath, 0o444);
+}
+```
+
+### Performans Optimizasyonları
+1. Memory-mapped I/O
+2. Büyük cache boyutu
+3. WITHOUT ROWID tabloları
+4. Optimize edilmiş indeksler
+5. WHERE koşullu indeksler
+6. Bulk insert işlemleri
+
+### Sorgu Optimizasyonları
+1. Prepared statements
+2. İndeks kullanımı
+3. Materialize view'lar
+4. İstatistik tabloları
+
+## 📊 Alan Tipleri ve Validasyonlar
+
+### Veri Tipleri (dataTypes)
+1. **String**
+   - `single-line-text`: Tek satır metin
+   - `multi-line-text`: Çok satırlı metin
+   - `email`: E-posta adresi
+   - `url`: URL adresi
+   - `slug`: SEO dostu URL
+   - `color`: Renk değeri
+   - `json`: JSON veri
+   - `md-editor`: Markdown içerik
+   - `rich-text-editor`: Zengin metin
+
+2. **Number**
+   - `integer`: Tam sayı
+   - `decimal`: Ondalıklı sayı
+   - `rating`: Derecelendirme
+   - `percent`: Yüzde değeri
+   - `phone-number`: Telefon numarası
+
+3. **Boolean**
+   - `checkbox`: İşaret kutusu
+   - `switch`: Anahtar
+
+4. **Date**
+   - `date`: Tarih
+   - `date-time`: Tarih ve saat
+
+5. **Media**
+   - `media`: Medya dosyası
+
+6. **Relation**
+   - `one-to-one`: Tekil ilişki
+   - `one-to-many`: Çoklu ilişki
+
+### Validasyon Kuralları
+```json
+{
+  "validations": [
+    {
+      "title": "Required Field",
+      "id": "required-field",
+      "property": "required",
+      "description": "Alan boş bırakılamaz"
+    },
+    {
+      "title": "Unique Field",
+      "id": "unique-field",
+      "property": "unique",
+      "description": "Benzersiz değer olmalı"
+    },
+    {
+      "title": "Input Range",
+      "id": "input-range-field",
+      "property": "input-range",
+      "description": "Sayısal aralık kontrolü",
+      "form": {
+        "number-of-stars": {
+          "component": "integer",
+          "props": {
+            "min": 1,
+            "max": 10
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+### Alan Seçenekleri (options)
+```json
+{
+  "options": [
+    {
+      "title": "Use as title field",
+      "id": "title-field",
+      "property": "title",
+      "description": "İlişkilerde ID yerine bu alan değeri gösterilir"
+    },
+    {
+      "title": "Set default value",
+      "id": "default-value",
+      "property": "default",
+      "description": "Varsayılan değer ataması"
+    },
+    {
+      "title": "Number of Stars",
+      "id": "number-of-stars",
+      "property": "start",
+      "description": "Derecelendirme yıldız sayısı"
+    },
+    {
+      "title": "Choose A Model",
+      "id": "reference",
+      "property": "reference",
+      "description": "Referans model seçimi"
+    }
+  ]
+}
+```
+
+### SQLite Veri Tipi Eşleştirmeleri
+1. **TEXT**
+   - Tüm string tipleri (`single-line-text`, `multi-line-text`, `email`, `url`, `slug`, `color`, `json`, `md-editor`, `rich-text-editor`)
+   - `phone-number`
+   - `media` (dosya yolu)
+
+2. **INTEGER**
+   - `integer`
+   - `rating`
+   - `percent`
+   - `checkbox`, `switch` (0/1)
+   - `status`
+
+3. **REAL**
+   - `decimal`
+
+4. **DATETIME**
+   - `date`
+   - `date-time`
+   - `created_at`
+   - `updated_at`
+
+## 📋 Model ve İçerik Yapısı
+
+### Model Metadata Kuralları
+```json
+{
+  "name": "ServicesItems",      // PascalCase model adı
+  "modelId": "services-items",  // kebab-case benzersiz ID bu ayni zamanda JSON dosyasının adı
+  "localization": true,        // Çoklu dil desteği true ise content/services-items/tr.json ve content/services-items/en.json gibi dosyalar oluşturulur. false ise content/services-items/services-items.json gibi tek dosya oluşturulur.
+  "type": "JSON",             // Veri tipi
+  "createdBy": "user",        // Oluşturan kullanıcı
+  "isServerless": false       // Sunucusuz mod durumu eger true ise SQL db oluşturulmaz.
+}
+```
+
+### Model Alan Kuralları
+
+```typescript
+type ContentrainFieldType = 'string' | 'number' | 'boolean' | 'array' | 'date' | 'media' | 'relation';
+type ContentrainComponentId = 'single-line-text' | 'multi-line-text' | 'email' | 'url' | 'slug' | 'color' | 'json' | 'md-editor' | 'rich-text-editor' | 'integer' | 'decimal' | 'rating' | 'percent' | 'phone-number' | 'checkbox' | 'switch' | 'date' | 'date-time' | 'media' | 'one-to-one' | 'one-to-many';
+```
+
+```json
+{
+  "name": "Başlık",           // Görünen ad
+  "fieldId": "title",         // camelCase benzersiz ID
+  "modelId": "services-items", // Bağlı model ID
+  "componentId": "text",      // Alan tipi
+  "fieldType": "string",      // Veri tipi
+  "validations": {           // Doğrulama kuralları
+    "required-field": { "value": true },
+    "unique-field": { "value": false }
+  },
+  "options": {               // Alan seçenekleri
+    "placeholder": "Servis başlığı giriniz"
+  }
+}
+```
+
+### İçerik Yapısı Kuralları
+
+#### Lokalizasyonsuz İçerik
+```json
+// content/[modelId]/[modelId].json
+{
+  "ID": "unique-uuid",
+  "title": "Servis Başlığı",
+  "description": "Açıklama",
+  "status": "publish",
+  "created_at": "2024-01-01T00:00:00.000Z",
+  "updated_at": "2024-01-01T00:00:00.000Z"
+}
+```
+
+#### Lokalizasyonlu İçerik
+```json
+// content/[modelId]/[locale].json
+{
+  "ID": "unique-uuid",
+  "title": "Service Title",  // Lokalize alan
+  "description": "Description", // Lokalize alan
+  "status": "publish",              // Sistem alanı
+  "created_at": "2024-01-01T00:00:00.000Z",
+  "updated_at": "2024-01-01T00:00:00.000Z"
+}
+```
+
+### Sistem Alanları
+1. **Zorunlu Alanlar**
+   - `ID`: UUID formatında birincil anahtar
+   - `status`: publish, draft, changed string degerleri
+   - `created_at`: Oluşturma tarihi (ISO)
+   - `updated_at`: Güncelleme tarihi (ISO)
+   - `scheduled`: Zamanlanmis iceriklerde true olur. Zamanlanmamis icerklerde false ya da yoktur eger yoksa bile false gecilmelidir.
+
+2. **Alan Tipleri**
+   - `text`: Tek satır metin
+   - `textarea`: Çok satırlı metin
+   - `markdown`: Markdown içerik
+   - `number`: Sayısal değer
+   - `boolean`: Mantıksal değer
+   - `date`: Tarih
+   - `media`: Medya dosyası
+   - `relation`: Model ilişkisi
+
+3. **Validasyon Kuralları**
+   - `required-field`: Zorunlu alan
+   - `unique-field`: Benzersiz değer
+   - `min-length`: Minimum uzunluk
+   - `max-length`: Maksimum uzunluk
+   - `pattern`: Regex pattern
+   - `range`: Sayısal aralık
+
+### İçerik Organizasyonu
+```
+content/
+├── [modelId1]/           # Lokalizasyonlu model
+│   ├── tr.json          # Türkçe içerik
+│   └── en.json          # İngilizce içerik
+└── [modelId2]/          # Lokalizasyonsuz model
+    └── [modelId2].json  # Tekil içerik
+```
+### Icerikler icin ve modeller icin tipler
+```typescript
+
+export type ContentrainStatus = 'publish' | 'draft' | 'changed';
+
+export interface ModelMetadata {
+  name: string
+  modelId: string
+  localization: boolean
+  type: 'JSON'
+  createdBy: string
+  isServerless: boolean
+}
+
+export interface ModelField {
+  name: string
+  fieldId: string
+  modelId: string
+  componentId: ContentrainComponentId
+  fieldType: ContentrainFieldType
+  options: FieldOptions
+  validations: FieldValidations
+  system?: boolean
+  defaultField?: boolean
+}
+
+export interface ValidationRule {
+  title: string
+  id: string
+  property: string
+  description: string
+  form?: Record<string, any>
+}
+
+export interface FieldOption {
+  title: string
+  id: string
+  property: string
+  description: string
+  form?: Record<string, any>
+}
+
+export interface ContentItem {
+  ID: string
+  [key: string]: any
+  status: ContentrainStatus
+  scheduled?: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DatabaseConfig {
+  memory?: boolean
+  readonly?: boolean
+  fileMustExist?: boolean
+  timeout?: number
+  verbose?: boolean
+}
+
+export type ContentrainFieldType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'array'
+  | 'date'
+  | 'media'
+  | 'relation';
+
+export type ContentrainComponentId =
+  | 'single-line-text'
+  | 'multi-line-text'
+  | 'email'
+  | 'url'
+  | 'slug'
+  | 'color'
+  | 'json'
+  | 'md-editor'
+  | 'rich-text-editor'
+  | 'integer'
+  | 'decimal'
+  | 'rating'
+  | 'percent'
+  | 'phone-number'
+  | 'checkbox'
+  | 'switch'
+  | 'date'
+  | 'date-time'
+  | 'media'
+  | 'one-to-one'
+  | 'one-to-many';
+
+export interface FieldOptions {
+  'title-field'?: {
+    value: boolean
+  }
+  'default-value'?: {
+    value: boolean
+    form: {
+      [key: string]: {
+        value: any
+      }
+    }
+  }
+  'reference'?: {
+    value: boolean
+    form: {
+      reference: {
+        value: string
+      }
+    }
+  }
+}
+
+export interface FieldValidations {
+  'required-field'?: {
+    value: boolean
+  }
+  'unique-field'?: {
+    value: boolean
+  }
+  'input-range-field'?: {
+    value: {
+      min: number
+      max: number
+    }
+  }
+}
+```
+### Testler
+- tests klasorunde yazilacak
+- vitest kullanilacak
+- root/playground/contentrain icindeki icerik ve modeller kullanilacak

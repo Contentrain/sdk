@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { ContentLoader, ContentrainSDK } from '@contentrain/query';
+import ContentrainSQLiteGenerator from '@contentrain/sqlite-generator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -107,6 +108,19 @@ const loader = new ContentLoader({
 
 async function main() {
   try {
+    // SQLite veritabanı oluştur
+    console.log('\n=== SQLite Veritabanı Oluşturma ===');
+    const generator = new ContentrainSQLiteGenerator({
+      modelsDir: join(__dirname, '../../contentrain/models'),
+      contentDir: join(__dirname, '../../contentrain'),
+      outputDir: join(__dirname, '../dist'),
+      dbName: 'contentrain.db',
+    });
+
+    console.log('SQLite veritabanı oluşturuluyor...');
+    await generator.generate();
+    console.log('SQLite veritabanı oluşturuldu!');
+
     console.log('\n=== 1. Temel Sorgular ===');
 
     // 1.1 Filtreleme ve Sıralama
@@ -134,7 +148,7 @@ async function main() {
     // 2.1 Bire-Bir İlişki
     console.log('\n--- Bire-Bir İlişki ---');
     const testimonials = await sdk
-      .query<ITestimonialItemQuery>('testimonail-items')
+      .query<ITestimonialItemQuery>('testimonial-items')
       .include('creative-work')
       .get();
     console.log('Referanslar ve İlişkili İşler:', testimonials.data.map(t => ({

@@ -1,0 +1,62 @@
+{
+  "name": "@contentrain/sqlite-generator",
+  "version": "1.0.0",
+  "description": "SQLite database generator for Contentrain CMS",
+  "author": "Contentrain Inc.",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/contentrain/contentrain-sdk.git",
+    "directory": "packages/sqlite-generator"
+  },
+  "bugs": {
+    "url": "https://github.com/contentrain/contentrain-sdk/issues"
+  },
+  "homepage": "https://github.com/contentrain/contentrain-sdk/tree/main/packages/sqlite-generator#readme",
+  "keywords": [
+    "contentrain",
+    "sqlite",
+    "database",
+    "generator",
+    "content-management"
+  ],
+  "type": "module",
+  "bin": {
+    "contentrain-sqlite": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest watch",
+    "test:run": "vitest run",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@contentrain/query": "latest",
+    "better-sqlite3": "^11.8.1",
+    "commander": "^11.1.0",
+    "fast-glob": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^20.17.16",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  }
+}

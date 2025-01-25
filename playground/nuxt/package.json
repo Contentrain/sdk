@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "cr:generate": "contentrain-generate -d"
+    "cr:generate": "contentrain-generate -d",
+    "clean": "rm -rf .output && rm -rf node_modules && rm -rf .nuxt "
   },
   "dependencies": {
     "@contentrain/query": "workspace:*",
