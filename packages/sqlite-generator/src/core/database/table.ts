@@ -1,12 +1,16 @@
 import type { Database } from 'better-sqlite3';
-import type { ContentItem } from '../../types';
+import type { ContentItem, ModelField, ModelMetadata } from '../../types';
 import { normalizeName, normalizeTableName } from '../../utils/sql';
 
 export class TableManager {
   private readonly SYSTEM_FIELDS = ['ID', 'status', 'created_at', 'updated_at', 'scheduled'];
   private readonly LOCALIZATION_SYSTEM_FIELDS = ['ID', 'lang'];
 
-  constructor(private db: Database) {
+  constructor(
+    private db: Database,
+    private modelMetadata: Record<string, ModelMetadata>,
+    private modelFields: Record<string, ModelField[]>,
+  ) {
     console.log('TableManager başlatıldı');
   }
 
@@ -36,6 +40,11 @@ export class TableManager {
       if (typeof value === 'boolean') {
         normalized[normalizedKey] = value ? 1 : 0;
       }
+      // Array değerleri JSON string'e çevir
+      else if (Array.isArray(value)) {
+        normalized[normalizedKey] = JSON.stringify(value);
+      }
+      // Diğer değerleri olduğu gibi kullan
       else {
         normalized[normalizedKey] = value;
       }
@@ -67,11 +76,37 @@ export class TableManager {
     return tableName;
   }
 
+  private getLocalizableFields(modelId: string): string[] {
+    const fields = this.modelFields[modelId];
+    if (!fields) {
+      console.warn('Model fields bulunamadı:', modelId);
+      return [];
+    }
+
+    return fields
+      .filter((field) => {
+        // İlişki alanları lokalize edilemez
+        if (field.fieldType === 'relation')
+          return false;
+        // Sistem alanları lokalize edilemez
+        if (this.SYSTEM_FIELDS.includes(field.fieldId))
+          return false;
+        return true;
+      })
+      .map(field => normalizeName(field.fieldId));
+  }
+
   async importContent(modelId: string, content: ContentItem[]): Promise<void> {
-    console.log('İçerik aktarımı başladı:', { modelId, contentCount: content.length });
+    const metadata = this.modelMetadata[modelId];
+    if (!metadata) {
+      throw new Error(`Model metadata bulunamadı: ${modelId}`);
+    }
+
+    // Lokalize olsa bile ana tabloya veri gir
+    console.log('Ana tabloya içerik aktarımı başladı:', { modelId, contentCount: content.length });
 
     const tableName = this.getTableName(modelId);
-    console.log('Tablo adı oluşturuldu:', { modelId, suffix: undefined, tableName });
+    console.log('Tablo adı:', { modelId, tableName });
 
     const normalizedContent = content.map(item => this.normalizeContentForDB(item));
 
@@ -97,25 +132,25 @@ export class TableManager {
     const placeholders = columns.map(col => `@${col}`);
 
     const sql = `
-      INSERT INTO ${tableName} (
+      INSERT OR REPLACE INTO ${tableName} (
         ${columns.join(', ')}
       ) VALUES (
         ${placeholders.join(', ')}
       )
     `;
 
-    console.log('SQL sorgusu hazırlandı:', { sql });
+    console.log('SQL sorgusu:', { sql });
 
     const stmt = this.db.prepare(sql);
 
     try {
       const insertMany = this.db.transaction((items: any[]) => {
         for (const item of items) {
-          console.log('Veri eklenecek:', { tableName, normalizedItem: item });
+          console.log('Ana tabloya veri eklenecek:', { tableName, normalizedItem: item });
 
           // Her alan için NULL kontrolü yap
           const params = columns.reduce((acc: any, col: string) => {
-            acc[col] = item[col] ?? null; // Eğer değer yoksa NULL kullan
+            acc[col] = item[col] ?? null;
             return acc;
           }, {});
 
@@ -124,6 +159,7 @@ export class TableManager {
       });
 
       insertMany(normalizedContent);
+      console.log('Ana tabloya içerik aktarımı tamamlandı');
     }
     catch (error) {
       console.error('İçerik aktarım hatası:', {
@@ -135,26 +171,102 @@ export class TableManager {
   }
 
   async importLocalizedContent(modelId: string, lang: string, content: ContentItem[]): Promise<void> {
-    console.log('Lokalize içerik aktarımı başladı:', { modelId, lang, contentCount: content.length });
-    const tableName = this.getTableName(modelId, 'i18n');
+    const metadata = this.modelMetadata[modelId];
+    if (!metadata) {
+      throw new Error(`Model metadata bulunamadı: ${modelId}`);
+    }
 
-    // İlk içeriğin alanlarını al ve normalize et
-    const firstItem = this.normalizeContentForDB(content[0] || {});
-    const columns = Object.keys(firstItem).filter(k =>
-      !this.SYSTEM_FIELDS.includes(k)
-      && !this.LOCALIZATION_SYSTEM_FIELDS.includes(k),
+    if (!metadata.localization) {
+      throw new Error(`Model lokalize değil: ${modelId}`);
+    }
+
+    // Gelen içeriği logla
+    console.log(`${modelId} modeli için gelen içerik:`, {
+      lang,
+      contentCount: content.length,
+      ids: content.map(item => item.ID),
+      firstItem: content[0],
+    });
+
+    // Ana tablodaki ID'leri kontrol et
+    const mainTableName = this.getTableName(modelId);
+    const mainTableIds = this.db
+      .prepare(`SELECT ID FROM ${mainTableName}`)
+      .all() as Array<{ ID: string }>;
+
+    console.log(`${modelId} ana tablo ID'leri:`, {
+      tableName: mainTableName,
+      ids: mainTableIds.map(row => row.ID),
+      count: mainTableIds.length,
+    });
+
+    const existingIds = new Set(mainTableIds.map(row => row.ID));
+
+    // ID eşleşmelerini detaylı logla
+    content.forEach((item) => {
+      console.log(`ID Kontrolü - ${item.ID}:`, {
+        exists: existingIds.has(item.ID),
+        itemContent: item,
+      });
+    });
+
+    // Sadece ana tabloda var olan ID'leri içeren kayıtları filtrele
+    const validContent = content.filter((item) => {
+      const isValid = existingIds.has(item.ID);
+      if (!isValid) {
+        console.log(`UYARI: ${modelId} modeli için ${item.ID} ID'li kayıt ana tabloda bulunamadı`, {
+          itemContent: item,
+        });
+      }
+      return isValid;
+    });
+
+    if (validContent.length === 0) {
+      console.log(`${modelId} modeli için geçerli lokalize içerik bulunamadı`);
+      return;
+    }
+
+    const localizableFields = this.getLocalizableFields(modelId);
+    console.log('Lokalize edilebilir alanlar:', { modelId, fields: localizableFields });
+
+    console.log('Lokalize içerik aktarımı başladı:', {
+      modelId,
+      lang,
+      contentCount: validContent.length,
+      filteredCount: content.length - validContent.length,
+    });
+
+    const tableName = this.getTableName(modelId, 'i18n');
+    const normalizedContent = validContent.map(item => this.normalizeContentForDB(item));
+
+    // Tüm kayıtlardaki alanları birleştir
+    const allColumns = new Set<string>();
+    normalizedContent.forEach((item) => {
+      Object.keys(item).forEach(key => allColumns.add(key));
+    });
+
+    // Gerekli sistem alanlarını ekle
+    const requiredSystemFields = ['created_at', 'updated_at'];
+    requiredSystemFields.forEach(field => allColumns.add(field));
+
+    // Lokalize edilebilir alanları ve gerekli sistem alanlarını filtrele
+    const columns = Array.from(allColumns).filter(col =>
+      requiredSystemFields.includes(col)
+      || (!this.LOCALIZATION_SYSTEM_FIELDS.includes(col)
+        && localizableFields.includes(col)),
     );
 
     console.log('Lokalize edilecek kolonlar:', {
       tableName,
-      allColumns: Object.keys(firstItem),
+      allColumns: Array.from(allColumns),
       filteredColumns: columns,
       systemFields: this.SYSTEM_FIELDS,
       localizationFields: this.LOCALIZATION_SYSTEM_FIELDS,
+      requiredSystemFields,
     });
 
     const sql = `
-      INSERT INTO ${tableName} (
+      INSERT OR REPLACE INTO ${tableName} (
         ID, lang,
         ${columns.join(', ')}
       ) VALUES (
@@ -166,49 +278,98 @@ export class TableManager {
 
     const stmt = this.db.prepare(sql);
 
-    const transaction = this.db.transaction((items: ContentItem[]) => {
-      for (const item of items) {
-        const normalizedItem = this.normalizeContentForDB(item);
-        console.log('Lokalize veri eklenecek:', {
-          tableName,
-          normalizedItem,
-          lang,
-        });
-        stmt.run({
-          ...normalizedItem,
-          lang,
-        });
-      }
-    });
+    try {
+      const insertMany = this.db.transaction((items: ContentItem[]) => {
+        for (const item of items) {
+          const normalizedItem = this.normalizeContentForDB(item);
+          console.log('Lokalize veri eklenecek:', {
+            tableName,
+            id: normalizedItem.ID,
+            originalId: item.ID,
+            normalizedItem,
+            originalItem: item,
+            lang,
+          });
 
-    transaction(content);
-    console.log('Lokalize içerik aktarımı tamamlandı:', { modelId, lang, tableName });
+          // Sadece gerekli alanları al
+          const params = {
+            ID: normalizedItem.ID,
+            lang,
+            ...columns.reduce((acc: any, col: string) => {
+              acc[col] = normalizedItem[col] ?? null;
+              return acc;
+            }, {}),
+          };
+
+          console.log('SQL parametreleri:', {
+            tableName,
+            id: params.ID,
+            params,
+          });
+
+          stmt.run(params);
+        }
+      });
+
+      insertMany(validContent);
+      console.log('Lokalize içerik aktarımı tamamlandı:', {
+        modelId,
+        lang,
+        tableName,
+        aktarılanIds: validContent.map(item => item.ID),
+      });
+    }
+    catch (error) {
+      console.error('Lokalize içerik aktarım hatası:', {
+        model: modelId,
+        lang,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        sonİşlenenId: validContent[validContent.length - 1]?.ID,
+      });
+      throw error;
+    }
   }
 
   async importRelations(modelId: string, fieldId: string, relations: { sourceId: string, targetId: string }[]): Promise<void> {
     console.log('İlişki aktarımı başladı:', { modelId, fieldId, relationCount: relations.length });
     const tableName = this.getTableName(modelId, fieldId);
 
+    // Önce tabloyu temizle
+    const clearSQL = `DELETE FROM ${tableName} WHERE 1=1`;
+    this.db.prepare(clearSQL).run();
+    console.log('İlişki tablosu temizlendi:', { tableName });
+
+    // Yeni ilişkileri ekle
     const sql = `
-      INSERT INTO ${tableName} (source_id, target_id)
+      INSERT OR REPLACE INTO ${tableName} (source_id, target_id)
       VALUES (@source_id, @target_id)
     `;
     console.log('İlişki SQL sorgusu:', { sql });
 
     const stmt = this.db.prepare(sql);
 
-    const transaction = this.db.transaction((items: { sourceId: string, targetId: string }[]) => {
-      for (const item of items) {
-        const normalizedItem = this.normalizeRelationForDB(item);
-        console.log('İlişki verisi eklenecek:', {
-          tableName,
-          normalizedItem,
-        });
-        stmt.run(normalizedItem);
-      }
-    });
+    try {
+      const transaction = this.db.transaction((items: { sourceId: string, targetId: string }[]) => {
+        for (const item of items) {
+          const normalizedItem = this.normalizeRelationForDB(item);
+          console.log('İlişki verisi eklenecek:', {
+            tableName,
+            normalizedItem,
+          });
+          stmt.run(normalizedItem);
+        }
+      });
 
-    transaction(relations);
-    console.log('İlişki aktarımı tamamlandı:', { modelId, fieldId, tableName });
+      transaction(relations);
+      console.log('İlişki aktarımı tamamlandı:', { modelId, fieldId, tableName });
+    }
+    catch (error) {
+      console.error('İlişki aktarım hatası:', {
+        model: modelId,
+        fieldId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
   }
 }

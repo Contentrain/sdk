@@ -188,7 +188,23 @@ importers:
         version: 1.6.0(@types/node@20.17.12)
 
   playground/node:
+    dependencies:
+      '@contentrain/query':
+        specifier: workspace:*
+        version: link:../../packages/query
+      '@contentrain/sqlite-generator':
+        specifier: workspace:*
+        version: link:../../packages/sqlite-generator
+      '@contentrain/types-generator':
+        specifier: workspace:*
+        version: link:../../packages/types-generator
+      better-sqlite3:
+        specifier: ^11.8.1
+        version: 11.8.1
     devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.12
+        version: 7.6.12
       '@types/node':
         specifier: ^22.10.5
         version: 22.10.5
@@ -5447,8 +5463,8 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
     dependencies:
       '@types/doctrine': 0.0.9
-      '@typescript-eslint/scope-manager': 8.21.0
-      '@typescript-eslint/utils': 8.21.0(eslint@9.17.0)(typescript@5.6.3)
+      '@typescript-eslint/scope-manager': 8.19.1
+      '@typescript-eslint/utils': 8.19.1(eslint@9.17.0)(typescript@5.6.3)
       debug: 4.4.0(supports-color@9.4.0)
       doctrine: 3.0.0
       enhanced-resolve: 5.18.0

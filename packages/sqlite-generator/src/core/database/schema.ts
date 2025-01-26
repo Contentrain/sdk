@@ -170,30 +170,30 @@ export class SchemaManager {
     console.log('Lokalizasyon tablosu oluşturuldu:', { modelId });
   }
 
-  createRelationTableSQL(modelId: string, relationField: ModelField, targetModelId: string): string {
-    console.log('İlişki tablosu SQL oluşturma başladı:', { modelId, fieldId: relationField.fieldId, targetModelId });
-    // Model ID'leri normalize et
-    const normalizedModelId = normalizeTableName(modelId);
-    const normalizedTargetModelId = normalizeTableName(targetModelId);
-    const normalizedFieldId = normalizeName(relationField.fieldId);
+  createRelationTableSQL(modelId: string, field: ModelField, targetModelId: string): string {
+    const tableName = normalizeTableName(modelId, field.fieldId);
+    const sourceTable = normalizeTableName(modelId);
+    const targetTable = normalizeTableName(targetModelId);
 
-    const tableName = `${normalizedModelId}_${normalizedFieldId}`;
-    const isOneToOne = relationField.componentId === 'one-to-one';
-
-    const sql = `CREATE TABLE IF NOT EXISTS ${tableName} (
-      source_id TEXT NOT NULL,
-      target_id TEXT NOT NULL,
-      PRIMARY KEY (source_id${isOneToOne ? '' : ', target_id'}),
-      FOREIGN KEY (source_id) REFERENCES ${normalizedModelId}(ID) ON DELETE CASCADE,
-      FOREIGN KEY (target_id) REFERENCES ${normalizedTargetModelId}(ID) ON DELETE CASCADE
-    ) WITHOUT ROWID;`;
-    console.log('İlişki tablosu SQL oluşturuldu:', {
-      modelId,
-      targetModelId,
+    console.log('İlişki tablosu oluşturuluyor:', {
       tableName,
-      isOneToOne,
-      sql,
+      sourceTable,
+      targetTable,
+      fieldType: field.fieldType,
     });
+
+    const sql = `
+      CREATE TABLE IF NOT EXISTS ${tableName} (
+        source_id TEXT NOT NULL,
+        target_id TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (source_id, target_id),
+        FOREIGN KEY (source_id) REFERENCES ${sourceTable}(ID) ON DELETE CASCADE,
+        FOREIGN KEY (target_id) REFERENCES ${targetTable}(ID) ON DELETE CASCADE
+      )
+    `;
+
+    console.log('İlişki tablosu SQL sorgusu:', { sql });
     return sql;
   }
 

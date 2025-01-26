@@ -31,6 +31,8 @@ export class ContentrainSQLiteGenerator {
   private indexOptimizer!: IndexOptimizer;
   private queryOptimizer!: QueryOptimizer;
   private localizationManager: LocalizationManager;
+  private modelMetadataCache: Record<string, ModelMetadata> = {};
+  private modelFieldsCache: Record<string, ModelField[]> = {};
 
   constructor(config: ContentrainSQLiteConfig) {
     this.config = {
@@ -45,9 +47,23 @@ export class ContentrainSQLiteGenerator {
     this.localizationManager = new LocalizationManager();
   }
 
+  private async initializeModelData(): Promise<void> {
+    // Model metadata'yı oku ve cache'le
+    const metadata = await this.readModelMetadata();
+    for (const model of metadata) {
+      this.modelMetadataCache[model.modelId] = model;
+
+      if (!model.isServerless) {
+        // Model fields'ları oku ve cache'le
+        const fields = await this.readModelFields(model.modelId);
+        this.modelFieldsCache[model.modelId] = fields;
+      }
+    }
+  }
+
   private initializeDatabaseServices(db: BetterSQLite3.Database): void {
     // Veritabanı bağımlı servisleri başlat
-    this.table = new TableManager(db);
+    this.table = new TableManager(db, this.modelMetadataCache, this.modelFieldsCache);
     this.tableGenerator = new TableGenerator(db);
     this.relationGenerator = new RelationGenerator(db);
     this.indexOptimizer = new IndexOptimizer(db);
@@ -138,14 +154,55 @@ export class ContentrainSQLiteGenerator {
     }
   }
 
-  async createTables(): Promise<void> {
-    const metadata = await this.readModelMetadata();
+  private async sortModelsByDependency(): Promise<string[]> {
+    const graph = new Map<string, Set<string>>();
+    const visited = new Set<string>();
+    const sorted: string[] = [];
 
-    for (const model of metadata) {
+    // Graf oluştur
+    for (const [modelId, model] of Object.entries(this.modelMetadataCache)) {
       if (model.isServerless)
         continue;
 
-      const fields = await this.readModelFields(model.modelId);
+      const fields = this.modelFieldsCache[modelId];
+      const relations = fields.filter(f => f.fieldType === 'relation');
+
+      graph.set(modelId, new Set());
+      for (const relation of relations) {
+        const targetModel = relation.options?.reference?.form?.reference?.value;
+        if (targetModel) {
+          graph.get(modelId)!.add(targetModel);
+        }
+      }
+    }
+
+    // Topolojik sıralama
+    const visit = (modelId: string) => {
+      if (visited.has(modelId))
+        return;
+      visited.add(modelId);
+
+      const dependencies = graph.get(modelId) || new Set();
+      for (const dep of dependencies) {
+        visit(dep);
+      }
+
+      sorted.push(modelId);
+    };
+
+    for (const modelId of graph.keys()) {
+      visit(modelId);
+    }
+
+    return sorted;
+  }
+
+  async createTables(): Promise<void> {
+    for (const model of Object.values(this.modelMetadataCache)) {
+      if (model.isServerless)
+        continue;
+
+      const fields = this.modelFieldsCache[model.modelId];
       await this.tableGenerator.createMainTable(model.modelId, fields);
 
       if (model.localization) {
@@ -159,119 +216,111 @@ export class ContentrainSQLiteGenerator {
   }
 
   async importContent(): Promise<void> {
-    const metadata = await this.readModelMetadata();
+    console.log('İçerik aktarımı başlıyor...');
 
-    // Önce ana tablolara içerikleri aktar
-    for (const model of metadata) {
-      if (model.isServerless)
+    // Modelleri bağımlılık sırasına göre sırala
+    const sortedModels = await this.sortModelsByDependency();
+    console.log('Model sıralaması:', sortedModels);
+
+    // Her model için sıralı işlem yap
+    for (const modelId of sortedModels) {
+      const model = this.modelMetadataCache[modelId];
+      if (model.isServerless) {
+        console.log(`${modelId} modeli serverless, atlanıyor...`);
         continue;
-
-      const fields = await this.readModelFields(model.modelId);
+      }
 
       try {
+        const fields = this.modelFieldsCache[model.modelId];
+        console.log(`${model.modelId} modeli için işlemler başlıyor...`);
+
+        // 1. Ana içeriği aktar
+        let mainContent: any[];
         if (model.localization) {
-          // Önce mevcut dil kodlarını oku
           const languages = await this.readLocalizationCodes(model.modelId);
           if (languages.length === 0) {
-            throw new Error(`No language files found for localized model: ${model.modelId}`);
+            throw new Error(`${model.modelId} modeli için dil dosyası bulunamadı`);
           }
-          console.log('Dil kodları bulundu:', { modelId: model.modelId, languages });
-
-          // Her dil için içeriği işle
-          for (const lang of languages) {
-            const content = await this.loadContentFile(model.modelId, lang);
-
-            if (lang === languages[0]) {
-              // İlk dili ana içerik olarak kullan
-              console.log('Ana içerik yükleniyor:', { modelId: model.modelId, lang });
-              const normalizedContent = await this.contentValidator.validateContent(content, fields);
-              await this.table.importContent(model.modelId, normalizedContent);
-            }
-            else {
-              // Diğer dilleri lokalizasyon tablosuna ekle
-              console.log('Lokalize içerik yükleniyor:', { modelId: model.modelId, lang });
-              const normalizedI18nContent = await this.contentValidator.validateLocalizedContent(content, fields, lang);
-              await this.table.importLocalizedContent(model.modelId, lang, normalizedI18nContent);
-            }
-          }
+          mainContent = await this.loadContentFile(model.modelId, languages[0]);
+          console.log(`${model.modelId} modeli için ${languages[0]} dilinden ana içerik yüklendi`);
         }
         else {
-          // Lokalize olmayan model için normal içerik yükle
-          console.log('Lokalize olmayan içerik yükleniyor:', { modelId: model.modelId });
-          const content = await this.loadContentFile(model.modelId);
-          const normalizedContent = await this.contentValidator.validateContent(content, fields);
-          await this.table.importContent(model.modelId, normalizedContent);
+          mainContent = await this.loadContentFile(model.modelId);
+          console.log(`${model.modelId} modeli için ana içerik yüklendi`);
         }
-      }
-      catch (error) {
-        console.error('İçerik aktarım hatası:', {
-          model: model.modelId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
-        throw error;
-      }
-    }
 
-    // Sonra ilişki tablolarına içerikleri aktar
-    for (const model of metadata) {
-      if (model.isServerless)
-        continue;
+        if (!mainContent || !Array.isArray(mainContent)) {
+          console.log(`${model.modelId} modeli için içerik bulunamadı`);
+          continue;
+        }
 
-      const fields = await this.readModelFields(model.modelId);
-      const relations = this.relationGenerator.getRelationFields(fields);
+        // Ana içeriği validate et ve aktar
+        const normalizedContent = await this.contentValidator.validateContent(mainContent, fields);
+        await this.table.importContent(model.modelId, normalizedContent);
+        console.log(`${model.modelId} modeli için ana içerik aktarıldı`);
 
-      if (relations.length > 0) {
-        try {
-          let content: any[];
-          if (model.localization) {
-            // Lokalize model için dil kodlarını oku ve ilk dili kullan
-            const languages = await this.readLocalizationCodes(model.modelId);
-            if (languages.length === 0) {
-              throw new Error(`No language files found for localized model: ${model.modelId}`);
+        // 2. Lokalize içerikleri aktar (varsa)
+        if (model.localization) {
+          const languages = await this.readLocalizationCodes(model.modelId);
+          for (const lang of languages.slice(1)) {
+            const i18nContent = await this.loadContentFile(model.modelId, lang);
+            if (!i18nContent || !Array.isArray(i18nContent)) {
+              console.log(`${model.modelId} modeli için ${lang} dilinde içerik bulunamadı`);
+              continue;
             }
-            content = await this.loadContentFile(model.modelId, languages[0]);
-          }
-          else {
-            content = await this.loadContentFile(model.modelId);
-          }
 
+            console.log(`${model.modelId} modeli için ${lang} dili aktarılıyor...`);
+            const normalizedI18nContent = await this.contentValidator.validateLocalizedContent(
+              i18nContent,
+              fields,
+              lang,
+            );
+            await this.table.importLocalizedContent(model.modelId, lang, normalizedI18nContent);
+            console.log(`${model.modelId} modeli için ${lang} dili aktarıldı`);
+          }
+        }
+
+        // 3. İlişkileri aktar (varsa)
+        const relations = this.relationGenerator.getRelationFields(fields);
+        if (relations.length > 0) {
           for (const relation of relations) {
-            // İlişki verilerini çıkar
-            const relationContent = content
+            console.log(`${model.modelId} modeli için ${relation.fieldId} ilişkisi aktarılıyor...`);
+
+            const relationContent = mainContent
               .map((item: any) => {
                 const relationData = item[relation.fieldId];
                 if (!relationData)
                   return null;
 
-                if (Array.isArray(relationData)) {
-                  return relationData.map((targetId: string) => ({
-                    sourceId: String(item.ID),
-                    targetId: String(targetId),
-                  }));
-                }
-
-                return {
-                  sourceId: String(item.ID),
-                  targetId: String(relationData),
-                };
+                return Array.isArray(relationData)
+                  ? relationData.map((targetId: string) => ({
+                      sourceId: String(item.ID),
+                      targetId: String(targetId),
+                    }))
+                  : {
+                      sourceId: String(item.ID),
+                      targetId: String(relationData),
+                    };
               })
-              .filter((item): item is { sourceId: string, targetId: string } => item !== null)
+              .filter((item): item is { sourceId: string, targetId: string } | { sourceId: string, targetId: string }[] => item !== null)
               .flat();
 
             if (relationContent.length > 0) {
               await this.table.importRelations(model.modelId, relation.fieldId, relationContent);
+              console.log(`${model.modelId} modeli için ${relation.fieldId} ilişkisi aktarıldı`);
             }
           }
         }
-        catch (error) {
-          console.error('İlişki aktarım hatası:', {
-            model: model.modelId,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-          throw error;
-        }
+
+        console.log(`${model.modelId} modeli için tüm işlemler tamamlandı`);
+      }
+      catch (error) {
+        console.error(`${model.modelId} modeli için işlem hatası:`, error);
+        throw error;
       }
     }
+
+    console.log('İçerik aktarımı tamamlandı');
   }
 
   async finalizeDatabase(): Promise<void> {
@@ -298,38 +347,40 @@ export class ContentrainSQLiteGenerator {
 
   async generate(): Promise<void> {
     try {
-      // 1. Model metadata oku
-      const metadata = await this.readModelMetadata();
-      await this.modelValidator.validateMetadata(metadata);
+      // 1. Model metadata ve fields'ları oku ve cache'le
+      await this.initializeModelData();
 
-      // 2. Her model için field bilgilerini oku ve valide et
-      for (const model of metadata) {
+      // 2. Model metadata'yı valide et
+      await this.modelValidator.validateMetadata(Object.values(this.modelMetadataCache));
+
+      // 3. Her model için field bilgilerini valide et
+      for (const model of Object.values(this.modelMetadataCache)) {
         if (model.isServerless)
           continue;
 
-        const fields = await this.readModelFields(model.modelId);
+        const fields = this.modelFieldsCache[model.modelId];
         await this.modelValidator.validateFields(fields);
 
-        // 3. Lokalize modeller için dil kodlarını oku
+        // 4. Lokalize modeller için dil kodlarını oku
         if (model.localization) {
           const languages = await this.readLocalizationCodes(model.modelId);
           await this.localizationManager.validateLanguages(languages);
         }
       }
 
-      // 4. Veritabanı bağlantısını oluştur
+      // 5. Veritabanı bağlantısını oluştur
       this.db = await this.connection.createDatabase(join(this.config.outputDir, this.config.dbName || 'contentrain.db'));
 
-      // 5. Veritabanı servislerini başlat
+      // 6. Veritabanı servislerini başlat
       this.initializeDatabaseServices(this.db);
 
-      // 6. Tabloları ve ilişkileri oluştur
+      // 7. Tabloları ve ilişkileri oluştur
       await this.createTables();
 
-      // 7. İçerikleri aktar
+      // 8. İçerikleri aktar
       await this.importContent();
 
-      // 8. Veritabanını hazırla ve hedef dizine taşı
+      // 9. Veritabanını hazırla ve hedef dizine taşı
       await this.finalizeDatabase();
     }
     catch (error) {

@@ -11,11 +11,20 @@
     "scripts": {
         "build": "tsc",
         "start": "tsx src/index.ts",
-        "dev": "tsx watch src/index.ts"
+        "dev": "tsx watch src/index.ts",
+        "generate-database": "tsx src/sql.ts",
+        "sql-query": "tsx src/sql-query.ts"
+    },
+    "dependencies": {
+        "@contentrain/query": "workspace:*",
+        "@contentrain/sqlite-generator": "workspace:*",
+        "@contentrain/types-generator": "workspace:*",
+        "better-sqlite3": "^11.8.1"
     },
     "devDependencies": {
         "@types/node": "^22.10.5",
         "tsx": "^4.7.0",
-        "typescript": "^5.7.3"
+        "typescript": "^5.7.3",
+        "@types/better-sqlite3": "^7.6.12"
     }
 }
