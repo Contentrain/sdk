@@ -1,267 +1,268 @@
 // Bu dosya otomatik olarak oluşturulmuştur
+import type BetterSQLite3 from 'better-sqlite3';
 
 export interface Faqitems {
-  ID: string | null;
-  question: string;
-  answer: string;
-  order_field: number;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  question: string
+  answer: string
+  order_field: number
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface FaqitemsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  question: string;
-  answer: string;
-  order_field: number;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  question: string
+  answer: string
+  order_field: number
 }
 
 export interface MetaTags {
-  ID: string | null;
-  name: string;
-  content: string;
-  description: string | null;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  name: string
+  content: string
+  description: string | null
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface MetaTagsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  content: string;
-  description: string | null;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  name: string
+  content: string
+  description: string | null
 }
 
 export interface Processes {
-  ID: string | null;
-  title: string;
-  description: string;
-  icon: string;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  title: string
+  description: string
+  icon: string
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface ProcessesI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  description: string;
-  icon: string;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  title: string
+  description: string
+  icon: string
 }
 
 export interface ReferencesTable {
-  ID: string | null;
-  logo: string;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  logo: string
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface Sections {
-  ID: string | null;
-  title: string;
-  description: string;
-  buttontext: string | null;
-  buttonlink: string | null;
-  name: string;
-  subtitle: string | null;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  title: string
+  description: string
+  buttontext: string | null
+  buttonlink: string | null
+  name: string
+  subtitle: string | null
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface SectionsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  description: string;
-  buttontext: string | null;
-  buttonlink: string | null;
-  name: string;
-  subtitle: string | null;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  title: string
+  description: string
+  buttontext: string | null
+  buttonlink: string | null
+  name: string
+  subtitle: string | null
 }
 
 export interface Services {
-  ID: string | null;
-  title: string;
-  description: string | null;
-  image: string | null;
-  reference: string | null;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  title: string
+  description: string | null
+  image: string | null
+  reference: string | null
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface ServicesI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  description: string | null;
-  image: string | null;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  title: string
+  description: string | null
+  image: string | null
 }
 
 export interface ServicesReference {
-  source_id: string;
-  target_id: string;
-  created_at: string;
+  source_id: string
+  target_id: string
+  created_at: string
 }
 
 export interface Sociallinks {
-  ID: string | null;
-  link: string;
-  icon: string;
-  service: string | null;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  link: string
+  icon: string
+  service: string | null
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface SociallinksService {
-  source_id: string;
-  target_id: string;
-  created_at: string;
+  source_id: string
+  target_id: string
+  created_at: string
 }
 
 export interface Tabitems {
-  ID: string | null;
-  link: string;
-  description: string;
-  image: string;
-  category: string;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  link: string
+  description: string
+  image: string
+  category: string
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface TabitemsCategory {
-  source_id: string;
-  target_id: string;
-  created_at: string;
+  source_id: string
+  target_id: string
+  created_at: string
 }
 
 export interface TabitemsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  link: string;
-  description: string;
-  image: string;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  link: string
+  description: string
+  image: string
 }
 
 export interface TestimonailItems {
-  ID: string | null;
-  name: string;
-  description: string;
-  title: string;
-  image: string;
-  creative_work: string;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  name: string
+  description: string
+  title: string
+  image: string
+  creative_work: string
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface TestimonailItemsCreativeWork {
-  source_id: string;
-  target_id: string;
-  created_at: string;
+  source_id: string
+  target_id: string
+  created_at: string
 }
 
 export interface TestimonailItemsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  name: string;
-  description: string;
-  title: string;
-  image: string;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  name: string
+  description: string
+  title: string
+  image: string
 }
 
 export interface Workcategories {
-  ID: string | null;
-  category: string;
-  order_field: number;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  category: string
+  order_field: number
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface WorkcategoriesI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  category: string;
-  order_field: number;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  category: string
+  order_field: number
 }
 
 export interface Workitems {
-  ID: string | null;
-  title: string;
-  image: string | null;
-  description: string;
-  category: string;
-  link: string;
-  order_field: number;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  scheduled: number;
-  scheduled_at: string | null;
+  ID: string | null
+  title: string
+  image: string | null
+  description: string
+  category: string
+  link: string
+  order_field: number
+  status: number
+  created_at: string
+  updated_at: string
+  scheduled: number
+  scheduled_at: string | null
 }
 
 export interface WorkitemsCategory {
-  source_id: string;
-  target_id: string;
-  created_at: string;
+  source_id: string
+  target_id: string
+  created_at: string
 }
 
 export interface WorkitemsI18n {
-  lang: string;
-  ID: string;
-  created_at: string;
-  updated_at: string;
-  title: string;
-  image: string | null;
-  description: string;
-  link: string;
-  order_field: number;
+  lang: string
+  ID: string
+  created_at: string
+  updated_at: string
+  title: string
+  image: string | null
+  description: string
+  link: string
+  order_field: number
 }
 
 export class FaqitemsRepository {
@@ -663,4 +664,3 @@ export class WorkitemsI18nRepository {
     return this.db.prepare('SELECT * FROM workitems_i18n WHERE status = ?').all(status) as WorkitemsI18n[];
   }
 }
-
