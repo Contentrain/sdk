@@ -12,7 +12,7 @@
         "build": "tsc",
         "start": "tsx src/index.ts",
         "dev": "tsx watch src/index.ts",
-        "generate-database": "tsx src/sql.ts",
+        "sql-db": "tsx src/sql.ts",
         "sql-query": "tsx src/sql-query.ts"
     },
     "dependencies": {

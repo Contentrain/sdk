@@ -6,6 +6,7 @@ import { DatabaseConnection } from './core/database/connection';
 import { TableManager } from './core/database/table';
 import { RelationGenerator } from './core/generator/relation';
 import { TableGenerator } from './core/generator/table';
+import { TypeScriptGenerator } from './core/generator/type';
 import { LocalizationManager } from './core/localization/manager';
 import { IndexOptimizer } from './core/optimizer/index';
 import { QueryOptimizer } from './core/optimizer/query';
@@ -343,6 +344,12 @@ export class ContentrainSQLiteGenerator {
     this.queryOptimizer.optimizeDatabase();
     await this.connection.setReadOnlyMode();
     await this.connection.moveToTargetDir(this.config.outputDir);
+
+    // TypeScript tip tanımlamalarını oluştur
+    const dbPath = join(this.config.outputDir, this.config.dbName || 'contentrain.db');
+    const outputFile = join(this.config.outputDir, 'contentrain.d.ts');
+    const typeScriptGenerator = new TypeScriptGenerator(dbPath, outputFile);
+    typeScriptGenerator.generateTypes();
   }
 
   async generate(): Promise<void> {
