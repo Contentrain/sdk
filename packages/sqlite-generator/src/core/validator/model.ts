@@ -16,6 +16,11 @@ export class ModelValidator {
         throw new Error(`Model ID "${model.modelId}" must be in kebab-case`);
       }
 
+      // Model name must be PascalCase
+      if (!/^[A-Z][a-zA-Z]*$/.test(model.name)) {
+        throw new Error(`Model name "${model.name}" must be in PascalCase`);
+      }
+
       // Type must be JSON
       if (model.type !== 'JSON') {
         throw new Error('Model type must be \'JSON\'');
@@ -38,10 +43,10 @@ export class ModelValidator {
       modelFields.add(field.fieldId);
       // TODO kontrol edilecek field id  kebap-case camelcase yada eger id ise ID gibi uppercase olabilir
 
-      // Field ID must be camelCase
-      /*       if (!/^[a-z][a-zA-Z0-9]*$/.test(field.fieldId)) {
+      // Field ID must be camelCase (except ID)
+      if (field.fieldId !== 'ID' && !/^[a-z][a-zA-Z0-9]*$/.test(field.fieldId)) {
         throw new Error(`Field ID "${field.fieldId}" must be in camelCase`);
-      } */
+      }
 
       // Validate relation fields
       if (field.fieldType === 'relation') {

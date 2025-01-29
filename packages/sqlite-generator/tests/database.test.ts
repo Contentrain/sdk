@@ -1,4 +1,4 @@
-import type { ContentItem, ModelField } from '../src/types';
+import type { ContentItem, ContentrainComponentId, ContentrainFieldType, ModelField, ModelMetadata } from '../src/types';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -58,7 +58,72 @@ describe('database', () => {
     beforeEach(async () => {
       connection = new DatabaseConnection();
       const db = await connection.createDatabase(dbPath);
+
+      const mockFields: Record<string, ModelField[]> = {
+        services_items: [
+          {
+            name: 'Title',
+            fieldId: 'title',
+            modelId: 'services-items',
+            componentId: 'single-line-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {
+              'title-field': {
+                value: true,
+              },
+            },
+            system: false,
+            defaultField: false,
+          },
+          {
+            name: 'Description',
+            fieldId: 'description',
+            modelId: 'services-items',
+            componentId: 'rich-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {},
+            system: false,
+            defaultField: false,
+          },
+        ],
+        categories: [
+          {
+            name: 'Title',
+            fieldId: 'title',
+            modelId: 'categories',
+            componentId: 'single-line-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {
+              'title-field': {
+                value: true,
+              },
+            },
+            system: false,
+            defaultField: false,
+          },
+        ],
+      };
+
+      // SchemaManager ile tabloları oluştur
       schema = new SchemaManager(db);
+      schema.createMainTableSQL('services-items', mockFields.services_items);
+      schema.createMainTableSQL('categories', mockFields.categories);
+      schema.createLocalizationTableSQL('services-items', mockFields.services_items);
     });
 
     afterEach(() => {
@@ -197,39 +262,99 @@ describe('database', () => {
     beforeEach(async () => {
       connection = new DatabaseConnection();
       const db = await connection.createDatabase(dbPath);
-      const schema = new SchemaManager(db);
-      table = new TableManager(db);
 
-      // Test tablosunu oluştur
-      const fields: ModelField[] = [
-        {
-          name: 'Title',
-          fieldId: 'page-title',
+      // Mock metadata ve fields ekle
+      const mockMetadata: Record<string, ModelMetadata> = {
+        services_items: {
+          name: 'ServicesItems',
           modelId: 'services-items',
-          componentId: 'single-line-text',
-          fieldType: 'string',
-          validations: {
-            'required-field': { value: true },
+          localization: true,
+          type: 'JSON' as const,
+          createdBy: 'test',
+          isServerless: false,
+        },
+        categories: {
+          name: 'Categories',
+          modelId: 'categories',
+          localization: false,
+          type: 'JSON' as const,
+          createdBy: 'test',
+          isServerless: false,
+        },
+      };
+
+      const mockFields: Record<string, ModelField[]> = {
+        services_items: [
+          {
+            name: 'Title',
+            fieldId: 'title',
+            modelId: 'services-items',
+            componentId: 'single-line-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {
+              'title-field': {
+                value: true,
+              },
+            },
+            system: false,
+            defaultField: false,
           },
-          options: {},
-        },
-        {
-          name: 'Description',
-          fieldId: 'long-description',
-          modelId: 'services-items',
-          componentId: 'multi-line-text',
-          fieldType: 'string',
-          validations: {},
-          options: {},
-        },
-      ];
+          {
+            name: 'Description',
+            fieldId: 'description',
+            modelId: 'services-items',
+            componentId: 'rich-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {},
+            system: false,
+            defaultField: false,
+          },
+        ],
+        categories: [
+          {
+            name: 'Title',
+            fieldId: 'title',
+            modelId: 'categories',
+            componentId: 'single-line-text' as ContentrainComponentId,
+            fieldType: 'string' as ContentrainFieldType,
+            validations: {
+              'required-field': {
+                value: true,
+              },
+            },
+            options: {
+              'title-field': {
+                value: true,
+              },
+            },
+            system: false,
+            defaultField: false,
+          },
+        ],
+      };
 
-      // Önce ana tabloyu oluştur
-      const mainTableSQL = schema.createMainTableSQL('services_items', fields);
+      // SchemaManager ile tabloları oluştur
+      const schema = new SchemaManager(db);
+
+      // Ana tabloları oluştur
+      const mainTableSQL = schema.createMainTableSQL('services-items', mockFields.services_items);
       db.exec(mainTableSQL);
 
-      // Sonra lokalizasyon tablosunu oluştur
-      const localizationTableSQL = schema.createLocalizationTableSQL('services_items', fields);
+      const categoriesTableSQL = schema.createMainTableSQL('categories', mockFields.categories);
+      db.exec(categoriesTableSQL);
+
+      // Lokalizasyon tablosunu oluştur
+      const localizationTableSQL = schema.createLocalizationTableSQL('services-items', mockFields.services_items);
       db.exec(localizationTableSQL);
 
       // İlişki tablosunu oluştur
@@ -237,8 +362,8 @@ describe('database', () => {
         name: 'Category',
         fieldId: 'categoryId',
         modelId: 'services-items',
-        componentId: 'one-to-one',
-        fieldType: 'relation',
+        componentId: 'one-to-one' as ContentrainComponentId,
+        fieldType: 'relation' as ContentrainFieldType,
         validations: {},
         options: {
           reference: {
@@ -250,27 +375,15 @@ describe('database', () => {
             },
           },
         },
+        system: false,
+        defaultField: false,
       };
 
-      // Önce categories tablosunu oluştur
-      const categoryFields: ModelField[] = [{
-        name: 'Title',
-        fieldId: 'title',
-        modelId: 'categories',
-        componentId: 'single-line-text',
-        fieldType: 'string',
-        validations: {},
-        options: {},
-      }];
-      const categoriesTableSQL = schema.createMainTableSQL('categories', categoryFields);
-      db.exec(categoriesTableSQL);
-
-      // Sonra ilişki tablosunu oluştur
       const relationTableSQL = schema.createRelationTableSQL('services_items', relationField, 'categories');
       db.exec(relationTableSQL);
 
-      // İndeksleri oluştur
-      await schema.createIndexes('services_items', fields);
+      // TableManager'ı oluştur
+      table = new TableManager(db, mockMetadata, mockFields);
     });
 
     afterEach(() => {
@@ -280,13 +393,13 @@ describe('database', () => {
     it('should import content', async () => {
       const content: ContentItem[] = [
         {
-          'ID': '1',
-          'page-title': 'Test Service',
-          'long-description': 'Test Description',
-          'status': 'publish',
-          'createdAt': '2024-01-15T00:00:00.000Z',
-          'updatedAt': '2024-01-15T00:00:00.000Z',
-          'scheduled': false,
+          ID: '1',
+          title: 'Test Service',
+          description: 'Test Description',
+          status: 'publish',
+          createdAt: '2024-01-15T00:00:00.000Z',
+          updatedAt: '2024-01-15T00:00:00.000Z',
+          scheduled: false,
         },
       ];
 
@@ -304,13 +417,13 @@ describe('database', () => {
       // Önce ana tabloya veri ekle
       const mainContent: ContentItem[] = [
         {
-          'ID': '1',
-          'page-title': 'Test Service',
-          'long-description': 'Test Description',
-          'status': 'publish',
-          'createdAt': '2024-01-15T00:00:00.000Z',
-          'updatedAt': '2024-01-15T00:00:00.000Z',
-          'scheduled': false,
+          ID: '1',
+          title: 'Test Service',
+          description: 'Test Description',
+          status: 'publish',
+          createdAt: '2024-01-15T00:00:00.000Z',
+          updatedAt: '2024-01-15T00:00:00.000Z',
+          scheduled: false,
         },
       ];
       await table.importContent('services_items', mainContent);
@@ -318,13 +431,13 @@ describe('database', () => {
       // Sonra lokalize içeriği ekle
       const localizedContent: ContentItem[] = [
         {
-          'ID': '1',
-          'page-title': 'Test Servis',
-          'long-description': 'Test Açıklama',
-          'status': 'publish',
-          'createdAt': '2024-01-15T00:00:00.000Z',
-          'updatedAt': '2024-01-15T00:00:00.000Z',
-          'scheduled': false,
+          ID: '1',
+          title: 'Test Servis',
+          description: 'Test Açıklama',
+          status: 'publish',
+          createdAt: '2024-01-15T00:00:00.000Z',
+          updatedAt: '2024-01-15T00:00:00.000Z',
+          scheduled: false,
         },
       ];
 
@@ -335,13 +448,13 @@ describe('database', () => {
       // Önce ana tablolara veri ekle
       const servicesContent: ContentItem[] = [
         {
-          'ID': '123',
-          'page-title': 'Test Service',
-          'long-description': 'Test Description',
-          'status': 'publish',
-          'createdAt': '2024-01-15T00:00:00.000Z',
-          'updatedAt': '2024-01-15T00:00:00.000Z',
-          'scheduled': false,
+          ID: '123',
+          title: 'Test Service',
+          description: 'Test Description',
+          status: 'publish',
+          createdAt: '2024-01-15T00:00:00.000Z',
+          updatedAt: '2024-01-15T00:00:00.000Z',
+          scheduled: false,
         },
       ];
       await table.importContent('services_items', servicesContent);

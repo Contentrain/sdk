@@ -150,9 +150,11 @@ export class SchemaManager {
       return columnDef;
     });
 
-    // Sadece gerekli sistem alanlarını ekle
+    // Sistem alanlarını ekle
     columns.unshift('ID TEXT NOT NULL');
     columns.unshift('lang TEXT NOT NULL');
+    columns.push('created_at DATETIME NOT NULL');
+    columns.push('updated_at DATETIME NOT NULL');
     columns.push('PRIMARY KEY (ID, lang)');
     columns.push(`FOREIGN KEY (ID) REFERENCES ${normalizedModelId}(ID) ON DELETE CASCADE`);
 
