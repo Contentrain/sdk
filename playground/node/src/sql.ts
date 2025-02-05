@@ -1,24 +1,21 @@
 import { dirname, join } from 'node:path';
 import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
-
-import ContentrainSQLiteGenerator from '@contentrain/sqlite-generator';
+import { ContentrainSQL } from '@contentrain/sql';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function generateDatabase() {
   try {
-    console.log('SQLite veritabanı oluşturuluyor...');
-
     // SQLite generator'ı yapılandır
-    const generator = new ContentrainSQLiteGenerator({
+    const generator = new ContentrainSQL({
       // Model tanımlamalarının bulunduğu dizin
       modelsDir: join(__dirname, '../../contentrain/models'),
       // İçerik dosyalarının bulunduğu dizin
       contentDir: join(__dirname, '../../contentrain'),
       // Veritabanının oluşturulacağı dizin
-      outputDir: join(__dirname, '../db'),
+      outputPath: join(__dirname, '../db'),
       // Veritabanı dosya adı
       dbName: 'contentrain.db',
     });

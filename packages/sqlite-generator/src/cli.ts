@@ -1,69 +1,50 @@
 #!/usr/bin/env node
 
 import { join } from 'node:path';
-import process from 'node:process';
+import { cwd, exit } from 'node:process';
 import { Command } from 'commander';
-import ContentrainSQLiteGenerator from './index';
+import { ContentrainSQL } from './index';
+import { ContentrainError } from './types/errors';
 
-export const program = new Command();
-
-// Version komutunu özel olarak işle
-program.on('option:version', () => {
-  console.log('1.0.0');
-  process.exit(0);
-});
+const program = new Command();
 
 program
-  .name('contentrain-sqlite')
-  .description('SQLite database generator for Contentrain CMS')
-  .version('1.0.0', '-V, --version', 'output the version number')
-  .helpOption('-h, --help', 'display help for command')
-  .option('-m, --models <dir>', 'Models directory path', 'contentrain/models')
-  .option('-c, --content <dir>', 'Content directory path', 'contentrain')
-  .option('-o, --output <dir>', 'Output directory path', 'dist')
-  .option('-d, --db-name <n>', 'Database file name', 'contentrain.db')
+  .name('contentrain-sql')
+  .description('Contentrain SQL Generator CLI')
+  .version('1.0.0');
+
+program
+  .command('generate')
+  .description('Converts JSON content to SQLite database')
+  .option('-m, --models <dir>', 'Directory containing model definitions', 'contentrain/models')
+  .option('-c, --content <dir>', 'Directory containing content files', 'contentrain')
+  .option('-o, --output <dir>', 'Directory where database will be created', 'db')
+  .option('-n, --name <name>', 'Database file name', 'contentrain.db')
   .action(async (options) => {
     try {
-      const cwd = process.cwd();
-      console.log('Current working directory:', cwd);
-      console.log('Options:', options);
-
-      // Dizinleri kontrol et
-      const modelsDir = join(cwd, options.models);
-      const contentDir = join(cwd, options.content);
-      const outputDir = join(cwd, options.output);
-
-      console.log('Models directory:', modelsDir);
-      console.log('Content directory:', contentDir);
-      console.log('Output directory:', outputDir);
-
-      const generator = new ContentrainSQLiteGenerator({
-        modelsDir,
-        contentDir,
-        outputDir,
-        dbName: options.dbName,
+      const generator = new ContentrainSQL({
+        modelsDir: join(cwd(), options.models),
+        contentDir: join(cwd(), options.content),
+        outputPath: join(cwd(), options.output),
+        dbName: options.name,
       });
 
-      console.log('Generating SQLite database...');
       await generator.generate();
-      console.log('Database generated successfully!');
-      process.exit(0);
+      console.info(`Database created: ${join(cwd(), options.output, options.name)}`);
     }
     catch (error) {
-      if (error instanceof Error) {
+      if (error instanceof ContentrainError) {
         console.error('Error:', error.message);
+        console.error('Details:', JSON.stringify(error.details, null, 2));
+        if (error.cause) {
+          console.error('Cause:', error.cause.message);
+        }
       }
       else {
-        console.error('Error:', String(error));
+        console.error('Error:', error instanceof Error ? error.message : String(error));
       }
-      process.exit(1);
+      exit(1);
     }
-  })
-  .on('--help', () => {
-    console.log('');
-    console.log('Examples:');
-    console.log('  $ contentrain-sqlite');
-    console.log('  $ contentrain-sqlite --models models --content content --output dist --db-name custom.db');
   });
 
 program.parse();

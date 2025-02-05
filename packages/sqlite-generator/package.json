@@ -1,46 +1,24 @@
 {
   "name": "@contentrain/sqlite-generator",
   "version": "1.0.0",
-  "description": "SQLite database generator for Contentrain CMS",
-  "author": "Contentrain Inc.",
-  "license": "MIT",
-  "private": false,
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/contentrain/contentrain-sdk.git",
-    "directory": "packages/sqlite-generator"
-  },
-  "bugs": {
-    "url": "https://github.com/contentrain/contentrain-sdk/issues"
-  },
-  "homepage": "https://github.com/contentrain/contentrain-sdk/tree/main/packages/sqlite-generator#readme",
-  "keywords": [
-    "contentrain",
-    "sqlite",
-    "database",
-    "generator",
-    "content-management"
-  ],
-  "type": "module",
+  "description": "SQLite generator for Contentrain CMS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "contentrain-sqlite": "./dist/cli.js"
+    "contentrain-sqlite": "dist/cli.js"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "vitest watch",
-    "test:run": "vitest run",
-    "clean": "rm -rf dist",
-    "typecheck": "tsc --noEmit"
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "@contentrain/query": "latest",
@@ -58,5 +36,11 @@
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.7.0"
   }
 }

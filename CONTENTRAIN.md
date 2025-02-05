@@ -9,8 +9,8 @@ contentrain/
 │   ├── metadata.json     # Model tanımlamaları
 │   └── [modelId].json    # Model alan tanımlamaları
 └── [modelId1]/           # localization true Her model için içerik klasörü en tr de vb dil kodlari olur.
-    ├── tr.json          # Türkçe içerikler (localization: true ise)
-    ├── en.json          # İngilizce içerikler (localization: true ise)
+    ├── [langcode1].json          # tr.json Türkçe içerikler (localization: true ise)
+    ├── [langcode2].json          # en.json İngilizce içerikler (localization: true ise)
 └── [modelId2]/           #localization false model için içerik klasörü
     └── [modelId2].json   # İçerikler (localization: false ise)
 ```
@@ -143,42 +143,45 @@ Her modelde bulunması gereken zorunlu sistem alanları:
 {
   "validations": {
     "required-field": {
-      "value": true
+      "value": false,
+      "description": "Bu alan boş bırakıldığında içeriği yayınlayamazsınız"
     }
   }
 }
 ```
-Açıklama: Alan boş bırakılamaz
 
 ### 4.2 Unique Field
 ```json
 {
   "validations": {
     "unique-field": {
-      "value": true
+      "value": false,
+      "description": "Aynı içeriğe sahip başka bir kayıt varsa içeriği yayınlayamazsınız"
     }
   }
 }
 ```
-Açıklama: Aynı değere sahip başka bir kayıt olamaz
 
 ### 4.3 Input Range Field
 ```json
 {
   "validations": {
     "input-range-field": {
-      "value": true,
+      "value": false,
+      "description": "Sadece belirtilen sayı aralığını kabul eder",
       "form": {
         "number-of-stars": {
-          "min": 1,
-          "max": 10
+          "component": "integer",
+          "props": {
+            "min": 1,
+            "max": 10
+          }
         }
       }
     }
   }
 }
 ```
-Açıklama: Belirtilen sayı aralığında değer kabul eder
 
 ## 5. Alan Seçenekleri
 
@@ -187,49 +190,54 @@ Açıklama: Belirtilen sayı aralığında değer kabul eder
 {
   "options": {
     "title-field": {
-      "value": true
+      "value": false,
+      "description": "İlişkilerde ID yerine bu alanın değeri görüntülenir",
+      "disabled": true
     }
   }
 }
 ```
-Açıklama: İlişkilerde ID yerine bu alanın değeri görüntülenir
 
 ### 5.2 Default Value
 ```json
 {
   "options": {
     "default-value": {
-      "value": true,
+      "value": false,
+      "description": "Form alanını bu değerle önceden doldurur",
       "form": {
         "default-value": {
-          "value": "varsayılan değer"
+          "component": "default-value",
+          "value": ""
         }
       }
     }
   }
 }
 ```
-Açıklama: Form alanı için varsayılan değer belirler
 
 ### 5.3 Number of Stars
 ```json
 {
   "options": {
     "number-of-stars": {
-      "value": true,
+      "value": false,
+      "description": "Değerlendirme yıldız sayısı",
       "form": {
         "number-of-stars": {
-          "min": 1,
-          "max": 5
+          "component": "integer",
+          "props": {
+            "min": 1,
+            "max": 10
+          }
         }
       }
     }
   }
 }
 ```
-Açıklama: Rating alanı için yıldız sayısını belirler
 
-### 5.4 Reference
+### 5.4 Reference - Relation
 ```json
 {
   "options": {
@@ -244,55 +252,52 @@ Açıklama: Rating alanı için yıldız sayısını belirler
   }
 }
 ```
-Açıklama: İlişki kurulacak modeli belirler
 
 ## 6. Veri Tipleri (fieldType)
 
 ### 6.1 Temel Tipler
-- **string**: Metin verileri
-- **number**: Sayısal veriler
-- **boolean**: Mantıksal veriler
-- **array**: Dizi verileri
-- **date**: Tarih verileri
+- **string**: Metin verileri (single-line-text, multi-line-text, email, url, slug, color, json, md-editor, rich-text-editor)
+- **number**: Sayısal veriler (integer, decimal, rating, percent, phone-number)
+- **boolean**: Mantıksal veriler (checkbox, switch)
+- **array**: Dizi verileri (text, number ve diğer temel tipler için)
+- **date**: Tarih verileri (date, date-time)
 - **media**: Medya dosyaları
-- **relation**: İlişki verileri
+- **relation**: İlişki verileri (one-to-one, one-to-many)
 
 ## 7. Bileşen Tipleri (componentId)
 
 ### 7.1 Metin Bileşenleri
-- **single-line-text**: Tek satır metin
-- **multi-line-text**: Çok satır metin
-- **rich-text-editor**: Zengin metin editörü
-- **markdown-editor**: Markdown editörü
-- **email**: E-posta adresi
-- **url**: Web adresi
-- **slug**: SEO dostu URL
-- **color**: Renk seçici
-- **json**: JSON verisi
+- **single-line-text**: Tek satır metin (Kısayol: 0)
+- **multi-line-text**: Çok satır metin (Kısayol: 1)
+- **email**: E-posta adresi (Kısayol: 2)
+- **url**: Web adresi (Kısayol: 3)
+- **slug**: SEO dostu URL (Kısayol: 4)
+- **color**: Renk seçici (Kısayol: 5)
+- **json**: JSON verisi (Kısayol: 6)
+- **md-editor**: Markdown editörü (Kısayol: 7)
+- **rich-text-editor**: Zengin metin editörü (Kısayol: 8)
 
 ### 7.2 Sayısal Bileşenler
-- **integer**: Tam sayı
-- **decimal**: Ondalıklı sayı
-- **rating**: Değerlendirme
-- **percent**: Yüzde
-- **phone-number**: Telefon numarası
+- **integer**: Tam sayı (Kısayol: 0)
+- **decimal**: Ondalıklı sayı (Kısayol: 1)
+- **rating**: Değerlendirme (Kısayol: 2)
+- **percent**: Yüzde (Kısayol: 3)
+- **phone-number**: Telefon numarası (Kısayol: 4)
 
 ### 7.3 Seçim Bileşenleri
-- **checkbox**: Onay kutusu
-- **switch**: Anahtar
-- **select**: Tekli seçim
-- **multi-select**: Çoklu seçim
+- **checkbox**: Onay kutusu (Kısayol: 0)
+- **switch**: Anahtar (Kısayol: 1)
 
 ### 7.4 Tarih Bileşenleri
-- **date**: Tarih
-- **date-time**: Tarih ve saat
+- **date**: Tarih (Kısayol: 0)
+- **date-time**: Tarih ve saat (Kısayol: 1)
 
 ### 7.5 Medya Bileşenleri
-- **media**: Resim, video, dosya yükleme
+- **media**: Medya dosyası (Kısayol: 0)
 
 ### 7.6 İlişki Bileşenleri
-- **one-to-one**: Bire bir ilişki
-- **one-to-many**: Bire çok ilişki
+- **one-to-one**: Bire bir ilişki (Kısayol: 0)
+- **one-to-many**: Bire çok ilişki (Kısayol: 1)
 
 ## 8. Validasyonlar
 
