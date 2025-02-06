@@ -12,7 +12,7 @@
     "fieldType": "date",
     "system": true,
     "defaultField": false,
-    "modelId": "testimonail-items"
+    "modelId": "testimonial-items"
   },
   {
     "name": "updatedAt",
@@ -27,7 +27,7 @@
     "fieldType": "date",
     "system": true,
     "defaultField": false,
-    "modelId": "testimonail-items"
+    "modelId": "testimonial-items"
   },
   {
     "name": "ID",
@@ -42,7 +42,7 @@
     "fieldType": "string",
     "system": true,
     "defaultField": false,
-    "modelId": "testimonail-items"
+    "modelId": "testimonial-items"
   },
   {
     "name": "status",
@@ -57,12 +57,12 @@
     "fieldType": "string",
     "system": true,
     "defaultField": false,
-    "modelId": "testimonail-items"
+    "modelId": "testimonial-items"
   },
   {
     "name": "Name",
     "fieldId": "name",
-    "modelId": "testimonail-items",
+    "modelId": "testimonial-items",
     "componentId": "single-line-text",
     "options": {
       "title-field": {
@@ -79,7 +79,7 @@
   {
     "name": "Description",
     "fieldId": "description",
-    "modelId": "testimonail-items",
+    "modelId": "testimonial-items",
     "componentId": "single-line-text",
     "options": {},
     "validations": {
@@ -92,7 +92,7 @@
   {
     "name": "Title",
     "fieldId": "title",
-    "modelId": "testimonail-items",
+    "modelId": "testimonial-items",
     "componentId": "single-line-text",
     "options": {},
     "validations": {
@@ -105,7 +105,7 @@
   {
     "name": "Image",
     "fieldId": "image",
-    "modelId": "testimonail-items",
+    "modelId": "testimonial-items",
     "componentId": "media",
     "options": {},
     "validations": {
@@ -118,7 +118,7 @@
   {
     "name": "Creative work",
     "fieldId": "creative-work",
-    "modelId": "testimonail-items",
+    "modelId": "testimonial-items",
     "componentId": "one-to-one",
     "options": {
       "reference": {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IFaqItemsQuery, ISocialLinksQuery, ITabItemsQuery, ITestimonailItemsQuery, IWorkItemsQuery } from './types/contentrain';
+import type { IFaqItemsQuery, ISocialLinksQuery, ITabItemsQuery, ItestimonialItemsQuery, IWorkItemsQuery } from './types/contentrain';
 
 // Composable'ı kullan
 const { query } = useContentrain();
@@ -26,7 +26,7 @@ const { data: pagedWorkItems } = await useAsyncData('paged-work-items', () =>
 // 2.1 Bire-Bir İlişki
 
 const { data: testimonials } = await useAsyncData('testimonials', () =>
-  query<ITestimonailItemsQuery>('testimonail-items')
+  query<ItestimonialItemsQuery>('testimonial-items')
     .include('creative-work')
     .get());
 

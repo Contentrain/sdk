@@ -134,7 +134,7 @@ async function main() {
     // 2.1 Bire-Bir İlişki
     console.log('\n--- Bire-Bir İlişki ---');
     const testimonials = await sdk
-      .query<ITestimonialItemQuery>('testimonail-items')
+      .query<ITestimonialItemQuery>('testimonial-items')
       .include('creative-work')
       .get();
     console.log('Referanslar ve İlişkili İşler:', testimonials.data.map(t => ({

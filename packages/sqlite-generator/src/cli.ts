@@ -3,45 +3,64 @@
 import { join } from 'node:path';
 import { cwd, exit } from 'node:process';
 import { Command } from 'commander';
-import { ContentrainSQL } from './index';
+import { SQLiteGenerator } from './index';
 import { ContentrainError } from './types/errors';
 
 const program = new Command();
 
 program
-  .name('contentrain-sql')
-  .description('Contentrain SQL Generator CLI')
+  .name('contentrain-sqlite')
+  .description('Contentrain SQLite Generator CLI')
   .version('1.0.0');
 
 program
   .command('generate')
-  .description('Converts JSON content to SQLite database')
-  .option('-m, --models <dir>', 'Directory containing model definitions', 'contentrain/models')
-  .option('-c, --content <dir>', 'Directory containing content files', 'contentrain')
-  .option('-o, --output <dir>', 'Directory where database will be created', 'db')
-  .option('-n, --name <name>', 'Database file name', 'contentrain.db')
+  .description('JSON içeriğini SQLite veritabanına dönüştürür')
+  .option('-m, --models <dir>', 'Model tanımlarının bulunduğu dizin', 'contentrain/models')
+  .option('-c, --content <dir>', 'İçerik dosyalarının bulunduğu dizin', 'contentrain')
+  .option('-o, --output <dir>', 'Çıktı dizini', 'db')
+  .option('-d, --db-name <name>', 'Veritabanı dosya adı', 'contentrain.db')
+  .option('-t, --types-file <name>', 'Tip tanımları dosya adı', 'contentrain.d.ts')
+  .option('--cache-enabled', 'Önbelleği etkinleştir', true)
+  .option('--cache-ttl <seconds>', 'Önbellek süresi (saniye)', '300')
+  .option('--validate-input', 'Girdi doğrulamasını etkinleştir', true)
+  .option('--max-input-length <length>', 'Maksimum girdi uzunluğu', '1000')
+  .option('--enable-wal', 'WAL modunu etkinleştir', true)
+  .option('--cache-size <size>', 'Önbellek boyutu (KB)', '2000')
+  .option('--page-size <size>', 'Sayfa boyutu (byte)', '4096')
+  .option('--journal-size <size>', 'Günlük boyutu (byte)', '67108864')
   .action(async (options) => {
     try {
-      const generator = new ContentrainSQL({
+      const generator = new SQLiteGenerator({
         modelsDir: join(cwd(), options.models),
         contentDir: join(cwd(), options.content),
-        outputPath: join(cwd(), options.output),
-        dbName: options.name,
+        outputDir: join(cwd(), options.output),
+        dbName: options.dbName,
+        typesFile: options.typesFile,
+        cache: {
+          enabled: options.cacheEnabled,
+          ttl: Number.parseInt(options.cacheTtl, 10),
+        },
+        security: {
+          validateInput: options.validateInput,
+          maxInputLength: Number.parseInt(options.maxInputLength, 10),
+        },
+        optimization: {
+          enableWAL: options.enableWal,
+          cacheSize: Number.parseInt(options.cacheSize, 10),
+          pageSize: Number.parseInt(options.pageSize, 10),
+          journalSize: Number.parseInt(options.journalSize, 10),
+        },
       });
 
       await generator.generate();
-      console.info(`Database created: ${join(cwd(), options.output, options.name)}`);
+      console.info(`\nVeritabanı oluşturuldu: ${join(cwd(), options.output, options.dbName)}`);
+      console.info(`Tip tanımları oluşturuldu: ${join(cwd(), options.output, options.typesFile)}`);
     }
     catch (error) {
+      console.error('\nHata:', error instanceof Error ? error.message : String(error));
       if (error instanceof ContentrainError) {
-        console.error('Error:', error.message);
-        console.error('Details:', JSON.stringify(error.details, null, 2));
-        if (error.cause) {
-          console.error('Cause:', error.cause.message);
-        }
-      }
-      else {
-        console.error('Error:', error instanceof Error ? error.message : String(error));
+        console.error('Detaylar:', error.details);
       }
       exit(1);
     }

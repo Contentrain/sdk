@@ -50,7 +50,6 @@ export type TranslationMap = Record<string, TranslationItem[]>;
  */
 export interface ContentResult {
   items: ContentItem[]
-  translations?: TranslationMap
 }
 
 /**
@@ -58,6 +57,7 @@ export interface ContentResult {
  */
 export interface LocalizedContentResult extends ContentResult {
   translations: TranslationMap
+  idMap: Map<string, ContentItem>
 }
 
 /**

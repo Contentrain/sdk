@@ -116,7 +116,7 @@ onMounted(async () => {
 
   // 2. İlişki Sorguları
   // 2.1 Bire-Bir İlişki
-  const testimonials = await query<ITestimonialItem>('testimonail-items')
+  const testimonials = await query<ITestimonialItem>('testimonial-items')
     .include('creative-work')
     .get();
   testimonialItems.value = testimonials.data;

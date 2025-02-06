@@ -9,7 +9,7 @@ export class ValidationManager {
   /**
    * Model validasyonlarını gerçekleştirir
    */
-  validateModel(model: ModelConfig): void {
+  validateModel(model: ModelConfig, allModels?: ModelConfig[]): void {
     if (!model.id?.trim()) {
       throw new ValidationError({
         code: ErrorCode.EMPTY_MODEL_ID,
@@ -33,14 +33,14 @@ export class ValidationManager {
     }
 
     for (const field of model.fields) {
-      this.validateField(field, model);
+      this.validateField(field, model, allModels);
     }
   }
 
   /**
    * Alan validasyonlarını gerçekleştirir
    */
-  private validateField(field: ModelField, model: ModelConfig): void {
+  private validateField(field: ModelField, model: ModelConfig, allModels?: ModelConfig[]): void {
     if (!field.fieldId?.trim()) {
       throw new ValidationError({
         code: ErrorCode.EMPTY_FIELD_ID,
@@ -66,7 +66,7 @@ export class ValidationManager {
     }
 
     if (field.fieldType === 'relation') {
-      this.validateRelationField(field, { modelId: model.id, localization: model.localization }, [model]);
+      this.validateRelationField(field, { modelId: model.id, localization: model.localization }, allModels);
     }
   }
 
@@ -106,19 +106,6 @@ export class ValidationManager {
             sourceModel: meta.modelId,
             targetModel: targetModelId,
             fieldId: field.fieldId,
-          },
-        });
-      }
-
-      if (meta.localization !== undefined && meta.localization !== targetModel.localization) {
-        throw new ValidationError({
-          code: ErrorCode.LOCALIZATION_MISMATCH,
-          message: 'Localization mismatch between source and target models',
-          details: {
-            sourceModel: meta.modelId,
-            targetModel: targetModelId,
-            sourceLocalization: meta.localization,
-            targetLocalization: targetModel.localization,
           },
         });
       }

@@ -25,8 +25,8 @@ export class DefaultContentTransformer implements ContentTransformer {
         continue;
       }
 
-      const normalizedKey = this.fieldNormalizer.normalize(key);
-      normalized[normalizedKey] = this.normalizeValue(value);
+      // Alan adını olduğu gibi kullan
+      normalized[key] = this.normalizeValue(value);
     }
 
     return normalized as ContentItem;

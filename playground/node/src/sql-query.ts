@@ -2,8 +2,8 @@ import type { Database } from 'better-sqlite3';
 import type {
   Services,
   ServicesI18n,
-  TestimonailItems,
-  TestimonailItemsI18n,
+  testimonialItems,
+  testimonialItemsI18n,
   Workitems,
   WorkitemsI18n,
 } from '../types/database';
@@ -55,17 +55,17 @@ export async function queryTestimonials(db: Database, options: QueryOptions = {}
 
   // Ana tablo sorgusu
   const items = db.prepare(`
-    SELECT * FROM testimonail_items
+    SELECT * FROM testimonial_items
     WHERE status = ?
     ORDER BY ${orderBy} ${orderDirection}
     LIMIT ? OFFSET ?
-  `).all(status, limit, offset) as TestimonailItems[];
+  `).all(status, limit, offset) as testimonialItems[];
 
   // i18n sorgusu
   const i18nItems = db.prepare(`
-    SELECT * FROM testimonail_items_i18n
+    SELECT * FROM testimonial_items_i18n
     WHERE lang = ? AND ID IN (${items.map(() => '?').join(',')})
-  `).all(lang, ...items.map(item => item.ID)) as TestimonailItemsI18n[];
+  `).all(lang, ...items.map(item => item.ID)) as testimonialItemsI18n[];
 
   // Sonuçları birleştir
   return items.map(item => ({
@@ -362,16 +362,16 @@ export async function queryTestimonialsWithWork(db: Database, options: QueryOpti
   // Ana tablo ve ilişki sorgusu
   const items = db.prepare(`
     SELECT t.*, w.title as work_title
-    FROM testimonail_items t
+    FROM testimonial_items t
     LEFT JOIN workitems w ON t.creative_work = w.ID
     WHERE t.status = ?
-  `).all(status) as (TestimonailItems & { work_title: string })[];
+  `).all(status) as (testimonialItems & { work_title: string })[];
 
   // i18n sorgusu
   const i18nItems = db.prepare(`
-    SELECT * FROM testimonail_items_i18n
+    SELECT * FROM testimonial_items_i18n
     WHERE lang = ? AND ID IN (${items.map(() => '?').join(',')})
-  `).all(lang, ...items.map(item => item.ID)) as TestimonailItemsI18n[];
+  `).all(lang, ...items.map(item => item.ID)) as testimonialItemsI18n[];
 
   return items.map(item => ({
     ...item,

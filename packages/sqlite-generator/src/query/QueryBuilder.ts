@@ -1,17 +1,21 @@
 import type { ContentItem } from '../types/content';
 import type { Database } from '../types/database';
-import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
+import type {
+  IncludeClause,
+  QueryBuilder as IQueryBuilder,
+  OperatorForType,
+  PaginationOptions,
+  QueryConfig,
+  QueryOptions,
+  QueryResult,
+  RelationOptions,
+} from '../types/query';
 import { FieldNormalizer } from '../normalizer/FieldNormalizer';
 import { ErrorCode, ValidationError } from '../types/errors';
 
-export class QueryBuilder {
+export class QueryBuilder<T extends ContentItem> implements IQueryBuilder<T> {
+  private config: QueryConfig<T> = {};
   private fieldNormalizer: FieldNormalizer;
-  private filters: Filter[] = [];
-  private sorts: Sort[] = [];
-  private includes: Include = {};
-  private selectedFields: string[] = [];
-  private pagination?: Pagination;
-  private options: QueryOptions = {};
 
   constructor(
     private db: Database,
@@ -23,55 +27,132 @@ export class QueryBuilder {
   /**
    * Filtre ekler
    */
-  public where(filter: Filter): this {
-    this.filters.push(filter);
+  public where<K extends keyof T>(
+    field: K,
+    operator: OperatorForType<T[K]>,
+    value: T[K] | T[K][],
+  ): this {
+    if (!this.config.where) {
+      this.config.where = [];
+    }
+
+    this.config.where.push({
+      field,
+      operator,
+      value,
+    });
+
+    return this;
+  }
+
+  /**
+   * İlişki ekler
+   */
+  public include<K extends keyof T>(
+    relations: K | K[],
+    options?: RelationOptions<T[K]>,
+  ): this {
+    if (!this.config.include) {
+      this.config.include = {};
+    }
+
+    const relationArray = Array.isArray(relations) ? relations : [relations];
+    for (const relation of relationArray) {
+      if (options) {
+        this.config.include[relation] = options;
+      }
+    }
+
     return this;
   }
 
   /**
    * Sıralama ekler
    */
-  public orderBy(sort: Sort): this {
-    this.sorts.push(sort);
+  public orderBy(field: keyof T, direction: 'asc' | 'desc' = 'asc'): this {
+    if (!this.config.orderBy) {
+      this.config.orderBy = [];
+    }
+
+    this.config.orderBy.push({
+      field,
+      direction,
+    });
+
     return this;
   }
 
   /**
-   * İlişkileri ekler
+   * Limit ekler
    */
-  public include(includes: Include): this {
-    this.includes = includes;
+  public limit(count: number): this {
+    if (!this.config.pagination) {
+      this.config.pagination = {};
+    }
+    this.config.pagination.limit = count;
     return this;
   }
 
   /**
-   * Seçilecek alanları belirler
+   * Offset ekler
    */
-  public select(fields: string[]): this {
-    this.selectedFields = fields;
+  public offset(count: number): this {
+    if (!this.config.pagination) {
+      this.config.pagination = {};
+    }
+    this.config.pagination.offset = count;
     return this;
   }
 
   /**
-   * Sayfalama ekler
+   * Dil seçer
    */
-  public paginate(pagination: Pagination): this {
-    this.pagination = pagination;
+  public locale(code: string): this {
+    if (!this.config.options) {
+      this.config.options = {};
+    }
+    this.config.options.locale = code;
     return this;
   }
 
   /**
-   * Sorgu seçeneklerini ayarlar
+   * Önbellek süresini ayarlar
    */
-  public setOptions(options: QueryOptions): this {
-    this.options = options;
+  public cache(ttl?: number): this {
+    if (!this.config.options) {
+      this.config.options = {};
+    }
+    this.config.options.cache = true;
+    this.config.options.ttl = ttl;
+    return this;
+  }
+
+  /**
+   * Önbelleği devre dışı bırakır
+   */
+  public noCache(): this {
+    if (!this.config.options) {
+      this.config.options = {};
+    }
+    this.config.options.cache = false;
+    return this;
+  }
+
+  /**
+   * Önbelleği atlar
+   */
+  public bypassCache(): this {
+    if (!this.config.options) {
+      this.config.options = {};
+    }
+    this.config.options.bypassCache = true;
     return this;
   }
 
   /**
    * Sorguyu çalıştırır
    */
-  public async execute<T extends ContentItem = ContentItem>(): Promise<QueryResult<T>> {
+  public async get(): Promise<QueryResult<T>> {
     try {
       const query = this.buildQuery();
       const countQuery = this.buildCountQuery();
@@ -84,15 +165,15 @@ export class QueryBuilder {
       const total = totalResult?.total ?? 0;
       const result: QueryResult<T> = { data, total };
 
-      if (this.pagination) {
+      if (this.config.pagination) {
         result.pagination = {
-          limit: this.pagination.limit ?? 0,
-          offset: this.pagination.offset ?? 0,
-          hasMore: (this.pagination.offset ?? 0) + (this.pagination.limit ?? 0) < total,
+          limit: this.config.pagination.limit ?? 0,
+          offset: this.config.pagination.offset ?? 0,
+          hasMore: (this.config.pagination.offset ?? 0) + (this.config.pagination.limit ?? 0) < total,
         };
       }
 
-      if (Object.keys(this.includes).length > 0) {
+      if (this.config.include) {
         await this.loadRelations(result.data);
       }
 
@@ -109,6 +190,24 @@ export class QueryBuilder {
   }
 
   /**
+   * Tek kayıt getirir
+   */
+  public async first(): Promise<T | null> {
+    this.limit(1);
+    const result = await this.get();
+    return result.data[0] ?? null;
+  }
+
+  /**
+   * Kayıt sayısını getirir
+   */
+  public async count(): Promise<number> {
+    const query = this.buildCountQuery();
+    const result = await this.db.get<{ total: number }>(query.sql, query.params);
+    return result?.total ?? 0;
+  }
+
+  /**
    * SQL sorgusunu oluşturur
    */
   private buildQuery(): { sql: string, params: Record<string, unknown> } {
@@ -117,13 +216,13 @@ export class QueryBuilder {
     const parts: string[] = [];
 
     // SELECT
-    const fields = this.selectedFields.length > 0
-      ? this.selectedFields.map(f => this.fieldNormalizer.normalize(f))
+    const fields = this.config.select?.length
+      ? this.config.select.map(f => this.fieldNormalizer.normalize(f as string))
       : ['*'];
     parts.push(`SELECT ${fields.join(', ')} FROM ${tableName}`);
 
     // WHERE
-    if (this.filters.length > 0) {
+    if (this.config.where?.length) {
       const conditions = this.buildWhereConditions(params);
       if (conditions) {
         parts.push(`WHERE ${conditions}`);
@@ -131,22 +230,22 @@ export class QueryBuilder {
     }
 
     // ORDER BY
-    if (this.sorts.length > 0) {
-      const orderBy = this.sorts
-        .map(s => `${this.fieldNormalizer.normalize(s.field)} ${s.direction.toUpperCase()}`)
+    if (this.config.orderBy?.length) {
+      const orderBy = this.config.orderBy
+        .map(({ field, direction }) => `${this.fieldNormalizer.normalize(field as string)} ${direction.toUpperCase()}`)
         .join(', ');
       parts.push(`ORDER BY ${orderBy}`);
     }
 
     // LIMIT & OFFSET
-    if (this.pagination) {
-      if (this.pagination.limit) {
+    if (this.config.pagination) {
+      if (this.config.pagination.limit) {
         parts.push('LIMIT @limit');
-        params.limit = this.pagination.limit;
+        params.limit = this.config.pagination.limit;
       }
-      if (this.pagination.offset) {
+      if (this.config.pagination.offset) {
         parts.push('OFFSET @offset');
-        params.offset = this.pagination.offset;
+        params.offset = this.config.pagination.offset;
       }
     }
 
@@ -166,7 +265,7 @@ export class QueryBuilder {
 
     parts.push(`SELECT COUNT(*) as total FROM ${tableName}`);
 
-    if (this.filters.length > 0) {
+    if (this.config.where?.length) {
       const conditions = this.buildWhereConditions(params);
       if (conditions) {
         parts.push(`WHERE ${conditions}`);
@@ -183,43 +282,43 @@ export class QueryBuilder {
    * WHERE koşullarını oluşturur
    */
   private buildWhereConditions(params: Record<string, unknown>): string {
-    return this.filters
-      .map((filter, index) => {
-        const field = this.fieldNormalizer.normalize(filter.field);
+    return this.config.where!
+      .map(({ field, operator, value }, index) => {
+        const fieldName = this.fieldNormalizer.normalize(field as string);
         const paramName = `p${index}`;
-        params[paramName] = filter.value;
+        params[paramName] = value;
 
-        switch (filter.operator) {
+        switch (operator) {
           case 'eq':
-            return `${field} = @${paramName}`;
+            return `${fieldName} = @${paramName}`;
           case 'ne':
-            return `${field} != @${paramName}`;
+            return `${fieldName} != @${paramName}`;
           case 'gt':
-            return `${field} > @${paramName}`;
+            return `${fieldName} > @${paramName}`;
           case 'gte':
-            return `${field} >= @${paramName}`;
+            return `${fieldName} >= @${paramName}`;
           case 'lt':
-            return `${field} < @${paramName}`;
+            return `${fieldName} < @${paramName}`;
           case 'lte':
-            return `${field} <= @${paramName}`;
+            return `${fieldName} <= @${paramName}`;
           case 'contains':
-            params[paramName] = `%${filter.value}%`;
-            return `${field} LIKE @${paramName}`;
+            params[paramName] = `%${String(value)}%`;
+            return `${fieldName} LIKE @${paramName}`;
           case 'startsWith':
-            params[paramName] = `${filter.value}%`;
-            return `${field} LIKE @${paramName}`;
+            params[paramName] = `${String(value)}%`;
+            return `${fieldName} LIKE @${paramName}`;
           case 'endsWith':
-            params[paramName] = `%${filter.value}`;
-            return `${field} LIKE @${paramName}`;
+            params[paramName] = `%${String(value)}`;
+            return `${fieldName} LIKE @${paramName}`;
           case 'in':
-            return `${field} IN (${(filter.value as unknown[]).map((_, i) => `@${paramName}_${i}`).join(', ')})`;
+            return `${fieldName} IN (${(value as unknown[]).map((_, i) => `@${paramName}_${i}`).join(', ')})`;
           case 'nin':
-            return `${field} NOT IN (${(filter.value as unknown[]).map((_, i) => `@${paramName}_${i}`).join(', ')})`;
+            return `${fieldName} NOT IN (${(value as unknown[]).map((_, i) => `@${paramName}_${i}`).join(', ')})`;
           default:
             throw new ValidationError({
               code: ErrorCode.INVALID_OPERATOR,
               message: 'Invalid operator',
-              details: { operator: filter.operator },
+              details: { operator },
             });
         }
       })
@@ -229,30 +328,42 @@ export class QueryBuilder {
   /**
    * İlişkili verileri yükler
    */
-  private async loadRelations<T extends ContentItem>(items: T[]): Promise<void> {
-    for (const [relation, config] of Object.entries(this.includes)) {
-      const ids = items.map((item) => {
+  private async loadRelations(items: T[]): Promise<void> {
+    for (const [relation, config] of Object.entries(this.config.include!)) {
+      // İlişki ID'lerini topla
+      const relationIds = new Set<string>();
+      for (const item of items) {
         const relationId = item[`${relation}_id` as keyof T];
-        return typeof relationId === 'string' ? relationId : null;
-      }).filter(Boolean);
+        if (typeof relationId === 'string') {
+          relationIds.add(relationId);
+        }
+      }
 
-      if (ids.length === 0)
+      if (relationIds.size === 0) {
         continue;
+      }
 
-      const fields = config.fields ?? ['*'];
-      const builder = new QueryBuilder(this.db, relation)
-        .select(fields)
-        .where({ field: 'id', operator: 'in', value: ids });
+      // İlişkili verileri getir
+      const fields = config?.select ?? ['*'];
+      const builder = new QueryBuilder<ContentItem>(this.db, relation);
 
-      if (config.include) {
+      // ID'lere göre filtrele
+      const ids = Array.from(relationIds);
+      builder.where('id', 'in' as OperatorForType<string[]>, ids);
+
+      if (fields.length > 0) {
+        builder.select(fields as Array<keyof ContentItem>);
+      }
+
+      if (config?.include) {
         builder.include(config.include);
       }
 
-      if (this.options.locale) {
-        builder.setOptions({ locale: this.options.locale });
+      if (this.config.options?.locale) {
+        builder.locale(this.config.options.locale);
       }
 
-      const relations = await builder.execute();
+      const relations = await builder.get();
 
       // İlişkili verileri ana veriye bağla
       for (const item of items) {
@@ -262,5 +373,13 @@ export class QueryBuilder {
         }
       }
     }
+  }
+
+  /**
+   * Seçilecek alanları belirler
+   */
+  public select(fields: Array<keyof T>): this {
+    this.config.select = fields;
+    return this;
   }
 }

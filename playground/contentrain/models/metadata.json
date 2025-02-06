@@ -80,8 +80,8 @@
     "isServerless": false
   },
   {
-    "name": "Testimonail Items",
-    "modelId": "testimonail-items",
+    "name": "Testimonial Items",
+    "modelId": "testimonial-items",
     "localization": true,
     "type": "JSON",
     "createdBy": "user",

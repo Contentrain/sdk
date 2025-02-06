@@ -1,4 +1,15 @@
 export class FieldNormalizer {
+  private readonly TABLE_PREFIX = 'tbl_';
+  private readonly FIELD_PREFIX = 'field_';
+
+  // Regex patterns
+  private readonly CAMEL_CASE_REGEX = /([a-z])([A-Z])/g;
+  private readonly PASCAL_CASE_REGEX = /([A-Z])([A-Z][a-z])/g;
+  private readonly KEBAB_CASE_REGEX = /-/g;
+
+  // Index types
+  private readonly VALID_INDEX_TYPES = ['idx', 'udx'] as const;
+
   // Sistem alanları için özel dönüşüm kuralları
   private readonly SYSTEM_FIELDS = new Map([
     ['ID', 'id'],
@@ -141,24 +152,39 @@ export class FieldNormalizer {
    * Example: myFieldName -> my_field_name
    */
   public normalize(fieldName: string): string {
-    // Sistem alanı kontrolü
+    console.log(`Alan adı normalize ediliyor: ${fieldName}`);
+
+    // 1. Sistem alanı kontrolü
     if (this.SYSTEM_FIELDS.has(fieldName)) {
-      return this.SYSTEM_FIELDS.get(fieldName)!;
+      const normalizedName = this.SYSTEM_FIELDS.get(fieldName)!;
+      console.log('Sistem alanı dönüşümü:', { original: fieldName, normalized: normalizedName });
+      return normalizedName;
     }
 
-    const normalized = fieldName
-      // camelCase -> snake_case
-      .replace(/([a-z])([A-Z])/g, '$1_$2')
-      // PascalCase -> snake_case
-      .replace(/([A-Z])([A-Z][a-z])/g, '$1_$2')
-      // kebab-case -> snake_case
-      .replace(/-/g, '_')
+    // 2. Alan adını snake_case'e dönüştür
+    const snakeCase = fieldName
+      .replace(this.CAMEL_CASE_REGEX, '$1_$2')
+      .replace(this.PASCAL_CASE_REGEX, '$1_$2')
+      .replace(this.KEBAB_CASE_REGEX, '_')
       .toLowerCase();
 
-    // Rezerve edilmiş kelime kontrolü
-    return this.RESERVED_KEYWORDS.has(normalized)
-      ? `field_${normalized}`
-      : normalized;
+    console.log('Snake case dönüşümü:', { original: fieldName, snakeCase });
+
+    // 3. Rezerve kelime kontrolü
+    if (this.RESERVED_KEYWORDS.has(snakeCase)) {
+      const prefixedName = `field_${snakeCase}`;
+      console.log('Rezerve kelime dönüşümü:', { original: snakeCase, normalized: prefixedName });
+      return prefixedName;
+    }
+
+    // 4. Özel karakter kontrolü
+    const sanitized = snakeCase.replace(/[^a-z0-9_]/g, '_');
+    if (sanitized !== snakeCase) {
+      console.log('Özel karakter dönüşümü:', { original: snakeCase, sanitized });
+    }
+
+    console.log('Final dönüşüm:', { original: fieldName, normalized: sanitized });
+    return sanitized;
   }
 
   /**
@@ -174,7 +200,7 @@ export class FieldNormalizer {
     }
 
     // Rezerve edilmiş kelime kontrolü
-    const denormalized = fieldName.replace(/^field_/, '');
+    const denormalized = fieldName.replace(new RegExp(`^${this.FIELD_PREFIX}`), '');
 
     return denormalized
       // snake_case -> camelCase
@@ -186,7 +212,7 @@ export class FieldNormalizer {
    * Example: MyModel -> tbl_my_model
    */
   public normalizeTableName(modelId: string): string {
-    return `tbl_${this.normalize(modelId)}`;
+    return `${this.TABLE_PREFIX}${this.normalize(modelId)}`;
   }
 
   /**
@@ -195,7 +221,7 @@ export class FieldNormalizer {
    */
   public denormalizeTableName(tableName: string): string {
     return tableName
-      .replace(/^tbl_/, '')
+      .replace(new RegExp(`^${this.TABLE_PREFIX}`), '')
       .split('_')
       .map(part => part.charAt(0).toUpperCase() + part.slice(1))
       .join('');
@@ -207,7 +233,7 @@ export class FieldNormalizer {
    * @param childModel Child model ID
    * @returns Normalized relation table name
    */
-  normalizeRelationTableName(parentModel: string, childModel: string): string {
+  public normalizeRelationTableName(parentModel: string, childModel: string): string {
     return `${this.normalizeTableName(parentModel)}_${this.normalize(childModel)}`;
   }
 
@@ -218,7 +244,11 @@ export class FieldNormalizer {
    * @param type Index type (idx or udx)
    * @returns Normalized index name
    */
-  normalizeIndexName(tableName: string, columns: string[], type: 'idx' | 'udx' = 'idx'): string {
+  public normalizeIndexName(tableName: string, columns: string[], type: (typeof this.VALID_INDEX_TYPES)[number] = 'idx'): string {
+    if (!this.VALID_INDEX_TYPES.includes(type)) {
+      throw new Error(`Geçersiz indeks tipi: ${type}`);
+    }
+
     const cols = columns.map(col => this.normalize(col)).join('_');
     return `${type}_${tableName}_${cols}`;
   }

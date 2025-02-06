@@ -66,7 +66,7 @@ export interface ITabItems extends BaseContentrainType {
   }
 }
 
-export interface ITestimonailItems extends BaseContentrainType {
+export interface ItestimonialItems extends BaseContentrainType {
   'name': string
   'description': string
   'title': string
@@ -151,8 +151,8 @@ export type ITabItemsQuery = QueryConfig<
   }
 >;
 
-export type ITestimonailItemsQuery = QueryConfig<
-  ITestimonailItems,
+export type ItestimonialItemsQuery = QueryConfig<
+  ItestimonialItems,
   'en' | 'tr',
   {
     'creative-work': IWorkItems

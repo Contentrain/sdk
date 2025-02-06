@@ -126,7 +126,7 @@ describe('contentrain API Endpoints', async () => {
       const response = await $fetch<QueryResult<ITestimonialItem>>(url('/api/_contentrain/query'), {
         method: 'POST',
         body: {
-          model: 'testimonail-items',
+          model: 'testimonial-items',
           include: ['creative-work'],
         },
       });

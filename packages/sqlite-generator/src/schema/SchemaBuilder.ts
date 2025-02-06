@@ -25,12 +25,12 @@ export class SchemaBuilder {
       try {
         // 1. Ana tabloları oluştur ve indekslerini ekle
         for (const model of models) {
-          this.createModelTable(model);
+          await this.createModelTable(model);
           await this.createModelIndexes(model);
         }
 
         // 2. İlişki tablosunu oluştur ve indekslerini ekle
-        this.createRelationTable();
+        await this.createRelationTable();
         await this.createRelationIndexes();
 
         // 3. Çeviri tablolarını oluştur ve indekslerini ekle
@@ -38,7 +38,7 @@ export class SchemaBuilder {
           if (model.localization) {
             const localizedFields = model.fields.filter(field => field.localized);
             if (localizedFields.length > 0) {
-              this.createTranslationTable(model, localizedFields);
+              await this.createTranslationTable(model, localizedFields);
               await this.createTranslationIndexes(model, localizedFields);
             }
           }
@@ -52,20 +52,6 @@ export class SchemaBuilder {
         });
       }
     });
-  }
-
-  private async tableExists(tableName: string): Promise<boolean> {
-    try {
-      const result = await this.db.get<{ count: number }>(
-        'SELECT COUNT(*) as count FROM sqlite_master WHERE type = :type AND name = :name',
-        { type: 'table', name: tableName },
-      );
-      return (result?.count ?? 0) > 0;
-    }
-    catch (error) {
-      console.error(`Error checking table existence: ${tableName}`, error);
-      return false;
-    }
   }
 
   private async createModelIndexes(model: ModelConfig): Promise<void> {
@@ -130,7 +116,7 @@ export class SchemaBuilder {
       .filter(field =>
         field.validations?.['unique-field']?.value
         && field.fieldType !== 'relation'
-        && this.isLocalizableFieldType(field.fieldType, field.componentId),
+        && this.isLocalizableFieldType(field),
       );
 
     uniqueFields.forEach((field) => {
@@ -147,25 +133,19 @@ export class SchemaBuilder {
     }
   }
 
-  private isLocalizableFieldType(fieldType: ContentrainBaseType, componentId: ContentrainComponentType): boolean {
-    // Lokalize edilebilecek alan tipleri
-    const localizableTypes = new Set<ContentrainBaseType>([
-      'string',
-      'array',
-      'media',
-    ]);
+  private isLocalizableFieldType(field: ModelField): boolean {
+    // Sistem alanları lokalize edilemez
+    if (field.system) {
+      return false;
+    }
 
-    // Lokalize edilebilecek komponentler
-    const localizableComponents = new Set<ContentrainComponentType>([
-      'single-line-text',
-      'multi-line-text',
-      'rich-text-editor',
-      'markdown-editor',
-      'select',
-      'media',
-    ]);
+    // İlişki alanları lokalize edilemez
+    if (field.fieldType === 'relation') {
+      return false;
+    }
 
-    return localizableTypes.has(fieldType) && localizableComponents.has(componentId);
+    // Diğer tüm alanlar lokalize edilebilir
+    return true;
   }
 
   private async createRelationIndexes(): Promise<void> {
@@ -188,38 +168,117 @@ export class SchemaBuilder {
     await this.databaseOptimizer.createIndexes(indexes);
   }
 
-  private createModelTable(model: ModelConfig): void {
+  private async createModelTable(model: ModelConfig): Promise<void> {
     try {
+      console.log('\n=== Tablo Oluşturma Başlıyor ===');
+      console.log(`Model: ${model.id}`);
+      console.log('Model detayları:', {
+        name: model.name,
+        localization: model.localization,
+        fieldCount: model.fields.length,
+        fields: model.fields.map(f => ({
+          id: f.fieldId,
+          type: f.fieldType,
+          localized: f.localized,
+          system: f.system,
+          componentId: f.componentId,
+        })),
+      });
+
       const tableName = this.fieldNormalizer.normalizeTableName(model.id);
+      console.log('\nTablo adı:', tableName);
+
+      // Tablo adını doğrula
       this.validateTableName(tableName);
 
-      // Sistem alanlarını hazırla
-      const systemFields = this.generateSystemFieldDefinitions();
-
-      // Model alanlarını hazırla
-      const modelFields = this.generateFieldDefinitions(
-        model.fields.filter((field) => {
-          // Sistem alanlarını ve çeviri alanlarını filtrele
-          if (field.system)
-            return false;
-          // Lokalizasyon aktif ve alan lokalize edilebilir ise ana tabloya ekleme
-          if (model.localization && field.localized && this.isLocalizableFieldType(field.fieldType, field.componentId)) {
-            return false;
-          }
-          return true;
-        }),
+      // Tablo var mı kontrol et
+      const tableExists = await this.db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM sqlite_master WHERE type = @type AND name = @name',
+        { type: 'table', name: tableName },
       );
+      const exists = (tableExists?.count ?? 0) > 0;
+      console.log('\nTablo mevcut mu:', { exists });
 
-      // SQL oluştur ve çalıştır
+      if (exists) {
+        // PRAGMA sorgusunu düzelt - named parameter kullanma
+        const currentColumns = await this.db.all(
+          `PRAGMA table_info(${tableName})`,
+        );
+        console.log('\nMevcut tablo yapısı:', currentColumns);
+      }
+
+      // 1. Sistem alanlarını hazırla
+      const systemFields = this.generateSystemFieldDefinitions();
+      console.log('\nSistem alanları:', systemFields);
+
+      // 2. Model alanlarını filtrele ve normalize et
+      console.log('\nModel alanları filtreleniyor...');
+      const modelFields = model.fields.filter((field) => {
+        console.log(`Alan kontrol ediliyor: ${field.fieldId}`, {
+          system: field.system,
+          fieldType: field.fieldType,
+          localized: field.localized,
+          componentId: field.componentId,
+        });
+
+        // Sistem alanlarını atla (zaten eklenmiş olacak)
+        if (field.system) {
+          console.log(`Sistem alanı atlanıyor: ${field.fieldId}`);
+          return false;
+        }
+
+        // İlişki alanları her zaman ana tabloda
+        if (field.fieldType === 'relation') {
+          console.log(`İlişki alanı ana tabloya eklenecek: ${field.fieldId}`);
+          return true;
+        }
+
+        // Lokalize edilmemiş alanlar ana tabloda
+        if (!field.localized) {
+          console.log(`Lokalize edilmemiş alan ana tabloya eklenecek: ${field.fieldId}`);
+          return true;
+        }
+
+        console.log(`Alan çeviri tablosuna gidecek: ${field.fieldId}`);
+        return false;
+      });
+
+      // 3. Model alanlarını SQL tanımlarına dönüştür
+      console.log('\nFiltrelenen alanlar:', modelFields.map(f => f.fieldId));
+      const modelDefinitions = this.generateFieldDefinitions(modelFields);
+      console.log('\nModel alanları SQL tanımları:', modelDefinitions);
+
+      // 4. SQL oluştur ve çalıştır
       const sql = `
         CREATE TABLE IF NOT EXISTS ${tableName} (
-          ${[...systemFields, ...modelFields].join(',\n          ')}
+          ${[...systemFields, ...modelDefinitions].join(',\n          ')}
         )
       `;
 
+      console.log('\nOluşturulan CREATE TABLE SQL:', sql);
       this.db.exec(sql);
+
+      // Tablo yapısını kontrol et
+      const tableInfo = await this.db.all(
+        `PRAGMA table_info(${tableName})`,
+      );
+      console.log('\nOluşturulan tablo yapısı:', JSON.stringify(tableInfo, null, 2));
+
+      console.log(`\n${tableName} tablosu başarıyla oluşturuldu.`);
+
+      // 5. Eğer model lokalize edilebilirse, çeviri tablosunu oluştur
+      if (model.localization) {
+        const localizedFields = model.fields.filter(field => field.localized);
+        if (localizedFields.length > 0) {
+          await this.createTranslationTable(model, localizedFields);
+        }
+      }
+
+      console.log('=== Tablo Oluşturma Tamamlandı ===\n');
     }
     catch (error) {
+      console.error(`\n!!! ${model.id} modeli için tablo oluşturulurken hata oluştu !!!`);
+      console.error('Hata:', error);
       throw new SchemaError({
         code: ErrorCode.TABLE_CREATION_FAILED,
         message: `Failed to create table for model ${model.id}`,
@@ -229,40 +288,135 @@ export class SchemaBuilder {
     }
   }
 
-  private createTranslationTable(model: ModelConfig, localizedFields: ModelField[]): void {
+  private async createTranslationTable(model: ModelConfig, localizedFields: ModelField[]): Promise<void> {
     try {
+      console.log('\n=== Çeviri Tablosu Oluşturuluyor ===');
+      console.log('Model:', model.id);
+      console.log('Lokalize edilmiş alanlar:', localizedFields.map(f => ({
+        fieldId: f.fieldId,
+        type: f.fieldType,
+        localized: f.localized,
+        system: f.system,
+        componentId: f.componentId,
+      })));
+
       const tableName = `${this.fieldNormalizer.normalizeTableName(model.id)}_translations`;
+      console.log('\nTablo adı:', tableName);
       this.validateTableName(tableName);
 
       // Sadece lokalize edilebilir alanları filtrele
-      const translatableFields = this.generateFieldDefinitions(
-        localizedFields.filter((field) => {
-          // İlişki alanlarını hariç tut
-          if (field.fieldType === 'relation')
-            return false;
-          // Sadece lokalize edilebilir alanları al
-          return this.isLocalizableFieldType(field.fieldType, field.componentId);
-        }),
-      );
+      const translatableFields = localizedFields.filter((field) => {
+        const isTranslatable = field.fieldType !== 'relation' && !field.system;
+        console.log(`Alan kontrol ediliyor: ${field.fieldId}`, {
+          fieldType: field.fieldType,
+          system: field.system,
+          isTranslatable,
+        });
+        return isTranslatable;
+      });
 
       if (translatableFields.length === 0) {
+        console.log('Çevrilebilir alan bulunamadı, tablo oluşturulmayacak.');
         return;
       }
 
-      // SQL oluştur ve çalıştır
-      const sql = `
-        CREATE TABLE IF NOT EXISTS ${tableName} (
-          id TEXT NOT NULL,
-          locale TEXT NOT NULL,
-          ${translatableFields.join(',\n          ')},
-          FOREIGN KEY (id) REFERENCES ${this.fieldNormalizer.normalizeTableName(model.id)}(id) ON DELETE CASCADE,
-          PRIMARY KEY (id, locale)
-        )
-      `;
+      // Alan tanımlarını oluştur
+      console.log('\nÇeviri tablosu için alan tanımları oluşturuluyor...');
+      console.log('Çevrilebilir alanlar:', translatableFields.map(f => f.fieldId));
 
-      this.db.exec(sql);
+      // Önce alanları normalize et
+      const normalizedFields = translatableFields.map(field => ({
+        ...field,
+        normalizedName: this.fieldNormalizer.normalize(field.fieldId),
+        // Çeviri tablosunda unique constraint'i kaldır
+        validations: {
+          ...field.validations,
+          'unique-field': { value: false },
+        },
+      }));
+
+      // Alan tanımlarını oluştur
+      const fieldDefinitions = this.generateFieldDefinitions(normalizedFields);
+      console.log('Oluşturulan alan tanımları:', fieldDefinitions);
+
+      // Tablo var mı kontrol et
+      const tableExistsResult = await this.db.get<{ count: number }>(
+        'SELECT COUNT(*) as count FROM sqlite_master WHERE type = @type AND name = @name',
+        { type: 'table', name: tableName },
+      );
+      const tableExists = (tableExistsResult?.count ?? 0) > 0;
+
+      // Eğer tablo varsa mevcut yapıyı kontrol et
+      if (tableExists) {
+        const currentColumns = await this.db.all<{ name: string }>(
+          `PRAGMA table_info(${tableName})`,
+        );
+        console.log('\nMevcut tablo yapısı:', currentColumns);
+
+        // Eksik kolonları bul
+        const existingColumns = new Set(currentColumns.map(col => col.name));
+        const missingColumns = normalizedFields
+          .filter(field => !existingColumns.has(field.normalizedName))
+          .map(field => field.normalizedName);
+
+        if (missingColumns.length > 0) {
+          console.log('Eksik kolonlar:', missingColumns);
+          // Eksik kolonları ekle
+          for (const columnName of missingColumns) {
+            const field = normalizedFields.find(f => f.normalizedName === columnName);
+            if (field) {
+              const sqlType = this.getSQLType(field.componentId);
+              if (sqlType) {
+                const alterSql = `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${sqlType}`;
+                console.log('Kolon ekleniyor:', alterSql);
+                this.db.exec(alterSql);
+              }
+            }
+          }
+        }
+      }
+      else {
+        // Tablo yoksa oluştur
+        const sql = `
+          CREATE TABLE IF NOT EXISTS ${tableName} (
+            id TEXT NOT NULL,
+            locale TEXT NOT NULL,
+            ${fieldDefinitions.join(',\n            ')},
+            FOREIGN KEY (id) REFERENCES ${this.fieldNormalizer.normalizeTableName(model.id)}(id) ON DELETE CASCADE,
+            PRIMARY KEY (id, locale)
+          )
+        `;
+
+        console.log('\nOluşturulan SQL:', sql);
+        this.db.exec(sql);
+      }
+
+      // Tablo yapısını kontrol et
+      const finalColumns = await this.db.all<{ name: string }>(
+        `PRAGMA table_info(${tableName})`,
+      );
+      console.log('\nFinal tablo yapısı:', finalColumns);
+
+      // Beklenen kolonları kontrol et
+      const expectedColumns = ['id', 'locale', ...normalizedFields.map(f => f.normalizedName)];
+      console.log('Beklenen kolonlar:', expectedColumns);
+
+      // Son kontrol
+      const finalColumnSet = new Set(finalColumns.map(col => col.name));
+      const missingInFinal = expectedColumns.filter(col => !finalColumnSet.has(col));
+      if (missingInFinal.length > 0) {
+        throw new SchemaError({
+          code: ErrorCode.TABLE_CREATION_FAILED,
+          message: `Missing columns in translation table: ${missingInFinal.join(', ')}`,
+          details: { modelId: model.id, tableName, missingColumns: missingInFinal },
+        });
+      }
+
+      console.log(`\n${tableName} çeviri tablosu başarıyla oluşturuldu.`);
     }
     catch (error) {
+      console.error('\n!!! Çeviri tablosu oluşturulurken hata oluştu !!!');
+      console.error('Hata:', error);
       throw new SchemaError({
         code: ErrorCode.TABLE_CREATION_FAILED,
         message: `Failed to create translation table for model ${model.id}`,
@@ -272,7 +426,7 @@ export class SchemaBuilder {
     }
   }
 
-  private createRelationTable(): void {
+  private async createRelationTable(): Promise<void> {
     try {
       const relationTableName = this.fieldNormalizer.normalizeRelationTableName('contentrain', 'relations');
       this.validateTableName(relationTableName);
@@ -303,49 +457,75 @@ export class SchemaBuilder {
   }
 
   private generateFieldDefinitions(fields: ModelField[]): string[] {
-    return fields
-      .filter(field => !field.system)
-      .map(field => this.generateFieldDefinition(field))
-      .filter((def): def is string => def !== null);
-  }
+    console.log('\n=== Alan Tanımları Oluşturuluyor ===');
+    console.log('Toplam alan sayısı:', fields.length);
+    console.log('Alanlar:', fields.map(f => ({
+      id: f.fieldId,
+      type: f.fieldType,
+      localized: f.localized,
+      system: f.system,
+      componentId: f.componentId,
+    })));
 
-  private generateFieldDefinition(field: ModelField): string | null {
-    try {
-      // İlişki alanları için
-      if (field.options?.reference?.value) {
-        const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
-        const columnName = `${normalizedName}_id`;
-        this.validateColumnName(columnName);
-        return `${columnName} TEXT`;
-      }
+    const definitions = new Map<string, string>();
 
-      // Normal alanlar için
-      const sqlType = this.getSQLType(field.componentId);
-      if (!sqlType) {
-        console.log(`No SQL type mapping for component type: ${field.componentId}`);
-        return null;
-      }
+    // Her alan için SQL tanımı oluştur
+    for (const field of fields) {
+      console.log(`\n${field.fieldId} alanı için SQL tanımı oluşturuluyor...`);
 
+      // 1. Alan adını normalize et
       const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
-      this.validateColumnName(normalizedName);
+      console.log('Normalize edilmiş alan adı:', normalizedName);
 
-      // Zorunlu alan kontrolü
-      const isRequired = field.validations?.['required-field']?.value === true;
-      return `${normalizedName} ${sqlType}${isRequired ? ' NOT NULL' : ''}`;
+      // 2. SQL tipini belirle
+      let sqlType: string | null = null;
+      if (field.fieldType === 'relation') {
+        sqlType = 'TEXT'; // İlişki alanları her zaman TEXT
+      }
+      else {
+        sqlType = this.getSQLType(field.componentId);
+      }
+
+      if (!sqlType) {
+        console.log(`${field.componentId} komponenti için SQL tipi bulunamadı`);
+        continue;
+      }
+
+      // 3. Kısıtlamaları ekle
+      const constraints: string[] = [];
+      if (field.validations?.['required-field']?.value === true) {
+        constraints.push('NOT NULL');
+      }
+      if (field.validations?.['unique-field']?.value === true) {
+        constraints.push('UNIQUE');
+      }
+
+      // 4. SQL tanımını oluştur
+      const sqlDefinition = `${normalizedName} ${sqlType}${constraints.length ? ` ${constraints.join(' ')}` : ''}`;
+
+      // 5. Tanımı ekle
+      if (definitions.has(normalizedName)) {
+        console.log(`UYARI: ${normalizedName} alanı zaten tanımlı, atlanıyor`);
+        continue;
+      }
+      definitions.set(normalizedName, sqlDefinition);
+      console.log('SQL tanımı:', sqlDefinition);
     }
-    catch (error) {
-      console.error(`Error generating field definition for ${field.fieldId}:`, error);
-      return null;
-    }
+
+    const result = Array.from(definitions.values());
+    console.log('\nOluşturulan alan tanımları:', result);
+    return result;
   }
 
   private generateSystemFieldDefinitions(): string[] {
-    return [
+    const definitions = [
       'id TEXT PRIMARY KEY',
       'created_at TEXT NOT NULL',
       'updated_at TEXT NOT NULL',
       'status TEXT NOT NULL CHECK(status IN (\'draft\', \'changed\', \'publish\'))',
     ];
+    console.log('\nSistem alanları:', definitions);
+    return definitions;
   }
 
   private getSQLType(componentType: ContentrainComponentType): string | null {
@@ -393,29 +573,18 @@ export class SchemaBuilder {
 
   private async columnExists(tableName: string, columnName: string): Promise<boolean> {
     try {
+      // Önce tablo adını doğrula
+      this.validateTableName(tableName);
+
       const result = await this.db.get<{ count: number }>(
-        'SELECT COUNT(*) as count FROM pragma_table_info(?1) WHERE name = ?2',
-        { 1: tableName, 2: columnName },
+        `SELECT COUNT(*) as count FROM pragma_table_info('${tableName}') WHERE name = @column`,
+        { column: columnName },
       );
       return (result?.count ?? 0) > 0;
     }
     catch (error) {
       console.error(`Error checking column existence: ${tableName}.${columnName}`, error);
       return false;
-    }
-  }
-
-  private validateColumnName(columnName: string): void {
-    try {
-      this.securityManager.validateSQLInput(columnName);
-    }
-    catch (error) {
-      throw new SchemaError({
-        code: ErrorCode.INVALID_INPUT,
-        message: `Invalid column name: ${columnName}`,
-        details: { columnName },
-        cause: error instanceof Error ? error : undefined,
-      });
     }
   }
 }

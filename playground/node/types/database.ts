@@ -181,7 +181,7 @@ export interface TabitemsI18n {
   image: string
 }
 
-export interface TestimonailItems {
+export interface testimonialItems {
   ID: string | null
   name: string
   description: string
@@ -195,13 +195,13 @@ export interface TestimonailItems {
   scheduled_at: string | null
 }
 
-export interface TestimonailItemsCreativeWork {
+export interface testimonialItemsCreativeWork {
   source_id: string
   target_id: string
   created_at: string
 }
 
-export interface TestimonailItemsI18n {
+export interface testimonialItemsI18n {
   lang: string
   ID: string
   created_at: string
@@ -537,51 +537,51 @@ export class TabitemsI18nRepository {
   }
 }
 
-export class TestimonailItemsRepository {
+export class testimonialItemsRepository {
   constructor(private db: BetterSQLite3.Database) {}
 
-  findAll(): TestimonailItems[] {
-    return this.db.prepare('SELECT * FROM testimonail_items').all() as TestimonailItems[];
+  findAll(): testimonialItems[] {
+    return this.db.prepare('SELECT * FROM testimonial_items').all() as testimonialItems[];
   }
 
-  findById(id: string): TestimonailItems | undefined {
-    return this.db.prepare('SELECT * FROM testimonail_items WHERE ID = ?').get(id) as TestimonailItems;
+  findById(id: string): testimonialItems | undefined {
+    return this.db.prepare('SELECT * FROM testimonial_items WHERE ID = ?').get(id) as testimonialItems;
   }
 
-  findByStatus(status: 'publish' | 'draft'): TestimonailItems[] {
-    return this.db.prepare('SELECT * FROM testimonail_items WHERE status = ?').all(status) as TestimonailItems[];
+  findByStatus(status: 'publish' | 'draft'): testimonialItems[] {
+    return this.db.prepare('SELECT * FROM testimonial_items WHERE status = ?').all(status) as testimonialItems[];
   }
 }
 
-export class TestimonailItemsCreativeWorkRepository {
+export class testimonialItemsCreativeWorkRepository {
   constructor(private db: BetterSQLite3.Database) {}
 
-  findAll(): TestimonailItemsCreativeWork[] {
-    return this.db.prepare('SELECT * FROM testimonail_items_creative_work').all() as TestimonailItemsCreativeWork[];
+  findAll(): testimonialItemsCreativeWork[] {
+    return this.db.prepare('SELECT * FROM testimonial_items_creative_work').all() as testimonialItemsCreativeWork[];
   }
 
-  findById(id: string): TestimonailItemsCreativeWork | undefined {
-    return this.db.prepare('SELECT * FROM testimonail_items_creative_work WHERE ID = ?').get(id) as TestimonailItemsCreativeWork;
+  findById(id: string): testimonialItemsCreativeWork | undefined {
+    return this.db.prepare('SELECT * FROM testimonial_items_creative_work WHERE ID = ?').get(id) as testimonialItemsCreativeWork;
   }
 
-  findByStatus(status: 'publish' | 'draft'): TestimonailItemsCreativeWork[] {
-    return this.db.prepare('SELECT * FROM testimonail_items_creative_work WHERE status = ?').all(status) as TestimonailItemsCreativeWork[];
+  findByStatus(status: 'publish' | 'draft'): testimonialItemsCreativeWork[] {
+    return this.db.prepare('SELECT * FROM testimonial_items_creative_work WHERE status = ?').all(status) as testimonialItemsCreativeWork[];
   }
 }
 
-export class TestimonailItemsI18nRepository {
+export class testimonialItemsI18nRepository {
   constructor(private db: BetterSQLite3.Database) {}
 
-  findAll(): TestimonailItemsI18n[] {
-    return this.db.prepare('SELECT * FROM testimonail_items_i18n').all() as TestimonailItemsI18n[];
+  findAll(): testimonialItemsI18n[] {
+    return this.db.prepare('SELECT * FROM testimonial_items_i18n').all() as testimonialItemsI18n[];
   }
 
-  findById(id: string): TestimonailItemsI18n | undefined {
-    return this.db.prepare('SELECT * FROM testimonail_items_i18n WHERE ID = ?').get(id) as TestimonailItemsI18n;
+  findById(id: string): testimonialItemsI18n | undefined {
+    return this.db.prepare('SELECT * FROM testimonial_items_i18n WHERE ID = ?').get(id) as testimonialItemsI18n;
   }
 
-  findByStatus(status: 'publish' | 'draft'): TestimonailItemsI18n[] {
-    return this.db.prepare('SELECT * FROM testimonail_items_i18n WHERE status = ?').all(status) as TestimonailItemsI18n[];
+  findByStatus(status: 'publish' | 'draft'): testimonialItemsI18n[] {
+    return this.db.prepare('SELECT * FROM testimonial_items_i18n WHERE status = ?').all(status) as testimonialItemsI18n[];
   }
 }
 
