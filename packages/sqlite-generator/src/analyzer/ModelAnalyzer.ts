@@ -1,5 +1,4 @@
 import type { ContentrainBaseType, ContentrainComponentType, ModelConfig, ModelField } from '../types/model';
-import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ContentrainError, ErrorCode, ValidationError } from '../types/errors';
@@ -88,10 +87,14 @@ export class ModelAnalyzer {
    */
   public async analyzeModels(modelsDir: string): Promise<ModelConfig[]> {
     try {
+      console.log('Model analizi başlıyor...');
       const { metadata, modelFields } = await this.readModelFiles(modelsDir);
-      const models: ModelConfig[] = [];
+      console.log('Model dosyaları okundu:', metadata.map(m => m.modelId));
 
+      // İlk aşama: Temel model yapılarını oluştur
+      const models: ModelConfig[] = [];
       for (const meta of metadata) {
+        console.log(`${meta.modelId} modeli yükleniyor...`);
         const fields = modelFields[meta.modelId];
         if (!fields) {
           throw new ValidationError({
@@ -101,11 +104,13 @@ export class ModelAnalyzer {
           });
         }
 
-        // Validate model metadata
+        // Temel model validasyonları
         this.validateModelMetadata(meta);
+        console.log(`${meta.modelId} meta verileri doğrulandı.`);
 
-        // Validate and normalize fields
-        const normalizedFields = this.validateAndNormalizeFields(fields, meta);
+        // Alan validasyonları (ilişkiler hariç)
+        const normalizedFields = this.validateAndNormalizeFields(fields, meta, false);
+        console.log(`${meta.modelId} alanları doğrulandı.`);
 
         models.push({
           id: meta.modelId,
@@ -116,14 +121,28 @@ export class ModelAnalyzer {
           createdBy: meta.createdBy,
           fields: normalizedFields,
         });
+        console.log(`${meta.modelId} modeli yüklendi.`);
       }
 
-      // Validate model relationships
+      // İkinci aşama: İlişkileri doğrula
+      console.log('İlişki doğrulaması başlıyor...');
+      for (const model of models) {
+        console.log(`${model.id} modeli için ilişkiler doğrulanıyor...`);
+        const relationFields = model.fields.filter(f => f.fieldType === 'relation');
+        for (const field of relationFields) {
+          this.validateRelationField(field, model, models);
+        }
+        console.log(`${model.id} modeli için ilişkiler doğrulandı.`);
+      }
+
+      // Model ilişkilerini doğrula
       this.validateModelRelationships(models);
+      console.log('Model analizi tamamlandı.');
 
       return models;
     }
     catch (error) {
+      console.error('Model analizi başarısız oldu:', error);
       throw new ContentrainError({
         code: ErrorCode.MODEL_ANALYSIS_FAILED,
         message: 'Model analysis failed',
@@ -240,10 +259,15 @@ export class ModelAnalyzer {
   /**
    * Validates and normalizes model fields
    */
-  private validateAndNormalizeFields(fields: unknown[], meta: {
-    modelId: string
-    localization: boolean
-  }): ModelField[] {
+  private validateAndNormalizeFields(
+    fields: unknown[],
+    meta: { modelId: string, localization: boolean },
+    validateRelations = true,
+  ): ModelField[] {
+    console.log('\n=== Model Alanları Normalize Ediliyor ===');
+    console.log(`Model: ${meta.modelId}`);
+    console.log('Alan sayısı:', fields.length);
+
     if (!Array.isArray(fields)) {
       throw new ValidationError({
         code: ErrorCode.INVALID_FIELDS_TYPE,
@@ -252,299 +276,224 @@ export class ModelAnalyzer {
       });
     }
 
-    // Check system fields
-    const systemFields = fields.filter(f => (f as ModelField).system);
-    for (const requiredField of this.REQUIRED_SYSTEM_FIELDS) {
-      const field = systemFields.find(f => (f as ModelField).fieldId === requiredField.fieldId);
-      if (!field) {
+    const normalizedFields = new Map<string, ModelField>();
+
+    // Sistem alanlarını ekle
+    for (const systemField of this.REQUIRED_SYSTEM_FIELDS) {
+      const field = {
+        ...systemField,
+        modelId: meta.modelId,
+        localized: false, // Sistem alanları asla lokalize edilemez
+      };
+      normalizedFields.set(field.fieldId, field);
+      console.log(`Sistem alanı eklendi: ${field.fieldId}`);
+    }
+
+    // Özel alanları doğrula ve normalize et
+    for (const field of fields) {
+      if (!this.isValidField(field)) {
         throw new ValidationError({
-          code: ErrorCode.MISSING_SYSTEM_FIELD,
-          message: 'Missing system field',
-          details: { modelId: meta.modelId, fieldId: requiredField.fieldId },
+          code: ErrorCode.INVALID_FIELD_FORMAT,
+          message: 'Invalid field format',
+          details: { modelId: meta.modelId, field },
         });
       }
 
-      if (!this.isValidSystemField(field as ModelField, requiredField)) {
-        throw new ValidationError({
-          code: ErrorCode.INVALID_SYSTEM_FIELD,
-          message: 'Invalid system field',
-          details: { modelId: meta.modelId, fieldId: requiredField.fieldId },
-        });
+      // Alan zaten eklenmiş mi kontrol et
+      if (normalizedFields.has(field.fieldId)) {
+        console.log(`Alan zaten mevcut, güncelleniyor: ${field.fieldId}`);
       }
+
+      if (field.fieldType === 'relation' && !validateRelations) {
+        // İlişki alanları için özel işlem
+        normalizedFields.set(field.fieldId, {
+          ...field,
+          localized: false, // İlişki alanları asla lokalize edilemez
+        });
+        console.log(`İlişki alanı eklendi: ${field.fieldId}`);
+        continue;
+      }
+
+      this.validateFieldType(field);
+      this.validateComponentType(field);
+
+      // Lokalizasyon durumunu belirle
+      const isLocalized = meta.localization && this.isLocalizableFieldType(field);
+
+      normalizedFields.set(field.fieldId, {
+        ...field,
+        localized: isLocalized,
+      });
+      console.log(`Alan eklendi: ${field.fieldId} (localized: ${isLocalized})`);
     }
 
-    // Validate and normalize custom fields
-    const customFields = fields.filter(f => !(f as ModelField).system);
-    const normalizedFields = customFields.map(field => this.validateAndNormalizeField(field as ModelField, meta));
+    return Array.from(normalizedFields.values());
+  }
 
-    return [...systemFields, ...normalizedFields] as ModelField[];
+  private isLocalizableFieldType(field: ModelField): boolean {
+    // Sistem alanları lokalize edilemez
+    if (field.system) {
+      return false;
+    }
+
+    // İlişki alanları lokalize edilemez
+    if (field.fieldType === 'relation') {
+      return false;
+    }
+
+    // Diğer tüm alanlar lokalize edilebilir
+    return true;
   }
 
   /**
-   * Validates system field configuration
+   * Validates field type
    */
-  private isValidSystemField(field: ModelField, required: typeof this.REQUIRED_SYSTEM_FIELDS[number]): boolean {
-    return (
-      field.fieldId === required.fieldId
-      && field.fieldType === required.fieldType
-      && field.componentId === required.componentId
-      && field.system === true
-      && field.validations?.['required-field']?.value === true
-    );
-  }
-
-  /**
-   * Validates and normalizes field configuration
-   */
-  private validateAndNormalizeField(field: ModelField, meta: {
-    modelId: string
-    localization: boolean
-  }): ModelField {
-    // Zorunlu alan kontrolleri
-    if (!field.name || typeof field.name !== 'string') {
-      throw new ValidationError({
-        code: ErrorCode.INVALID_FIELD_NAME_FORMAT,
-        message: 'Invalid field name',
-        details: { modelId: meta.modelId, fieldId: field.fieldId },
-      });
-    }
-
-    if (!field.fieldId || typeof field.fieldId !== 'string') {
-      throw new ValidationError({
-        code: ErrorCode.INVALID_FIELD,
-        message: 'Invalid field ID',
-        details: { modelId: meta.modelId, fieldId: field.fieldId },
-      });
-    }
-
-    // Alan tipi kontrolü
+  private validateFieldType(field: ModelField): void {
     if (!this.VALID_FIELD_TYPES.has(field.fieldType)) {
       throw new ValidationError({
         code: ErrorCode.INVALID_FIELD_TYPE,
         message: 'Invalid field type',
-        details: { modelId: meta.modelId, fieldId: field.fieldId, type: field.fieldType },
+        details: { fieldId: field.fieldId, type: field.fieldType },
       });
     }
+  }
 
-    // Komponent tipi kontrolü
+  /**
+   * Validates component type
+   */
+  private validateComponentType(field: ModelField): void {
     if (!this.VALID_COMPONENT_TYPES.has(field.componentId)) {
       throw new ValidationError({
-        code: ErrorCode.INVALID_FIELDS_TYPE,
+        code: ErrorCode.INVALID_COMPONENT_TYPE,
         message: 'Invalid component type',
-        details: { modelId: meta.modelId, fieldId: field.fieldId, type: field.componentId },
+        details: { fieldId: field.fieldId, type: field.componentId },
       });
     }
-
-    // Alan tipi ve komponent tipi uyumluluğu kontrolü
-    if (!this.isValidTypeComponentCombination(field.fieldType, field.componentId)) {
-      throw new ValidationError({
-        code: ErrorCode.INVALID_FIELDS_FORMAT,
-        message: 'Invalid type component combination',
-        details: { modelId: meta.modelId, fieldId: field.fieldId, fieldType: field.fieldType, componentId: field.componentId },
-      });
-    }
-
-    // İlişki alanları için validasyon
-    if (field.fieldType === 'relation') {
-      this.validateRelationField(field, meta);
-    }
-
-    // Sistem alanları lokalize edilemez
-    const isSystemField = field.system || this.isSystemFieldId(field.fieldId);
-
-    // İlişki alanları lokalize edilemez
-    const isRelationField = field.fieldType === 'relation';
-
-    // Lokalizasyon kontrolü
-    const shouldBeLocalized = meta.localization
-      && !isSystemField
-      && !isRelationField
-      && this.isLocalizableFieldType(field.fieldType, field.componentId);
-
-    // Normalize edilmiş alanı döndür
-    return {
-      ...field,
-      system: field.system || isSystemField,
-      localized: shouldBeLocalized,
-      defaultField: field.defaultField || false,
-    };
-  }
-
-  private isSystemFieldId(fieldId: string): boolean {
-    return ['ID', 'createdAt', 'updatedAt', 'status', 'order'].includes(fieldId);
-  }
-
-  private isLocalizableFieldType(fieldType: ContentrainBaseType, componentId: ContentrainComponentType): boolean {
-    // Lokalize edilebilecek alan tipleri
-    const localizableTypes = new Set<ContentrainBaseType>([
-      'string',
-      'array',
-      'media',
-    ]);
-
-    // Lokalize edilebilecek komponentler
-    const localizableComponents = new Set<ContentrainComponentType>([
-      'single-line-text',
-      'multi-line-text',
-      'rich-text-editor',
-      'markdown-editor',
-      'select',
-      'media',
-    ]);
-
-    return localizableTypes.has(fieldType) && localizableComponents.has(componentId);
   }
 
   /**
-   * Validates field type and component type compatibility
+   * Type guard for ModelField
    */
-  private isValidTypeComponentCombination(fieldType: ContentrainBaseType, componentId: ContentrainComponentType): boolean {
-    switch (fieldType) {
-      case 'string':
-        return [
-          'single-line-text',
-          'multi-line-text',
-          'rich-text-editor',
-          'markdown-editor',
-          'email',
-          'url',
-          'slug',
-          'color',
-          'json',
-          'phone-number',
-        ].includes(componentId);
-      case 'number':
-        return [
-          'integer',
-          'decimal',
-          'rating',
-          'percent',
-        ].includes(componentId);
-      case 'boolean':
-        return [
-          'checkbox',
-          'switch',
-        ].includes(componentId);
-      case 'array':
-        return [
-          'select',
-          'json',
-        ].includes(componentId);
-      case 'date':
-        return [
-          'date',
-          'date-time',
-        ].includes(componentId);
-      case 'media':
-        return componentId === 'media';
-      case 'relation':
-        return [
-          'one-to-one',
-          'one-to-many',
-        ].includes(componentId);
-      default:
-        return false;
+  private isValidField(field: unknown): field is ModelField {
+    if (!field || typeof field !== 'object') {
+      return false;
     }
+
+    const f = field as Record<string, unknown>;
+    return (
+      typeof f.fieldId === 'string'
+      && typeof f.name === 'string'
+      && typeof f.fieldType === 'string'
+      && typeof f.componentId === 'string'
+      && typeof f.modelId === 'string'
+      && typeof f.options === 'object'
+      && f.options !== null
+    );
   }
 
   /**
-   * Validates relation field configuration
-   */
-  private validateRelationField(field: ModelField, meta: {
-    modelId: string
-    localization: boolean
-  }): void {
-    const reference = field.options?.reference;
-    if (!reference?.value || !reference.form.reference.value) {
-      throw new ValidationError({
-        code: ErrorCode.INVALID_RELATION_CONFIG,
-        message: 'Invalid relation config',
-        details: { modelId: meta.modelId, fieldId: field.fieldId },
-      });
-    }
-
-    if (reference.form.titleField?.value) {
-      if (typeof reference.form.titleField.value !== 'string') {
-        throw new ValidationError({
-          code: ErrorCode.INVALID_FIELD,
-          message: 'Invalid title field',
-          details: { modelId: meta.modelId, fieldId: field.fieldId },
-        });
-      }
-    }
-  }
-
-  /**
-   * Validates relationships between models
+   * Validates model relationships
    */
   private validateModelRelationships(models: ModelConfig[]): void {
-    const relationFields = new Map<string, Set<string>>();
+    const relationMap = new Map<string, Set<string>>();
 
     // Build relation map
     for (const model of models) {
       const relations = new Set<string>();
       for (const field of model.fields) {
         if (field.fieldType === 'relation') {
-          const targetModel = field.options?.reference?.form.reference.value;
+          const targetModel = field.options?.reference?.form?.reference?.value;
           if (targetModel) {
             relations.add(targetModel);
           }
         }
       }
-      if (relations.size > 0) {
-        relationFields.set(model.id, relations);
-      }
+      relationMap.set(model.id, relations);
     }
 
-    // Validate relations
-    for (const [modelId, relations] of relationFields) {
-      for (const targetModel of relations) {
-        // Check target model exists
-        if (!models.find(m => m.id === targetModel)) {
-          throw new ValidationError({
-            code: ErrorCode.TARGET_MODEL_NOT_FOUND,
-            message: 'Relation target not found',
-            details: { sourceModel: modelId, targetModel },
-          });
-        }
+    // Check for circular dependencies
+    const visited = new Set<string>();
+    const visiting = new Set<string>();
 
-        // Check for circular dependencies
-        if (this.hasCircularDependency(modelId, targetModel, relationFields, new Set())) {
-          throw new ValidationError({
-            code: ErrorCode.CIRCULAR_DEPENDENCY,
-            message: 'Circular relation detected',
-            details: { sourceModel: modelId, targetModel },
-          });
+    const visit = (modelId: string): void => {
+      if (visited.has(modelId)) {
+        return;
+      }
+
+      if (visiting.has(modelId)) {
+        throw new ValidationError({
+          code: ErrorCode.CIRCULAR_DEPENDENCY,
+          message: 'Circular dependency detected',
+          details: { modelId },
+        });
+      }
+
+      visiting.add(modelId);
+
+      const relations = relationMap.get(modelId);
+      if (relations) {
+        for (const targetModel of relations) {
+          visit(targetModel);
         }
+      }
+
+      visiting.delete(modelId);
+      visited.add(modelId);
+    };
+
+    for (const model of models) {
+      if (!visited.has(model.id)) {
+        visit(model.id);
       }
     }
   }
 
   /**
-   * Checks for circular dependencies in model relationships
+   * Validates relation field
    */
-  private hasCircularDependency(
-    sourceModel: string,
-    targetModel: string,
-    relationMap: Map<string, Set<string>>,
-    visited: Set<string>,
-  ): boolean {
-    if (visited.has(targetModel)) {
-      return targetModel === sourceModel;
+  private validateRelationField(field: ModelField, model: ModelConfig, models: ModelConfig[]): void {
+    console.log(`${model.id} modelinde ${field.fieldId} ilişkisi doğrulanıyor...`);
+
+    const reference = field.options?.reference;
+    if (!reference?.value || !reference.form.reference.value) {
+      throw new ValidationError({
+        code: ErrorCode.INVALID_RELATION_CONFIG,
+        message: 'Invalid relation configuration',
+        details: { modelId: model.id, fieldId: field.fieldId },
+      });
     }
 
-    visited.add(targetModel);
-    const targetRelations = relationMap.get(targetModel);
-    if (!targetRelations) {
-      return false;
+    const targetModelId = reference.form.reference.value;
+    const targetModel = models.find(m => m.id === targetModelId);
+
+    if (!targetModel) {
+      throw new ValidationError({
+        code: ErrorCode.TARGET_MODEL_NOT_FOUND,
+        message: 'Target model not found',
+        details: { sourceModel: model.id, targetModel: targetModelId },
+      });
     }
 
-    for (const nextTarget of targetRelations) {
-      if (this.hasCircularDependency(sourceModel, nextTarget, relationMap, new Set(visited))) {
-        return true;
+    // İlişki alanları her zaman ana tabloda olmalı
+    field.localized = false;
+
+    if (reference.form.titleField?.value) {
+      const titleField = targetModel.fields.find(
+        f => f.fieldId === reference.form.titleField?.value,
+      );
+      if (!titleField) {
+        throw new ValidationError({
+          code: ErrorCode.TITLE_FIELD_NOT_FOUND,
+          message: 'Title field not found in target model',
+          details: {
+            sourceModel: model.id,
+            targetModel: targetModelId,
+            titleField: reference.form.titleField.value,
+          },
+        });
       }
     }
 
-    return false;
+    console.log(`${model.id} modelinde ${field.fieldId} ilişkisi doğrulandı.`);
   }
 }

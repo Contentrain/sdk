@@ -1,4 +1,4 @@
-import type { ContentItem, RawContentItem, RelationItem, TranslationItem } from '../types/content';
+import type { ContentItem, DefaultContentResult, LocalizedContentResult, RawContentItem, RelationItem, TranslationItem } from '../types/content';
 import type { Database, PreparedStatement } from '../types/database';
 import type { ContentrainBaseType, ModelConfig } from '../types/model';
 import { DefaultContentTransformer } from '../normalizer/ContentTransformer';
@@ -21,19 +21,57 @@ export class DataMigrator {
   /**
    * Migrates model data to database
    */
-  public async migrateModelData(model: ModelConfig, items: RawContentItem[]): Promise<void> {
+  public async migrateModelData(model: ModelConfig, contentResult: LocalizedContentResult | DefaultContentResult): Promise<void> {
+    console.log('\n=== Model Verisi Migrate Ediliyor ===');
+    console.log(`Model: ${model.id}`);
+    console.log('Content Result:', {
+      itemCount: contentResult.contentItems.length,
+      hasTranslations: 'translations' in contentResult,
+      translationCount: 'translations' in contentResult ? Object.keys(contentResult.translations).length : 0,
+    });
+    console.log('Content Items IDs:', contentResult.contentItems.map(item => item.id));
+
     const tableName = this.fieldNormalizer.normalizeTableName(model.id);
-    const modelStmt = this.prepareModelStatement(tableName, model);
+    console.log(`\nHedef tablo: ${tableName}`);
 
     try {
       await this.db.transaction(async () => {
-        for (let i = 0; i < items.length; i += this.BATCH_SIZE) {
-          const batch = items.slice(i, i + this.BATCH_SIZE);
-          await this.processBatch(batch, modelStmt, model);
+        // Ana tablo için statement hazırla
+        const modelStmt = this.prepareModelStatement(tableName, model);
+
+        // Lokalize edilmiş model ise çeviri tablosu için de statement hazırla
+        let translationStmt = null;
+        if (model.localization) {
+          const translationTableName = `${tableName}_translations`;
+          translationStmt = this.prepareTranslationStatement(translationTableName, model);
+        }
+
+        // Ana tabloya kayıtları ekle
+        console.log('\n=== Ana Tablo Kayıtları İşleniyor ===');
+        for (const item of contentResult.contentItems) {
+          console.log(`\nKayıt işleniyor - ID: ${item.id}`);
+          console.log('Kayıt içeriği:', item);
+          await this.insertMainTableRecord(item, modelStmt, model);
+        }
+
+        // Çeviri kayıtlarını ekle
+        if (model.localization && translationStmt && 'translations' in contentResult) {
+          console.log('\n=== Çeviri Kayıtları İşleniyor ===');
+          for (const [locale, translations] of Object.entries(contentResult.translations)) {
+            console.log(`\nDil: ${locale}, Çeviri sayısı: ${translations.length}`);
+            for (const translation of translations) {
+              console.log(`Çeviri işleniyor - ID: ${translation.id}, Locale: ${locale}`);
+              await this.insertTranslationRecord(translation, locale, translationStmt, model);
+            }
+          }
         }
       });
+
+      console.log('\n=== Model Verisi Başarıyla Migrate Edildi ===');
     }
     catch (error) {
+      console.error('\n!!! Model Verisi Migrate Edilirken Hata Oluştu !!!');
+      console.error('Hata:', error);
       throw new MigrationError({
         code: ErrorCode.MODEL_MIGRATION_FAILED,
         message: 'Failed to migrate model data',
@@ -41,6 +79,270 @@ export class DataMigrator {
         cause: error instanceof Error ? error : undefined,
       });
     }
+  }
+
+  private groupItemsById(items: RawContentItem[]): Map<string, Map<string, RawContentItem>> {
+    console.log('\n=== Kayıtlar ID\'ye Göre Gruplandırılıyor ===');
+    const groupedItems = new Map<string, Map<string, RawContentItem>>();
+
+    for (const item of items) {
+      const id = item.ID;
+      const locale = this.getLocaleFromItem(item);
+
+      if (!groupedItems.has(id)) {
+        groupedItems.set(id, new Map());
+      }
+
+      const localeMap = groupedItems.get(id)!;
+      if (localeMap.has(locale)) {
+        console.warn(`Uyarı: ${id} ID'li kayıt ${locale} dili için zaten mevcut, üzerine yazılıyor`);
+      }
+      localeMap.set(locale, item);
+    }
+
+    // Gruplama istatistikleri
+    console.log('\nGruplama sonuçları:');
+    console.log(`Toplam benzersiz ID: ${groupedItems.size}`);
+    for (const [id, localeMap] of groupedItems) {
+      console.log(`ID: ${id}, Dil sayısı: ${localeMap.size}, Diller: ${Array.from(localeMap.keys()).join(', ')}`);
+    }
+
+    return groupedItems;
+  }
+
+  private async insertMainTableRecord(
+    item: ContentItem,
+    stmt: PreparedStatement,
+    model: ModelConfig,
+  ): Promise<void> {
+    try {
+      const tableName = this.fieldNormalizer.normalizeTableName(model.id);
+      console.log('\n=== Ana Tablo Kaydı Kontrol Ediliyor ===');
+      console.log(`Tablo: ${tableName}`);
+      console.log(`ID: ${item.id}`);
+
+      // Mevcut kaydı kontrol et
+      const existingRecord = await this.db.get(
+        `SELECT id FROM ${tableName} WHERE id = @id`,
+        { id: item.id },
+      );
+
+      console.log('Mevcut kayıt kontrolü:', {
+        id: item.id,
+        exists: !!existingRecord,
+      });
+
+      const values = this.extractModelValues(model, item);
+      console.log('Hazırlanan değerler:', values);
+
+      if (existingRecord) {
+        console.log(`ID ${item.id} için mevcut kayıt bulundu, güncelleniyor...`);
+        const updateResult = await this.db.run(
+          `UPDATE ${tableName} SET ${Object.keys(values)
+            .filter(key => key !== 'id')
+            .map(key => `${key} = @${key}`)
+            .join(', ')}
+                WHERE id = @id`,
+          { ...values, id: item.id },
+        );
+        console.log('Güncelleme sonucu:', updateResult);
+      }
+      else {
+        console.log(`ID ${item.id} için yeni kayıt ekleniyor...`);
+        const insertResult = stmt.run(values);
+        console.log('Ekleme sonucu:', insertResult);
+      }
+    }
+    catch (error) {
+      console.error('Ana tablo kaydı eklenirken hata:', error);
+      throw new MigrationError({
+        code: ErrorCode.MODEL_MIGRATION_FAILED,
+        message: 'Failed to insert main record',
+        details: {
+          id: item.id,
+          modelId: model.id,
+        },
+        cause: error instanceof Error ? error : undefined,
+      });
+    }
+  }
+
+  private async insertTranslationRecord(
+    item: ContentItem,
+    locale: string,
+    stmt: PreparedStatement,
+    model: ModelConfig,
+  ): Promise<void> {
+    try {
+      const translationValues = this.extractTranslationValues(model, {
+        ...item,
+        locale,
+      });
+
+      console.log(`\n=== Çeviri Kaydı Ekleniyor (${locale}) ===`);
+      console.log('ID:', item.id);
+      console.log('Değerler:', translationValues);
+
+      stmt.run(translationValues);
+      console.log('Çeviri kaydı başarıyla eklendi');
+    }
+    catch (error) {
+      console.error('Çeviri kaydı eklenirken hata:', error);
+      throw new MigrationError({
+        code: ErrorCode.TRANSLATION_MIGRATION_FAILED,
+        message: 'Failed to insert translation record',
+        details: {
+          id: item.id,
+          locale,
+          modelId: model.id,
+        },
+        cause: error instanceof Error ? error : undefined,
+      });
+    }
+  }
+
+  private extractModelValues(model: ModelConfig, item: ContentItem): Record<string, unknown> {
+    console.log('\n=== Model Değerleri Çıkarılıyor ===');
+
+    // 1. Sistem alanlarını ekle
+    const values: Record<string, unknown> = {
+      id: item.id,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      status: item.status,
+    };
+    console.log('Sistem alanları:', values);
+
+    // 2. Model alanlarını işle
+    for (const field of model.fields) {
+      // Sistem alanlarını atla (zaten ekledik)
+      if (field.system)
+        continue;
+
+      // Lokalize model ise ve alan lokalize ise atla (çeviri tablosuna gidecek)
+      if (model.localization && field.localized)
+        continue;
+
+      const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
+      const value = item[field.fieldId];
+
+      if (field.fieldType === 'relation') {
+        // İlişki alanı için _id ekle
+        const columnName = `${normalizedName}_id`;
+        const relationValue = Array.isArray(value) ? value[0] ?? null : value ?? null;
+        values[columnName] = relationValue;
+        console.log(`İlişki alanı: ${columnName} =`, relationValue);
+      }
+      else {
+        // Normal alan
+        const normalizedValue = this.normalizeValue(value, field.fieldType);
+        values[normalizedName] = normalizedValue;
+        console.log(`Alan: ${normalizedName} =`, normalizedValue);
+      }
+    }
+
+    return values;
+  }
+
+  private extractTranslationValues(
+    model: ModelConfig,
+    item: TranslationItem,
+  ): Record<string, unknown> {
+    console.log('\n=== Çeviri Değerleri Çıkarılıyor ===');
+
+    // 1. Temel alanları ekle
+    const values: Record<string, unknown> = {
+      id: item.id,
+      locale: item.locale,
+    };
+    console.log('Temel alanlar:', values);
+
+    // 2. Lokalize edilmiş alanları ekle
+    for (const field of model.fields) {
+      // Sadece lokalize edilmiş ve ilişki olmayan alanları işle
+      if (!field.localized || field.fieldType === 'relation')
+        continue;
+
+      const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
+      const value = item[field.fieldId];
+      const normalizedValue = this.normalizeValue(value, field.fieldType);
+
+      values[normalizedName] = normalizedValue;
+      console.log(`Çeviri alanı: ${normalizedName} =`, normalizedValue);
+    }
+
+    return values;
+  }
+
+  private normalizeValue(value: unknown, fieldType: ContentrainBaseType): unknown {
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    try {
+      switch (fieldType) {
+        case 'string':
+          return String(value);
+
+        case 'number': {
+          const num = Number(value);
+          return Number.isNaN(num) ? null : num;
+        }
+
+        case 'boolean':
+          return Boolean(value);
+
+        case 'date': {
+          if (value instanceof Date)
+            return value.toISOString();
+          const date = new Date(value as string);
+          return Number.isNaN(date.getTime()) ? null : date.toISOString();
+        }
+
+        case 'array':
+          if (Array.isArray(value))
+            return JSON.stringify(value);
+          try {
+            return JSON.stringify(JSON.parse(value as string));
+          }
+          catch {
+            return JSON.stringify([value]);
+          }
+
+        case 'media':
+          return String(value);
+
+        case 'relation':
+          if (Array.isArray(value))
+            return value[0] ?? null;
+          return value ?? null;
+
+        default:
+          console.warn(`Bilinmeyen alan tipi: ${String(fieldType)}, string olarak işleniyor`);
+          return String(value);
+      }
+    }
+    catch (error) {
+      console.error('Değer normalizasyonu hatası:', {
+        value,
+        fieldType,
+        error,
+      });
+      return null;
+    }
+  }
+
+  private getLocaleFromItem(item: RawContentItem): string {
+    // __locale bilgisi MigrationManager tarafından eklenmeli
+    const locale = (item as any).__locale;
+    if (!locale) {
+      throw new MigrationError({
+        code: ErrorCode.MISSING_LOCALE_FILE,
+        message: 'Locale information is missing',
+        details: { item },
+      });
+    }
+    return locale.toLowerCase();
   }
 
   /**
@@ -58,7 +360,7 @@ export class DataMigrator {
       await this.db.transaction(async () => {
         for (let i = 0; i < translations.length; i += this.BATCH_SIZE) {
           const batch = translations.slice(i, i + this.BATCH_SIZE);
-          await this.processTranslationBatch(batch, stmt, model);
+          this.processTranslationBatch(batch, stmt, model);
         }
       });
     }
@@ -158,71 +460,41 @@ export class DataMigrator {
   }
 
   /**
-   * Processes a batch of model data
-   */
-  private async processBatch(
-    batch: RawContentItem[],
-    stmt: PreparedStatement,
-    model: ModelConfig,
-  ): Promise<void> {
-    for (const item of batch) {
-      if (!this.validationManager.isValidContentItem(item)) {
-        throw new MigrationError({
-          code: ErrorCode.MODEL_MIGRATION_FAILED,
-          message: 'Invalid content item',
-          details: { item: JSON.stringify(item) },
-        });
-      }
-
-      const normalizedItem = this.normalizeContentItem(item);
-      const modelValues = this.extractModelValues(model, normalizedItem);
-
-      try {
-        stmt.run(modelValues);
-      }
-      catch (error) {
-        throw new MigrationError({
-          code: ErrorCode.MODEL_MIGRATION_FAILED,
-          message: 'Failed to insert model data',
-          details: {
-            modelId: model.id,
-            itemId: normalizedItem.id,
-          },
-          cause: error instanceof Error ? error : undefined,
-        });
-      }
-    }
-  }
-
-  /**
    * Processes a batch of translation data
    */
-  private async processTranslationBatch(
-    batch: TranslationItem[],
+  private processTranslationBatch(
+    translations: TranslationItem[],
     stmt: PreparedStatement,
     model: ModelConfig,
-  ): Promise<void> {
-    for (const translation of batch) {
+  ): void {
+    console.log('\n=== Çeviri Batch İşleniyor ===');
+    console.log(`Model: ${model.id}`);
+    console.log(`Çeviri sayısı: ${translations.length}`);
+
+    for (const translation of translations) {
       if (!this.validationManager.isValidTranslationItem(translation)) {
         throw new MigrationError({
           code: ErrorCode.TRANSLATION_MIGRATION_FAILED,
           message: 'Invalid translation item',
-          details: { item: JSON.stringify(translation) },
+          details: { translation: JSON.stringify(translation) },
         });
       }
 
-      const values = await this.extractTranslationValues(model, translation);
+      const translationValues = this.extractTranslationValues(model, translation);
+      console.log('\nÇeviri değerleri:', translationValues);
 
       try {
-        stmt.run(values);
+        stmt.run(translationValues);
+        console.log('Çeviri başarıyla eklendi');
       }
       catch (error) {
+        console.error('Çeviri eklenirken hata oluştu:', error);
         throw new MigrationError({
           code: ErrorCode.TRANSLATION_MIGRATION_FAILED,
-          message: 'Failed to insert translation data',
+          message: 'Failed to insert translation',
           details: {
             modelId: model.id,
-            itemId: translation.id,
+            translationId: translation.id,
             locale: translation.locale,
           },
           cause: error instanceof Error ? error : undefined,
@@ -279,23 +551,80 @@ export class DataMigrator {
    * Prepares statement for model data
    */
   private prepareModelStatement(tableName: string, model: ModelConfig): PreparedStatement {
-    const fields = model.fields
-      .filter(field => !field.system && !field.localized)
-      .map((field) => {
-        const fieldName = this.fieldNormalizer.normalize(field.fieldId);
-        return field.fieldType === 'relation'
-          ? `${fieldName}_id`
-          : fieldName;
+    console.log('\n=== Model Statement Hazırlanıyor ===');
+    console.log(`Tablo: ${tableName}`);
+    console.log('Model:', {
+      id: model.id,
+      fields: model.fields.map(f => ({
+        fieldId: f.fieldId,
+        type: f.fieldType,
+        localized: f.localized,
+        system: f.system,
+      })),
+    });
+
+    // Benzersiz alan listesi oluştur
+    const uniqueFields = new Map<string, string>();
+
+    // Sistem alanlarını ekle
+    const systemFields = ['id', 'created_at', 'updated_at', 'status'];
+    systemFields.forEach((field) => {
+      uniqueFields.set(field, field);
+      console.log(`Sistem alanı eklendi: ${field}`);
+    });
+
+    // Model alanlarını ekle
+    model.fields
+      .filter((field) => {
+        console.log(`Alan kontrol ediliyor: ${field.fieldId}`, {
+          system: field.system,
+          fieldType: field.fieldType,
+          localized: field.localized,
+        });
+
+        // Sistem alanları zaten eklendi
+        if (field.system) {
+          console.log(`Sistem alanı atlanıyor: ${field.fieldId}`);
+          return false;
+        }
+
+        // İlişki alanları her zaman ana tabloda
+        if (field.fieldType === 'relation') {
+          console.log(`İlişki alanı ana tabloya eklenecek: ${field.fieldId}`);
+          return true;
+        }
+
+        // Lokalize edilmemiş alanlar ana tabloda
+        if (!field.localized) {
+          console.log(`Lokalize edilmemiş alan ana tabloya eklenecek: ${field.fieldId}`);
+          return true;
+        }
+
+        console.log(`Alan çeviri tablosuna gidecek: ${field.fieldId}`);
+        return false;
+      })
+      .forEach((field) => {
+        const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
+        const finalName = field.fieldType === 'relation' ? `${normalizedName}_id` : normalizedName;
+
+        if (uniqueFields.has(finalName)) {
+          console.log(`Alan zaten mevcut: ${finalName}`);
+        }
+        else {
+          uniqueFields.set(finalName, finalName);
+          console.log(`Alan eklendi: ${finalName}`);
+        }
       });
 
-    const systemFields = ['id', 'created_at', 'updated_at', 'status'];
-    const allFields = [...systemFields, ...fields];
+    const allFields = Array.from(uniqueFields.values());
+    console.log('\nTüm alanlar:', allFields);
 
     const sql = `
-      INSERT INTO ${tableName} (${allFields.join(', ')})
-      VALUES (${allFields.map(f => `@${f}`).join(', ')})
+        INSERT INTO ${tableName} (${allFields.join(', ')})
+        VALUES (${allFields.map(f => `@${f}`).join(', ')})
     `;
 
+    console.log('\nOluşturulan SQL:', sql);
     return this.db.prepare(sql);
   }
 
@@ -303,23 +632,38 @@ export class DataMigrator {
    * Prepares statement for translation data
    */
   private prepareTranslationStatement(tableName: string, model: ModelConfig): PreparedStatement {
-    const fields = model.fields
-      .filter(field => field.localized)
-      .map((field) => {
-        const fieldName = this.fieldNormalizer.normalize(field.fieldId);
-        return field.fieldType === 'relation'
-          ? `${fieldName}_id`
-          : fieldName;
-      });
+    console.log('\n=== Çeviri Statement Hazırlanıyor ===');
+    console.log(`Tablo: ${tableName}`);
+    console.log('Model:', {
+      id: model.id,
+      fields: model.fields.map(f => ({
+        fieldId: f.fieldId,
+        type: f.fieldType,
+        localized: f.localized,
+        system: f.system,
+      })),
+    });
+
+    // Sadece lokalize edilmiş alanları filtrele
+    const localizedFields = model.fields.filter(field => field.localized);
+    console.log('\nLokalize edilmiş alanlar:', localizedFields.map(f => f.fieldId));
+
+    const fields = localizedFields.map((field) => {
+      const fieldName = this.fieldNormalizer.normalize(field.fieldId);
+      console.log(`Alan normalize edildi: ${field.fieldId} -> ${fieldName}`);
+      return fieldName;
+    });
 
     const systemFields = ['id', 'locale'];
     const allFields = [...systemFields, ...fields];
+    console.log('\nTüm alanlar:', allFields);
 
     const sql = `
       INSERT INTO ${tableName} (${allFields.join(', ')})
       VALUES (${allFields.map(f => `@${f}`).join(', ')})
     `;
 
+    console.log('\nOluşturulan SQL:', sql);
     return this.db.prepare(sql);
   }
 
@@ -346,69 +690,6 @@ export class DataMigrator {
   }
 
   /**
-   * Extracts model values
-   */
-  private extractModelValues(model: ModelConfig, item: ContentItem): Record<string, unknown> {
-    const values: Record<string, unknown> = {
-      id: item.id,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      status: item.status,
-    };
-
-    for (const field of model.fields) {
-      if (field.system || field.localized) {
-        continue;
-      }
-
-      const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
-      const value = item[field.fieldId];
-
-      if (field.fieldType === 'relation') {
-        const columnName = `${normalizedName}_id`;
-        values[columnName] = Array.isArray(value) ? value[0] ?? null : value ?? null;
-      }
-      else {
-        values[normalizedName] = this.normalizeValue(value, field.fieldType);
-      }
-    }
-
-    return values;
-  }
-
-  /**
-   * Extracts translation values
-   */
-  private async extractTranslationValues(
-    model: ModelConfig,
-    item: TranslationItem,
-  ): Promise<Record<string, unknown>> {
-    const values: Record<string, unknown> = {
-      id: item.id,
-      locale: item.locale,
-    };
-
-    for (const field of model.fields) {
-      if (!field.localized) {
-        continue;
-      }
-
-      const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
-      const value = item[field.fieldId];
-
-      if (field.fieldType === 'relation') {
-        const columnName = `${normalizedName}_id`;
-        values[columnName] = Array.isArray(value) ? value[0] ?? null : value ?? null;
-      }
-      else {
-        values[normalizedName] = this.normalizeValue(value, field.fieldType);
-      }
-    }
-
-    return values;
-  }
-
-  /**
    * Extracts relation values
    */
   private extractRelationValues(relation: RelationItem): Record<string, unknown> {
@@ -421,34 +702,6 @@ export class DataMigrator {
       field_id: relation.fieldId,
       type: relation.type,
     };
-  }
-
-  /**
-   * Normalizes field value
-   */
-  private normalizeValue(value: unknown, fieldType: ContentrainBaseType): unknown {
-    if (value === undefined || value === null) {
-      return null;
-    }
-
-    switch (fieldType) {
-      case 'string':
-        return String(value);
-      case 'number':
-        return Number(value);
-      case 'boolean':
-        return Boolean(value);
-      case 'date':
-        return value instanceof Date ? value.toISOString() : String(value);
-      case 'array':
-        return Array.isArray(value) ? JSON.stringify(value) : String(value);
-      case 'media':
-        return String(value);
-      case 'relation':
-        return Array.isArray(value) ? value[0] ?? null : value ?? null;
-      default:
-        return String(value);
-    }
   }
 
   private async checkRecordExists(
@@ -485,5 +738,37 @@ export class DataMigrator {
     const stmt = this.prepareRelationStatement();
     const values = this.extractRelationValues(relation);
     stmt.run(values);
+  }
+
+  private extractTranslations(items: RawContentItem[], model: ModelConfig): TranslationItem[] {
+    const translations: TranslationItem[] = [];
+
+    for (const item of items) {
+      const normalizedItem = this.normalizeContentItem(item);
+      const translatedFields = model.fields.filter(f => f.localized);
+
+      // Her dil için çeviri kaydı oluştur
+      const locales = ['tr', 'en']; // TODO: Dilleri konfigürasyondan al
+      for (const locale of locales) {
+        const translation: TranslationItem = {
+          id: normalizedItem.id,
+          locale,
+          created_at: normalizedItem.created_at,
+          updated_at: normalizedItem.updated_at,
+          status: normalizedItem.status,
+        };
+
+        // Lokalize edilebilir alanları ekle
+        for (const field of translatedFields) {
+          if (field.fieldType !== 'relation') {
+            translation[field.fieldId] = normalizedItem[field.fieldId];
+          }
+        }
+
+        translations.push(translation);
+      }
+    }
+
+    return translations;
   }
 }

@@ -1,5 +1,7 @@
 import type {
   ContentItem,
+  DefaultContentResult,
+  LocalizedContentResult,
   RelationItem,
   TranslationItem,
 } from './types/content';
@@ -215,12 +217,12 @@ export class SQLiteGenerator {
   }
 
   /**
-   * Model ve içerikleri analiz eder
+   * Analyzes content and prepares for migration
    */
   private async analyzeContent(): Promise<{
     models: ModelConfig[]
     content: Record<string, {
-      items: ContentItem[]
+      contentItems: ContentItem[]
       translations?: TranslationItem[]
       relations?: RelationItem[]
     }>
@@ -234,23 +236,34 @@ export class SQLiteGenerator {
 
     // İçerikleri analiz et
     const content: Record<string, {
-      items: ContentItem[]
+      contentItems: ContentItem[]
       translations?: TranslationItem[]
       relations?: RelationItem[]
     }> = {};
 
     for (const model of models) {
       const result = await this.contentAnalyzer.analyzeContent(model);
-      const translations = result.translations
-        ? Object.values(result.translations).flat()
-        : undefined;
 
-      content[model.id] = {
-        items: result.items,
-        translations,
-      };
+      if (this.isLocalizedContent(result)) {
+        content[model.id] = {
+          contentItems: result.contentItems,
+          translations: Object.values(result.translations).flat(),
+        };
+      }
+      else {
+        content[model.id] = {
+          contentItems: result.contentItems,
+        };
+      }
     }
 
     return { models, content };
+  }
+
+  /**
+   * Type guard for LocalizedContentResult
+   */
+  private isLocalizedContent(content: LocalizedContentResult | DefaultContentResult): content is LocalizedContentResult {
+    return 'translations' in content;
   }
 }

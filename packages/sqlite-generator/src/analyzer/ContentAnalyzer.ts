@@ -1,5 +1,5 @@
-import type { ContentItem, ContentResult, DefaultContentResult, LocalizedContentResult, RawContentItem, TranslationItem, TranslationMap } from '../types/content';
-import type { ModelConfig, ModelField } from '../types/model';
+import type { ContentItem, DefaultContentResult, LocalizedContentResult, RawContentItem, TranslationMap } from '../types/content';
+import type { ModelConfig } from '../types/model';
 import { Buffer } from 'node:buffer';
 import { existsSync } from 'node:fs';
 import { readdir, readFile } from 'node:fs/promises';
@@ -31,7 +31,7 @@ export class ContentAnalyzer {
   /**
    * Analyzes model content
    */
-  async analyzeContent(model: ModelConfig): Promise<ContentResult> {
+  async analyzeContent(model: ModelConfig): Promise<LocalizedContentResult | DefaultContentResult> {
     const modelDir = join(this.contentDir, model.id);
 
     try {
@@ -57,8 +57,15 @@ export class ContentAnalyzer {
    * Reads localized content
    */
   private async readLocalizedContent(modelDir: string, modelId: string): Promise<LocalizedContentResult> {
+    console.log('\n=== Lokalize İçerik Okunuyor ===');
+    console.log(`Model: ${modelId}`);
+    console.log(`Dizin: ${modelDir}`);
+
     const translations: TranslationMap = {};
+    const mainTableContentItems = new Map<string, ContentItem>();
     const localeFiles = await this.findLocaleFiles(modelDir);
+
+    console.log('Bulunan dil dosyaları:', localeFiles);
 
     if (!localeFiles.length) {
       throw new ValidationError({
@@ -68,89 +75,71 @@ export class ContentAnalyzer {
       });
     }
 
-    let defaultItems: ContentItem[] = [];
-    const defaultLocale = 'tr'; // Default locale for Contentrain
+    // Her dil dosyasını oku
+    for (const file of localeFiles) {
+      const locale = this.getLocaleFromPath(file);
+      console.log(`\nDil dosyası işleniyor: ${file}`);
+      console.log(`Locale: ${locale}`);
 
-    // First read the default locale
-    const defaultFile = localeFiles.find(f => f.endsWith(`${defaultLocale}.json`));
-    if (!defaultFile) {
-      throw new ValidationError({
-        code: ErrorCode.DEFAULT_LOCALE_NOT_FOUND,
-        message: 'Default locale not found',
-        details: { modelId, locale: defaultLocale },
-      });
-    }
-
-    try {
-      const content = await this.readJSONFile(defaultFile);
-      if (!Array.isArray(content)) {
-        throw new ValidationError({
-          code: ErrorCode.INVALID_CONTENT_FORMAT,
-          message: 'Invalid content format',
-          details: { modelId, file: defaultFile, expected: 'array', received: typeof content },
-        });
+      if (!this.isValidLocale(locale)) {
+        console.warn(`[${modelId}] Geçersiz locale bulundu: ${locale}`);
+        continue;
       }
 
-      const validItems = content.filter(item => this.validationManager.isValidContentItem(item));
-      if (validItems.length === 0) {
-        throw new ValidationError({
-          code: ErrorCode.NO_VALID_CONTENT,
-          message: 'No valid content found',
-          details: { modelId, file: defaultFile },
-        });
-      }
+      try {
+        const content = await this.readJSONFile(file);
+        console.log('Dosya içeriği okundu, kayıt sayısı:', Array.isArray(content) ? content.length : 'Geçersiz format');
 
-      defaultItems = validItems.map(item => this.normalizeContentItem(item));
-      translations[defaultLocale] = validItems.map((item) => {
-        const normalized = this.normalizeContentItem(item);
-        return { ...normalized, locale: defaultLocale };
-      });
-
-      // Then read other locales
-      for (const file of localeFiles) {
-        const locale = this.getLocaleFromPath(file);
-        if (locale === defaultLocale)
-          continue;
-
-        if (!this.isValidLocale(locale)) {
-          console.warn(`[${modelId}] Invalid locale found: ${locale}`);
-          continue;
-        }
-
-        const localeContent = await this.readJSONFile(file);
-        if (!Array.isArray(localeContent)) {
+        if (!Array.isArray(content)) {
           throw new ValidationError({
             code: ErrorCode.INVALID_CONTENT_FORMAT,
             message: 'Invalid content format',
-            details: { modelId, file, expected: 'array', received: typeof localeContent },
+            details: { modelId, file, expected: 'array', received: typeof content },
           });
         }
 
-        const validLocaleItems = localeContent.filter(item => this.validationManager.isValidContentItem(item));
-        if (validLocaleItems.length === 0) {
-          console.warn(`[${modelId}] No valid content found in locale: ${locale}`);
-          continue;
+        const validItems = content.filter(item => this.validationManager.isValidContentItem(item));
+        console.log(`Geçerli kayıt sayısı: ${validItems.length}`);
+
+        // Ana tablo için içerikleri hazırla
+        for (const item of validItems) {
+          const normalized = this.normalizeContentItem(item);
+          console.log(`Ana tablo kaydı işleniyor - ID: ${normalized.id}`);
+          if (mainTableContentItems.has(normalized.id)) {
+            console.log(`ID ${normalized.id} zaten ana tablo listesinde mevcut`);
+          }
+          mainTableContentItems.set(normalized.id, normalized);
         }
 
-        translations[locale] = validLocaleItems.map((item) => {
+        // Çevirileri ekle
+        translations[locale] = validItems.map((item) => {
           const normalized = this.normalizeContentItem(item);
           return { ...normalized, locale };
         });
+        console.log(`${locale} diline ${translations[locale].length} çeviri eklendi`);
       }
-    }
-    catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
+      catch (error) {
+        console.error(`Dosya işlenirken hata: ${file}`, error);
+        if (error instanceof ValidationError)
+          throw error;
+        throw new ContentrainError({
+          code: ErrorCode.CONTENT_ANALYSIS_FAILED,
+          message: 'Failed to analyze localized content',
+          details: { modelId, locale },
+          cause: error instanceof Error ? error : undefined,
+        });
       }
-      throw new ContentrainError({
-        code: ErrorCode.CONTENT_ANALYSIS_FAILED,
-        message: 'Failed to analyze localized content',
-        details: { modelId },
-        cause: error instanceof Error ? error : undefined,
-      });
     }
 
-    return { items: defaultItems, translations };
+    console.log('\n=== İçerik Okuma Özeti ===');
+    console.log(`Toplam benzersiz ID sayısı: ${mainTableContentItems.size}`);
+    console.log(`Dil sayısı: ${Object.keys(translations).length}`);
+    console.log(`Diller: ${Object.keys(translations).join(', ')}`);
+
+    return {
+      contentItems: Array.from(mainTableContentItems.values()),
+      translations,
+    };
   }
 
   /**
@@ -158,6 +147,7 @@ export class ContentAnalyzer {
    */
   private async readDefaultContent(modelDir: string, modelId: string): Promise<DefaultContentResult> {
     const contentFile = join(modelDir, `${modelId}.json`);
+    const contentMap = new Map<string, Map<string, ContentItem>>();
 
     try {
       const items = await this.readJSONFile(contentFile);
@@ -178,7 +168,18 @@ export class ContentAnalyzer {
         });
       }
 
-      return { items: validItems.map(item => this.normalizeContentItem(item)) };
+      const normalizedItems = validItems.map(item => this.normalizeContentItem(item));
+
+      // ContentMap'i doldur (lokalize olmayan modeller için tek bir dil var)
+      for (const item of normalizedItems) {
+        const localeMap = new Map<string, ContentItem>();
+        localeMap.set('default', item);
+        contentMap.set(item.id, localeMap);
+      }
+
+      return {
+        contentItems: normalizedItems,
+      };
     }
     catch (error) {
       if (error instanceof ValidationError) {
@@ -356,100 +357,6 @@ export class ContentAnalyzer {
     }
   }
 
-  private validateRequiredFields(item: RawContentItem): void {
-    const requiredFields = ['ID', 'createdAt', 'updatedAt', 'status'];
-    for (const field of requiredFields) {
-      if (!item[field]) {
-        throw new ValidationError({
-          code: ErrorCode.MISSING_REQUIRED_FIELD,
-          message: `Missing required field: ${field}`,
-          details: { field },
-        });
-      }
-    }
-  }
-
-  private validateFieldTypes(item: RawContentItem, fields: ModelField[]): void {
-    for (const field of fields) {
-      const value = item[field.fieldId];
-      if (value === undefined)
-        continue;
-
-      switch (field.fieldType) {
-        case 'string':
-          if (value !== null && typeof value !== 'string') {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'string', received: typeof value },
-            });
-          }
-          break;
-        case 'number':
-          if (value !== null && typeof value !== 'number') {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'number', received: typeof value },
-            });
-          }
-          break;
-        case 'boolean':
-          if (value !== null && typeof value !== 'boolean') {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'boolean', received: typeof value },
-            });
-          }
-          break;
-        case 'array':
-          if (value !== null && !Array.isArray(value)) {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'array', received: typeof value },
-            });
-          }
-          break;
-        case 'date':
-          if (value !== null && !this.isValidDate(value)) {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'date', received: typeof value },
-            });
-          }
-          break;
-        case 'media':
-          if (value !== null && typeof value !== 'string') {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'string', received: typeof value },
-            });
-          }
-          break;
-        case 'relation':
-          if (value !== null && typeof value !== 'string' && !Array.isArray(value)) {
-            throw new ValidationError({
-              code: ErrorCode.INVALID_FIELD_TYPE,
-              message: `Invalid field type for ${field.fieldId}`,
-              details: { field: field.fieldId, expected: 'string | string[]', received: typeof value },
-            });
-          }
-          break;
-      }
-    }
-  }
-
-  private isValidDate(value: unknown): boolean {
-    if (typeof value !== 'string')
-      return false;
-    const date = new Date(value);
-    return !Number.isNaN(date.getTime());
-  }
-
   /**
    * Reads model content
    */
@@ -506,37 +413,5 @@ export class ContentAnalyzer {
       this.validationManager.validateFieldTypes(item, model.fields);
       return item;
     });
-  }
-
-  private validateTranslations(
-    items: RawContentItem[],
-    translations: Record<string, RawContentItem[]>,
-  ): void {
-    const itemIds = new Set(items.map(item => item.ID));
-    const requiredFields = ['ID', 'createdAt', 'updatedAt', 'status'];
-
-    for (const [locale, translatedItems] of Object.entries(translations)) {
-      for (const item of translatedItems) {
-        // ID eşleşmesi kontrolü
-        if (!itemIds.has(item.ID)) {
-          throw new ValidationError({
-            code: ErrorCode.TRANSLATION_ID_MISMATCH,
-            message: 'Translation ID mismatch',
-            details: { locale, id: item.ID },
-          });
-        }
-
-        // Zorunlu alanları kontrol et
-        for (const field of requiredFields) {
-          if (!item[field]) {
-            throw new ValidationError({
-              code: ErrorCode.MISSING_REQUIRED_FIELD_IN_TRANSLATION,
-              message: 'Missing required field in translation',
-              details: { locale, id: item.ID, field },
-            });
-          }
-        }
-      }
-    }
   }
 }

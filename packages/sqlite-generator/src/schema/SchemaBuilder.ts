@@ -111,20 +111,19 @@ export class SchemaBuilder {
       },
     ];
 
-    // Sadece lokalize edilebilir ve ilişki olmayan alanlar için unique indeks oluştur
-    const uniqueFields = localizedFields
+    // Diğer alanlar için UNIQUE olmayan indeksler
+    const indexableFields = localizedFields
       .filter(field =>
-        field.validations?.['unique-field']?.value
-        && field.fieldType !== 'relation'
+        field.fieldType !== 'relation'
         && this.isLocalizableFieldType(field),
       );
 
-    uniqueFields.forEach((field) => {
+    indexableFields.forEach((field) => {
       const fieldName = this.fieldNormalizer.normalize(field.fieldId);
       indexes.push({
         table: tableName,
         columns: [fieldName],
-        unique: true,
+        unique: false, // UNIQUE constraint'i kaldır
       });
     });
 
@@ -191,22 +190,6 @@ export class SchemaBuilder {
       // Tablo adını doğrula
       this.validateTableName(tableName);
 
-      // Tablo var mı kontrol et
-      const tableExists = await this.db.get<{ count: number }>(
-        'SELECT COUNT(*) as count FROM sqlite_master WHERE type = @type AND name = @name',
-        { type: 'table', name: tableName },
-      );
-      const exists = (tableExists?.count ?? 0) > 0;
-      console.log('\nTablo mevcut mu:', { exists });
-
-      if (exists) {
-        // PRAGMA sorgusunu düzelt - named parameter kullanma
-        const currentColumns = await this.db.all(
-          `PRAGMA table_info(${tableName})`,
-        );
-        console.log('\nMevcut tablo yapısı:', currentColumns);
-      }
-
       // 1. Sistem alanlarını hazırla
       const systemFields = this.generateSystemFieldDefinitions();
       console.log('\nSistem alanları:', systemFields);
@@ -245,7 +228,14 @@ export class SchemaBuilder {
 
       // 3. Model alanlarını SQL tanımlarına dönüştür
       console.log('\nFiltrelenen alanlar:', modelFields.map(f => f.fieldId));
-      const modelDefinitions = this.generateFieldDefinitions(modelFields);
+      const modelDefinitions = modelFields.map((field) => {
+        if (field.fieldType === 'relation') {
+          const normalizedName = `${this.fieldNormalizer.normalize(field.fieldId)}_id`;
+          console.log(`İlişki alanı için SQL tanımı: ${normalizedName} TEXT`);
+          return `${normalizedName} TEXT`;
+        }
+        return this.generateFieldDefinition(field);
+      });
       console.log('\nModel alanları SQL tanımları:', modelDefinitions);
 
       // 4. SQL oluştur ve çalıştır
@@ -259,10 +249,23 @@ export class SchemaBuilder {
       this.db.exec(sql);
 
       // Tablo yapısını kontrol et
-      const tableInfo = await this.db.all(
+      const tableInfo = await this.db.all<{ name: string }>(
         `PRAGMA table_info(${tableName})`,
       );
       console.log('\nOluşturulan tablo yapısı:', JSON.stringify(tableInfo, null, 2));
+
+      // Tablo yapısını doğrula
+      const columnNames = tableInfo.map(col => col.name);
+      const expectedColumns = [...systemFields, ...modelDefinitions].map(def => def.split(' ')[0]);
+      const missingColumns = expectedColumns.filter(col => !columnNames.includes(col));
+
+      if (missingColumns.length > 0) {
+        throw new SchemaError({
+          code: ErrorCode.TABLE_CREATION_FAILED,
+          message: `Missing columns in table: ${missingColumns.join(', ')}`,
+          details: { modelId: model.id, tableName, missingColumns },
+        });
+      }
 
       console.log(`\n${tableName} tablosu başarıyla oluşturuldu.`);
 
@@ -285,6 +288,97 @@ export class SchemaBuilder {
         details: { modelId: model.id },
         cause: error instanceof Error ? error : undefined,
       });
+    }
+  }
+
+  private generateSystemFieldDefinitions(): string[] {
+    return [
+      'id TEXT PRIMARY KEY',
+      'created_at TEXT NOT NULL',
+      'updated_at TEXT NOT NULL',
+      'status TEXT NOT NULL CHECK(status IN (\'draft\', \'changed\', \'publish\'))',
+    ];
+  }
+
+  private generateFieldDefinition(field: ModelField): string {
+    const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
+    const sqlType = this.getSQLType(field.componentId);
+    if (!sqlType) {
+      throw new SchemaError({
+        code: ErrorCode.INVALID_FIELD_TYPE,
+        message: `Invalid field type: ${field.componentId}`,
+        details: { fieldId: field.fieldId },
+      });
+    }
+
+    const constraints: string[] = [];
+    if (field.validations?.['required-field']?.value === true) {
+      constraints.push('NOT NULL');
+    }
+    if (field.validations?.['unique-field']?.value === true && !field.localized) {
+      constraints.push('UNIQUE');
+    }
+
+    return `${normalizedName} ${sqlType}${constraints.length ? ` ${constraints.join(' ')}` : ''}`;
+  }
+
+  private getSQLType(componentType: ContentrainComponentType): string | null {
+    const typeMap: Record<ContentrainComponentType, string | null> = {
+      'single-line-text': 'TEXT',
+      'multi-line-text': 'TEXT',
+      'rich-text-editor': 'TEXT',
+      'markdown-editor': 'TEXT',
+      'email': 'TEXT',
+      'url': 'TEXT',
+      'slug': 'TEXT',
+      'color': 'TEXT',
+      'phone-number': 'TEXT',
+      'integer': 'INTEGER',
+      'decimal': 'REAL',
+      'rating': 'INTEGER',
+      'percent': 'REAL',
+      'checkbox': 'INTEGER',
+      'switch': 'INTEGER',
+      'date': 'TEXT',
+      'date-time': 'TEXT',
+      'media': 'TEXT',
+      'json': 'TEXT',
+      'select': 'TEXT',
+      'one-to-one': null,
+      'one-to-many': null,
+    };
+
+    return typeMap[componentType] || null;
+  }
+
+  private validateTableName(tableName: string): void {
+    try {
+      this.securityManager.validateSQLInput(tableName);
+    }
+    catch (error) {
+      throw new SchemaError({
+        code: ErrorCode.INVALID_INPUT,
+        message: `Invalid table name: ${tableName}`,
+        details: { tableName },
+        cause: error instanceof Error ? error : undefined,
+      });
+    }
+  }
+
+  private async columnExists(tableName: string, columnName: string): Promise<boolean> {
+    try {
+      // Önce tablo adını doğrula
+      this.validateTableName(tableName);
+
+      const result = await this.db.get<{ count: number }>(
+        `SELECT COUNT(*) as count FROM pragma_table_info('${tableName}') WHERE name = @column`,
+        { column: columnName },
+      );
+      return (result?.count ?? 0) > 0;
+    }
+    catch (error) {
+      console.error(`Error checking column existence: ${tableName}.${columnName}`, error);
+      return false;
     }
   }
 
@@ -328,11 +422,8 @@ export class SchemaBuilder {
       const normalizedFields = translatableFields.map(field => ({
         ...field,
         normalizedName: this.fieldNormalizer.normalize(field.fieldId),
-        // Çeviri tablosunda unique constraint'i kaldır
-        validations: {
-          ...field.validations,
-          'unique-field': { value: false },
-        },
+        // Çeviri tablosunda tüm validasyonları kaldır
+        validations: {},
       }));
 
       // Alan tanımlarını oluştur
@@ -474,13 +565,15 @@ export class SchemaBuilder {
       console.log(`\n${field.fieldId} alanı için SQL tanımı oluşturuluyor...`);
 
       // 1. Alan adını normalize et
-      const normalizedName = this.fieldNormalizer.normalize(field.fieldId);
+      let normalizedName = this.fieldNormalizer.normalize(field.fieldId);
       console.log('Normalize edilmiş alan adı:', normalizedName);
 
       // 2. SQL tipini belirle
       let sqlType: string | null = null;
       if (field.fieldType === 'relation') {
-        sqlType = 'TEXT'; // İlişki alanları her zaman TEXT
+        sqlType = 'TEXT';
+        normalizedName = `${normalizedName}_id`; // İlişki alanları için _id ekle
+        console.log('İlişki alanı için yeni ad:', normalizedName);
       }
       else {
         sqlType = this.getSQLType(field.componentId);
@@ -496,7 +589,7 @@ export class SchemaBuilder {
       if (field.validations?.['required-field']?.value === true) {
         constraints.push('NOT NULL');
       }
-      if (field.validations?.['unique-field']?.value === true) {
+      if (field.validations?.['unique-field']?.value === true && !field.localized) {
         constraints.push('UNIQUE');
       }
 
@@ -515,76 +608,5 @@ export class SchemaBuilder {
     const result = Array.from(definitions.values());
     console.log('\nOluşturulan alan tanımları:', result);
     return result;
-  }
-
-  private generateSystemFieldDefinitions(): string[] {
-    const definitions = [
-      'id TEXT PRIMARY KEY',
-      'created_at TEXT NOT NULL',
-      'updated_at TEXT NOT NULL',
-      'status TEXT NOT NULL CHECK(status IN (\'draft\', \'changed\', \'publish\'))',
-    ];
-    console.log('\nSistem alanları:', definitions);
-    return definitions;
-  }
-
-  private getSQLType(componentType: ContentrainComponentType): string | null {
-    const typeMap: Record<ContentrainComponentType, string | null> = {
-      'single-line-text': 'TEXT',
-      'multi-line-text': 'TEXT',
-      'rich-text-editor': 'TEXT',
-      'markdown-editor': 'TEXT',
-      'email': 'TEXT',
-      'url': 'TEXT',
-      'slug': 'TEXT',
-      'color': 'TEXT',
-      'phone-number': 'TEXT',
-      'integer': 'INTEGER',
-      'decimal': 'REAL',
-      'rating': 'INTEGER',
-      'percent': 'REAL',
-      'checkbox': 'INTEGER',
-      'switch': 'INTEGER',
-      'date': 'TEXT',
-      'date-time': 'TEXT',
-      'media': 'TEXT',
-      'json': 'TEXT',
-      'select': 'TEXT',
-      'one-to-one': null,
-      'one-to-many': null,
-    };
-
-    return typeMap[componentType] || null;
-  }
-
-  private validateTableName(tableName: string): void {
-    try {
-      this.securityManager.validateSQLInput(tableName);
-    }
-    catch (error) {
-      throw new SchemaError({
-        code: ErrorCode.INVALID_INPUT,
-        message: `Invalid table name: ${tableName}`,
-        details: { tableName },
-        cause: error instanceof Error ? error : undefined,
-      });
-    }
-  }
-
-  private async columnExists(tableName: string, columnName: string): Promise<boolean> {
-    try {
-      // Önce tablo adını doğrula
-      this.validateTableName(tableName);
-
-      const result = await this.db.get<{ count: number }>(
-        `SELECT COUNT(*) as count FROM pragma_table_info('${tableName}') WHERE name = @column`,
-        { column: columnName },
-      );
-      return (result?.count ?? 0) > 0;
-    }
-    catch (error) {
-      console.error(`Error checking column existence: ${tableName}.${columnName}`, error);
-      return false;
-    }
   }
 }

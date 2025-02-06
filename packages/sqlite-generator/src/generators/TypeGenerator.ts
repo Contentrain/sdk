@@ -81,12 +81,106 @@ export interface IBaseTranslation<T extends string> {
     const fields = this.generateFields(model.fields);
     const relationFields = this.generateRelationFields(model);
 
+    // Özel karakterleri temizle
+    const sanitizedModelId = this.sanitizeIdentifier(model.id);
+    const interfaceName = `I${this.pascalCase(sanitizedModelId)}`;
+
     return `// ${model.name} Interface
-export interface I${this.pascalCase(model.id)} extends IBaseModel<${localeType}> {
+export interface ${interfaceName} extends IBaseModel<${localeType}> {
   ${fields}${relationFields ? `\n\n  ${relationFields}` : ''}
 }
 
 ${model.localization ? this.generateTranslationInterface(model) : ''}`;
+  }
+
+  /**
+   * Özel karakterleri temizler ve geçerli bir TypeScript tanımlayıcısı oluşturur
+   */
+  private sanitizeIdentifier(id: string): string {
+    // Tire ve özel karakterleri kaldır
+    return id.replace(/[-\s]/g, '_').replace(/\W/g, '');
+  }
+
+  /**
+   * Alanları oluşturur
+   */
+  private generateFields(fields: ModelField[]): string {
+    return fields
+      .filter(field => field.fieldType !== 'relation')
+      .map((field) => {
+        const type = this.getTypeScriptType(field);
+        const isRequired = field.validations?.['required-field']?.value;
+        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
+        return `${sanitizedFieldId}${isRequired ? '' : '?'}: ${type};`;
+      })
+      .join('\n  ');
+  }
+
+  /**
+   * İlişki alanlarını oluşturur
+   */
+  private generateRelationFields(model: ModelConfig): string {
+    const relationFields = model.fields.filter(field => field.fieldType === 'relation');
+    if (!relationFields.length)
+      return '';
+
+    return relationFields
+      .map((field) => {
+        const targetModel = field.options?.reference?.form?.reference?.value;
+        if (!targetModel)
+          return '';
+
+        const isOneToMany = field.componentId === 'one-to-many';
+        const sanitizedTargetModel = this.sanitizeIdentifier(targetModel);
+        const typeName = `I${this.pascalCase(sanitizedTargetModel)}`;
+        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
+
+        return [
+          `${sanitizedFieldId}_id${field.validations?.['required-field']?.value ? '' : '?'}: string;`,
+          `${sanitizedFieldId}${field.validations?.['required-field']?.value ? '' : '?'}: ${isOneToMany ? `${typeName}[]` : typeName} | null;`,
+        ].join('\n  ');
+      })
+      .filter(Boolean)
+      .join('\n\n  ');
+  }
+
+  /**
+   * Çeviri arayüzünü oluşturur
+   */
+  private generateTranslationInterface(model: ModelConfig): string {
+    const sanitizedModelId = this.sanitizeIdentifier(model.id);
+    const localizedFields = model.fields
+      .filter(field => field.localized)
+      .map((field) => {
+        const type = this.getTypeScriptType(field);
+        const isRequired = field.validations?.['required-field']?.value;
+        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
+        return `${sanitizedFieldId}${isRequired ? '' : '?'}: ${type};`;
+      })
+      .join('\n  ');
+
+    return `export interface I${this.pascalCase(sanitizedModelId)}Translation extends IBaseTranslation<'${model.id}'> {
+  ${localizedFields}
+}`;
+  }
+
+  /**
+   * TypeScript tipini alır
+   */
+  private getTypeScriptType(field: ModelField): string {
+    const baseType = TYPE_MAPPING[field.componentId] || 'unknown';
+    const isArray = field.componentId === 'select';
+    return isArray ? `${baseType}[]` : baseType;
+  }
+
+  /**
+   * Pascal case dönüşümü yapar
+   */
+  private pascalCase(str: string): string {
+    return str
+      .split(/[-_]/)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('');
   }
 
   /**
@@ -131,83 +225,5 @@ export interface ${modelName}Repository {
   findMany: (query: ${modelName}QueryConfig) => Promise<QueryResult<${interfaceName}>>;
   count: (query?: Omit<${modelName}QueryConfig, 'pagination' | 'orderBy'>) => Promise<number>;
 }`;
-  }
-
-  /**
-   * Alanları oluşturur
-   */
-  private generateFields(fields: ModelField[]): string {
-    return fields
-      .filter(field => field.fieldType !== 'relation')
-      .map((field) => {
-        const type = this.getTypeScriptType(field);
-        const isRequired = field.validations?.['required-field']?.value;
-        return `${field.fieldId}${isRequired ? '' : '?'}: ${type};`;
-      })
-      .join('\n  ');
-  }
-
-  /**
-   * İlişki alanlarını oluşturur
-   */
-  private generateRelationFields(model: ModelConfig): string {
-    const relationFields = model.fields.filter(field => field.fieldType === 'relation');
-    if (!relationFields.length)
-      return '';
-
-    return relationFields
-      .map((field) => {
-        const targetModel = field.options?.reference?.form?.reference?.value;
-        if (!targetModel)
-          return '';
-
-        const isOneToMany = field.componentId === 'one-to-many';
-        const typeName = `I${this.pascalCase(targetModel)}`;
-        const fieldName = field.fieldId;
-
-        return [
-          `${fieldName}_id${field.validations?.['required-field']?.value ? '' : '?'}: string;`,
-          `${fieldName}${field.validations?.['required-field']?.value ? '' : '?'}: ${isOneToMany ? `${typeName}[]` : typeName} | null;`,
-        ].join('\n  ');
-      })
-      .filter(Boolean)
-      .join('\n\n  ');
-  }
-
-  /**
-   * Çeviri arayüzünü oluşturur
-   */
-  private generateTranslationInterface(model: ModelConfig): string {
-    const localizedFields = model.fields
-      .filter(field => field.localized)
-      .map((field) => {
-        const type = this.getTypeScriptType(field);
-        const isRequired = field.validations?.['required-field']?.value;
-        return `${field.fieldId}${isRequired ? '' : '?'}: ${type};`;
-      })
-      .join('\n  ');
-
-    return `export interface I${this.pascalCase(model.id)}Translation extends IBaseTranslation<'${model.id}'> {
-  ${localizedFields}
-}`;
-  }
-
-  /**
-   * TypeScript tipini alır
-   */
-  private getTypeScriptType(field: ModelField): string {
-    const baseType = TYPE_MAPPING[field.componentId] || 'unknown';
-    const isArray = field.componentId === 'select';
-    return isArray ? `${baseType}[]` : baseType;
-  }
-
-  /**
-   * Pascal case dönüşümü yapar
-   */
-  private pascalCase(str: string): string {
-    return str
-      .split(/[-_]/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join('');
   }
 }

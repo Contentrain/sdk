@@ -19,11 +19,12 @@ export interface MigrationItem {
  */
 export interface MigrationState {
   modelId: string
-  items: ContentItem[]
+  contentItems: ContentItem[]
   translations?: TranslationItem[]
   relations?: RelationItem[]
   isCompleted: boolean
   error?: string
+
 }
 
 /**

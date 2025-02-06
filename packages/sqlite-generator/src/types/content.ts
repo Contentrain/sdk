@@ -46,25 +46,18 @@ export interface RelationItem {
 export type TranslationMap = Record<string, TranslationItem[]>;
 
 /**
- * Base content result interface
- */
-export interface ContentResult {
-  items: ContentItem[]
-}
-
-/**
  * Content result for localized content
  */
-export interface LocalizedContentResult extends ContentResult {
+export interface LocalizedContentResult {
+  contentItems: ContentItem[]
   translations: TranslationMap
-  idMap: Map<string, ContentItem>
 }
 
 /**
  * Content result for non-localized content
  */
-export interface DefaultContentResult extends ContentResult {
-  translations?: never
+export interface DefaultContentResult {
+  contentItems: ContentItem[]
 }
 
 /**

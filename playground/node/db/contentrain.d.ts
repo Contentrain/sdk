@@ -221,8 +221,8 @@ export interface ITestimonialItems extends IBaseModel<ModelLocales<'testimonial-
   title: string;
   image: string;
 
-  creative-work_id: string;
-  creative-work: IWorkitems | null;
+  creative_work_id: string;
+  creative_work: IWorkitems | null;
 }
 
 export interface ITestimonialItemsTranslation extends IBaseTranslation<'testimonial-items'> {
