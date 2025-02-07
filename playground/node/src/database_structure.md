@@ -444,7 +444,7 @@ Proje planını müşteri brifinglerine göre tasarladık, ön ucu ve arka ucu g
 | 2aa54f9e7eb1 | 2024-09-26T18:05:14.000Z | 2024-10-22T09:35:21.910Z | publish | https://x.com/lanistasoftware | ri-twitter-line | 9450777bee2f |
 | 2aa54f9e7eb2 | 2024-09-26T18:05:14.000Z | 2024-10-22T10:40:07.066Z | publish | https://www.instagram.com/lanistasoftware/ | ri-instagram-line | d00761480436 |
 
-## Table: tbl_field_references
+## Table: tbl_references
 
 | Column | Type | Primary Key |
 |--------|------|------------|
@@ -454,7 +454,7 @@ Proje planını müşteri brifinglerine göre tasarladık, ön ucu ve arka ucu g
 | status | TEXT |  |
 | logo | TEXT |  |
 
-### Data in tbl_field_references
+### Data in tbl_references
 
 | id | created_at | updated_at | status | logo |
 | --- | --- | --- | --- | --- |

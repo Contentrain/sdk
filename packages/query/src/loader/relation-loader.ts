@@ -28,10 +28,14 @@ export class RelationLoader extends BaseSQLiteLoader {
         AND field_id = ?
       `;
 
-      return await this.connection.query<DBRelation>(
+      logger.debug('Loading relations:', { model, sourceIds, fieldId, query });
+      const relations = await this.connection.query<DBRelation>(
         query,
         [model, ...sourceIds, fieldId],
       );
+      logger.debug('Loaded relations:', relations);
+
+      return relations;
     }
     catch (error) {
       logger.error('Load relations error:', { model, sourceIds, fieldId, error });
@@ -50,22 +54,29 @@ export class RelationLoader extends BaseSQLiteLoader {
       const targetModel = relations[0].target_model;
       const targetIds = relations.map(r => r.target_id);
 
+      logger.debug('Loading related content:', { targetModel, targetIds, locale });
+
       // Ana içeriği yükle
       const query = `
         SELECT * FROM tbl_${targetModel}
         WHERE id IN (${targetIds.map(() => '?').join(',')})
       `;
+      logger.debug('Related content query:', { query, targetIds });
       const data = await this.connection.query<T>(query, targetIds);
+      logger.debug('Loaded related content:', data);
 
       // Çevirisi varsa yükle
       if (locale) {
         const hasTranslations = await this.translationLoader.hasTranslations(targetModel);
+        logger.debug('Translation check:', { targetModel, hasTranslations });
+
         if (hasTranslations) {
           const translations = await this.translationLoader.loadTranslations(
             targetModel,
             targetIds,
             locale,
           );
+          logger.debug('Loaded translations:', translations);
 
           // Çevirileri ana veriye ekle
           return data.map(item => ({
@@ -91,10 +102,12 @@ export class RelationLoader extends BaseSQLiteLoader {
         WHERE source_model = ?
       `;
 
+      logger.debug('Getting relation types:', { model, query });
       const results = await this.connection.query<{ field_id: string, type: 'one-to-one' | 'one-to-many' }>(
         query,
         [model],
       );
+      logger.debug('Got relation types:', results);
 
       return results.reduce((acc, { field_id, type }) => {
         acc[field_id] = type;

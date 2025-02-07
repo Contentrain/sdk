@@ -154,8 +154,7 @@ export class FieldNormalizer {
   public normalize(fieldName: string): string {
     // 1. Sistem alanı kontrolü
     if (this.SYSTEM_FIELDS.has(fieldName)) {
-      const normalizedName = this.SYSTEM_FIELDS.get(fieldName)!;
-      return normalizedName;
+      return this.SYSTEM_FIELDS.get(fieldName)!;
     }
 
     // 2. Alan adını snake_case'e dönüştür
@@ -165,16 +164,32 @@ export class FieldNormalizer {
       .replace(this.KEBAB_CASE_REGEX, '_')
       .toLowerCase();
 
-    // 3. Rezerve kelime kontrolü
+    // 3. Rezerve kelime kontrolü - sadece gerekli durumlarda field_ öneki ekle
     if (this.RESERVED_KEYWORDS.has(snakeCase)) {
-      const prefixedName = `field_${snakeCase}`;
-      return prefixedName;
+      return `${this.FIELD_PREFIX}${snakeCase}`;
     }
 
     // 4. Özel karakter kontrolü
-    const sanitized = snakeCase.replace(/[^a-z0-9_]/g, '_');
+    return snakeCase.replace(/[^a-z0-9_]/g, '_');
+  }
 
-    return sanitized;
+  /**
+   * Normalizes table name for database
+   * Example: MyModel -> tbl_my_model
+   */
+  public normalizeTableName(modelId: string): string {
+    // 1. Snake case dönüşümü
+    const snakeCase = modelId
+      .replace(this.CAMEL_CASE_REGEX, '$1_$2')
+      .replace(this.PASCAL_CASE_REGEX, '$1_$2')
+      .replace(this.KEBAB_CASE_REGEX, '_')
+      .toLowerCase();
+
+    // 2. Özel karakter kontrolü
+    const normalized = snakeCase.replace(/[^a-z0-9_]/g, '_');
+
+    // 3. Tablo öneki ekle
+    return `${this.TABLE_PREFIX}${normalized}`;
   }
 
   /**
@@ -195,14 +210,6 @@ export class FieldNormalizer {
     return denormalized
       // snake_case -> camelCase
       .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-  }
-
-  /**
-   * Normalizes table name for database
-   * Example: MyModel -> tbl_my_model
-   */
-  public normalizeTableName(modelId: string): string {
-    return `${this.TABLE_PREFIX}${this.normalize(modelId)}`;
   }
 
   /**

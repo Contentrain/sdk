@@ -15,20 +15,20 @@ program
 
 program
   .command('generate')
-  .description('JSON içeriğini SQLite veritabanına dönüştürür')
-  .option('-m, --models <dir>', 'Model tanımlarının bulunduğu dizin', 'contentrain/models')
-  .option('-c, --content <dir>', 'İçerik dosyalarının bulunduğu dizin', 'contentrain')
-  .option('-o, --output <dir>', 'Çıktı dizini', 'db')
-  .option('-d, --db-name <name>', 'Veritabanı dosya adı', 'contentrain.db')
-  .option('-t, --types-file <name>', 'Tip tanımları dosya adı', 'contentrain.d.ts')
-  .option('--cache-enabled', 'Önbelleği etkinleştir', true)
-  .option('--cache-ttl <seconds>', 'Önbellek süresi (saniye)', '300')
-  .option('--validate-input', 'Girdi doğrulamasını etkinleştir', true)
-  .option('--max-input-length <length>', 'Maksimum girdi uzunluğu', '1000')
-  .option('--enable-wal', 'WAL modunu etkinleştir', true)
-  .option('--cache-size <size>', 'Önbellek boyutu (KB)', '2000')
-  .option('--page-size <size>', 'Sayfa boyutu (byte)', '4096')
-  .option('--journal-size <size>', 'Günlük boyutu (byte)', '67108864')
+  .description('Convert JSON content to SQLite database')
+  .option('-m, --models <dir>', 'Directory containing model definitions', 'contentrain/models')
+  .option('-c, --content <dir>', 'Directory containing content files', 'contentrain')
+  .option('-o, --output <dir>', 'Output directory', 'db')
+  .option('-d, --db-name <name>', 'Database file name', 'contentrain.db')
+  .option('--cache-enabled', 'Enable caching', true)
+  .option('--cache-ttl <seconds>', 'Cache duration (seconds)', '300')
+  .option('--validate-input', 'Enable input validation', true)
+  .option('--max-input-length <length>', 'Maximum input length', '1000')
+  .option('--enable-wal', 'Enable WAL mode', true)
+  .option('--cache-size <size>', 'Cache size (KB)', '2000')
+  .option('--page-size <size>', 'Page size (byte)', '4096')
+  .option('--journal-size <size>', 'Journal size (byte)', '67108864')
+
   .action(async (options) => {
     try {
       const generator = new SQLiteGenerator({
@@ -36,11 +36,11 @@ program
         contentDir: join(cwd(), options.content),
         outputDir: join(cwd(), options.output),
         dbName: options.dbName,
-        typesFile: options.typesFile,
         cache: {
           enabled: options.cacheEnabled,
           ttl: Number.parseInt(options.cacheTtl, 10),
         },
+
         security: {
           validateInput: options.validateInput,
           maxInputLength: Number.parseInt(options.maxInputLength, 10),
@@ -55,15 +55,15 @@ program
 
       await generator.generate();
       console.info(`\nVeritabanı oluşturuldu: ${join(cwd(), options.output, options.dbName)}`);
-      console.info(`Tip tanımları oluşturuldu: ${join(cwd(), options.output, options.typesFile)}`);
     }
     catch (error) {
       if (error instanceof ContentrainError) {
-        console.error('Hata:', error.message);
-        console.error('Detaylar:', error.details);
+        console.error('Error:', error.message);
+        console.error('Details:', error.details);
       }
+
       else {
-        console.error('Hata:', error instanceof Error ? error.message : String(error));
+        console.error('Error:', error instanceof Error ? error.message : String(error));
       }
       exit(1);
     }
