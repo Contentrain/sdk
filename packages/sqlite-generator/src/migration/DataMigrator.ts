@@ -325,32 +325,12 @@ export class DataMigrator {
     relations: RelationItem[],
     models: ModelConfig[],
   ): Promise<void> {
-    console.log('\n=== İlişki Migrasyonu Başlıyor ===');
-    console.log('Kaynak ID:', sourceId);
-    console.log('İlişki sayısı:', relations.length);
-    console.log('İlişkiler:', JSON.stringify(relations, null, 2));
-
     for (const relation of relations) {
-      console.log('\nİlişki işleniyor:', {
-        id: relation.id,
-        sourceModel: relation.sourceModel,
-        sourceId: relation.sourceId,
-        targetModel: relation.targetModel,
-        targetId: relation.targetId,
-        fieldId: relation.fieldId,
-        type: relation.type,
-      });
-
       // Kaynak verinin varlığını kontrol et
       const sourceExists = await this.checkRecordExists(
         relation.sourceModel,
         relation.sourceId,
       );
-      console.log('Kaynak kayıt kontrolü:', {
-        model: relation.sourceModel,
-        id: relation.sourceId,
-        exists: sourceExists,
-      });
 
       if (!sourceExists) {
         throw new MigrationError({
@@ -368,11 +348,6 @@ export class DataMigrator {
         relation.targetModel,
         relation.targetId,
       );
-      console.log('Hedef kayıt kontrolü:', {
-        model: relation.targetModel,
-        id: relation.targetId,
-        exists: targetExists,
-      });
 
       if (!targetExists) {
         throw new MigrationError({
@@ -390,13 +365,6 @@ export class DataMigrator {
       const relationField = sourceModel?.fields.find(
         f => f.fieldId === relation.fieldId,
       );
-
-      console.log('İlişki alan kontrolü:', {
-        modelId: sourceModel?.id,
-        fieldId: relationField?.fieldId,
-        fieldType: relationField?.fieldType,
-        componentId: relationField?.componentId,
-      });
 
       if (!relationField || relationField.fieldType !== 'relation') {
         throw new MigrationError({
@@ -417,10 +385,6 @@ export class DataMigrator {
           relation.targetModel,
           relation.sourceId,
         );
-        console.log('One-to-one ilişki kontrolü:', {
-          exists: !!existingRelation,
-          existingRelation,
-        });
 
         if (existingRelation) {
           throw new MigrationError({
@@ -436,18 +400,9 @@ export class DataMigrator {
         }
       }
 
-      // İlişkiyi kaydet
-      try {
-        await this.insertRelation(relation);
-        console.log('İlişki başarıyla kaydedildi:', relation.id);
-      }
-      catch (error) {
-        console.error('İlişki kaydedilirken hata:', error);
-        throw error;
-      }
+      // Save Relation
+      await this.insertRelation(relation);
     }
-
-    console.log('\n=== İlişki Migrasyonu Tamamlandı ===');
   }
 
   /**
@@ -591,7 +546,6 @@ export class DataMigrator {
       VALUES (${fields.map(f => `@${f}`).join(', ')})
     `;
 
-    console.log('\nİlişki SQL:', sql);
     return this.db.prepare(sql);
   }
 
@@ -599,7 +553,7 @@ export class DataMigrator {
    * Extracts relation values
    */
   private extractRelationValues(relation: RelationItem): Record<string, unknown> {
-    const values = {
+    return {
       id: relation.id,
       source_model: relation.sourceModel,
       source_id: relation.sourceId,
@@ -608,8 +562,6 @@ export class DataMigrator {
       field_id: relation.fieldId,
       type: relation.type,
     };
-    console.log('Çıkarılan ilişki değerleri:', values);
-    return values;
   }
 
   private async checkRecordExists(
@@ -630,13 +582,6 @@ export class DataMigrator {
     targetModel: string,
     sourceId: string,
   ): Promise<RelationItem | undefined> {
-    console.log('One-to-one ilişki kontrolü yapılıyor:', {
-      sourceModel,
-      fieldId,
-      targetModel,
-      sourceId,
-    });
-
     return this.db.get<RelationItem>(
       `SELECT * FROM tbl_contentrain_relations
        WHERE source_model = @sourceModel
@@ -653,31 +598,9 @@ export class DataMigrator {
   }
 
   private async insertRelation(relation: RelationItem): Promise<void> {
-    console.log('\nİlişki kaydediliyor:', relation);
-    try {
-      const stmt = this.prepareRelationStatement();
-      const values = this.extractRelationValues(relation);
-      console.log('İlişki değerleri:', values);
-      console.log('İlişki SQL:', stmt);
-
-      try {
-        const result = stmt.run(values);
-        console.log('İlişki kayıt sonucu:', result);
-      }
-      catch (error) {
-        console.error('İlişki kaydetme hatası:', {
-          error,
-          sql: stmt,
-          values,
-          relation,
-        });
-        throw error;
-      }
-    }
-    catch (error) {
-      console.error('İlişki hazırlama hatası:', error);
-      throw error;
-    }
+    const stmt = this.prepareRelationStatement();
+    const values = this.extractRelationValues(relation);
+    stmt.run(values);
   }
 
   private extractTranslations(items: RawContentItem[], model: ModelConfig): TranslationItem[] {

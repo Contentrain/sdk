@@ -453,9 +453,6 @@ export class SchemaBuilder {
       const relationTableName = this.fieldNormalizer.normalizeRelationTableName('contentrain', 'relations');
       this.validateTableName(relationTableName);
 
-      console.log('\n=== İlişki Tablosu Oluşturuluyor ===');
-      console.log('Tablo adı:', relationTableName);
-
       const sql = `
         CREATE TABLE IF NOT EXISTS ${relationTableName} (
           id TEXT PRIMARY KEY,
@@ -470,12 +467,9 @@ export class SchemaBuilder {
         )
       `;
 
-      console.log('SQL:', sql);
       this.db.exec(sql);
-      console.log('İlişki tablosu oluşturuldu.');
     }
     catch (error) {
-      console.error('İlişki tablosu oluşturulurken hata:', error);
       throw new SchemaError({
         code: ErrorCode.TABLE_CREATION_FAILED,
         message: 'Failed to create relation table',

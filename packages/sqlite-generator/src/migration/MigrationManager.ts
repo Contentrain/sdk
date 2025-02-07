@@ -118,13 +118,6 @@ export class MigrationManager {
    * Executes a single migration
    */
   private async executeMigration(migration: MigrationState): Promise<void> {
-    console.log('\n=== Model Migrasyonu Başlıyor ===');
-    console.log('Model ID:', migration.modelId);
-    console.log('İçerik sayısı:', migration.contentItems.length);
-    console.log('Çeviri var mı:', !!migration.translations);
-    console.log('İlişki var mı:', !!migration.relations);
-    console.log('İlişki sayısı:', migration.relations?.length ?? 0);
-
     const model = this.findModel(migration.modelId);
     if (!model) {
       throw new MigrationError({
@@ -152,19 +145,11 @@ export class MigrationManager {
 
     // İlişkileri migrate et
     if (migration.relations && migration.relations.length > 0) {
-      console.log('\nİlişkiler migrate ediliyor...');
-      console.log('İlişki sayısı:', migration.relations.length);
-      console.log('İlişkiler:', JSON.stringify(migration.relations, null, 2));
-
       await this.dataMigrator.migrateRelationData(
         migration.modelId,
         migration.relations,
         this.models,
       );
-      console.log('İlişki migrasyonu tamamlandı.');
-    }
-    else {
-      console.log('\nMigre edilecek ilişki bulunamadı.');
     }
   }
 

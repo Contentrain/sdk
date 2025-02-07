@@ -235,11 +235,8 @@ export class SQLiteGenerator {
       relations?: RelationItem[]
     }>
   }> {
-    console.log('\n=== İçerik Analizi Başlıyor ===');
     // Modelleri analiz et
     const models = await this.modelAnalyzer.analyzeModels(this.config.modelsDir);
-    console.log('Model sayısı:', models.length);
-    console.log('İlişki içeren modeller:', models.filter(m => m.fields.some(f => f.fieldType === 'relation')).map(m => m.id));
 
     // İlişkileri doğrula
     const relationAnalyzer = new RelationAnalyzer(models);
@@ -253,7 +250,6 @@ export class SQLiteGenerator {
     }> = {};
 
     for (const model of models) {
-      console.log(`\nModel işleniyor: ${model.id}`);
       const result = await this.contentAnalyzer.analyzeContent(model);
 
       if (this.isLocalizedContent(result)) {
@@ -271,11 +267,9 @@ export class SQLiteGenerator {
       // İlişkileri ekle
       const relationFields = model.fields.filter(f => f.fieldType === 'relation');
       if (relationFields.length > 0) {
-        console.log(`${model.id} için ilişki alanları:`, relationFields.map(f => f.fieldId));
         // İlişkileri oluştur
         const relations = relationAnalyzer.analyzeRelations(model, result.contentItems);
         if (relations.length > 0) {
-          console.log(`${model.id} için ilişkiler bulundu:`, relations.length);
           content[model.id].relations = relations;
         }
       }
