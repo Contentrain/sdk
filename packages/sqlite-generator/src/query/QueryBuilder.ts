@@ -1,83 +1,62 @@
+import type { ContentItem } from '../types/content';
 import type { Database } from '../types/database';
 import type {
-  BaseQueryModel,
-  ExtractFields,
-  ExtractRelations,
-  IncludeClause,
+  BaseTranslation,
   QueryBuilder as IQueryBuilder,
+  Operator,
   OperatorForType,
   QueryConfig,
   QueryResult,
   RelationConfig,
-  RelationOptions,
-  TableConfig,
-  TableName,
+  ValueForOperator,
+  WhereClause,
 } from '../types/query';
 import { FieldNormalizer } from '../normalizer/FieldNormalizer';
 import { ErrorCode, ValidationError } from '../types/errors';
 
 export class QueryBuilder<
-  T extends BaseQueryModel,
-  TTable extends TableConfig<string> = any,
-> implements IQueryBuilder<T, TTable> {
-  private config: QueryConfig<T> = {};
-  private includedRelations: Set<ExtractRelations<T>> = new Set();
-  private selectedFields: Set<ExtractFields<T>> = new Set();
+  T extends ContentItem,
+  TTranslation extends BaseTranslation = BaseTranslation,
+  TRelations extends Record<string, RelationConfig<ContentItem>> = Record<string, never>,
+> implements IQueryBuilder<T, TTranslation, TRelations> {
+  private config: QueryConfig<T, TTranslation, TRelations> = {};
+  private includedRelations: Set<keyof TRelations> = new Set();
+  private selectedFields: Set<keyof (T & TTranslation)> = new Set();
   private hasLocaleSet = false;
   private readonly defaultLocale = 'en';
   private readonly fieldNormalizer: FieldNormalizer;
-
-  public readonly tableName: TableName<TTable>;
-  public hasTranslations = false;
+  private readonly tableName: string;
+  private hasTranslations = false;
+  private initTranslationsPromise: Promise<void>;
 
   constructor(
     private db: Database,
-    modelId: TableName<TTable>,
+    modelId: string,
   ) {
     this.fieldNormalizer = new FieldNormalizer();
-    this.tableName = this.fieldNormalizer.normalizeTableName(modelId) as TableName<TTable>;
-    this.initTranslationsPromise = this.initTranslations().catch((error) => {
-      console.error('Failed to initialize translations:', error);
-      this.hasTranslations = false;
-    });
+    this.tableName = `tbl_${modelId}`;
+    this.initTranslationsPromise = this.initTranslations();
   }
-
-  private initTranslationsPromise: Promise<void>;
 
   private async initTranslations(): Promise<void> {
-    const hasTranslations = await this.checkTranslationTable();
-    this.hasTranslations = hasTranslations;
-  }
-
-  /**
-   * Checks translation table
-   */
-  private async checkTranslationTable(): Promise<boolean> {
     try {
       const translationTable = `${this.tableName}_translations`;
       const result = await this.db.get<{ name: string }>(
         'SELECT name FROM sqlite_master WHERE type = @type AND name = @name',
         { type: 'table', name: translationTable },
       );
-      return result?.name === translationTable;
+      this.hasTranslations = result?.name === translationTable;
     }
     catch (error) {
-      throw new ValidationError({
-        code: ErrorCode.INVALID_QUERY_PARAMETER,
-        message: 'Translation table not found',
-        details: { tableName: this.tableName },
-        cause: error instanceof Error ? error : undefined,
-      });
+      console.error('Failed to initialize translations:', error);
+      this.hasTranslations = false;
     }
   }
 
-  /**
-   * Filtre ekler
-   */
-  public where<K extends ExtractFields<T>>(
+  public where<K extends keyof (T & TTranslation)>(
     field: K,
-    operator: OperatorForType<T[K]>,
-    value: T[K] | T[K][],
+    operator: Operator,
+    value: ValueForOperator<(T & TTranslation)[K], Operator>,
   ): this {
     if (!this.config.where) {
       this.config.where = [];
@@ -87,53 +66,31 @@ export class QueryBuilder<
       field,
       operator,
       value,
-    });
+    } as WhereClause<T & TTranslation, K>);
 
     return this;
   }
 
-  /**
-   * İlişki ekler
-   */
-  public include<K extends ExtractRelations<T>>(
-    relations: K | K[],
-    options?: T[K] extends Array<infer U>
-      ? U extends BaseQueryModel
-        ? RelationOptions<U>
-        : never
-      : T[K] extends BaseQueryModel
-        ? RelationOptions<T[K]>
-        : never,
+  public include<K extends keyof TRelations>(
+    relation: K,
+    options: RelationConfig<TRelations[K]['model']>,
   ): this {
     if (!this.config.include) {
       this.config.include = {};
     }
 
-    const relationArray = Array.isArray(relations) ? relations : [relations];
-
-    for (const relation of relationArray) {
-      if (options) {
-        (this.config.include)[relation] = options;
-      }
-      this.includedRelations.add(relation);
-    }
-
+    this.config.include[relation] = options;
+    this.includedRelations.add(relation);
     return this;
   }
 
-  /**
-   * Alan seçimi yapar
-   */
-  public select(fields: Array<ExtractFields<T>>): this {
+  public select(fields: Array<keyof (T & TTranslation)>): this {
     this.config.select = fields;
     fields.forEach(field => this.selectedFields.add(field));
     return this;
   }
 
-  /**
-   * Sıralama ekler
-   */
-  public orderBy(field: ExtractFields<T>, direction: 'asc' | 'desc' = 'asc'): this {
+  public orderBy(field: keyof (T & TTranslation), direction: 'asc' | 'desc' = 'asc'): this {
     if (!this.config.orderBy) {
       this.config.orderBy = [];
     }
@@ -146,9 +103,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Limit ekler
-   */
   public limit(count: number): this {
     if (!this.config.pagination) {
       this.config.pagination = {};
@@ -157,9 +111,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Offset ekler
-   */
   public offset(count: number): this {
     if (!this.config.pagination) {
       this.config.pagination = {};
@@ -168,9 +119,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Dil seçer
-   */
   public locale(code: string): this {
     this.hasLocaleSet = true;
     if (!this.config.options) {
@@ -180,9 +128,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Önbellek süresini ayarlar
-   */
   public cache(ttl?: number): this {
     if (!this.config.options) {
       this.config.options = {};
@@ -192,9 +137,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Önbelleği devre dışı bırakır
-   */
   public noCache(): this {
     if (!this.config.options) {
       this.config.options = {};
@@ -203,9 +145,6 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Önbelleği atlar
-   */
   public bypassCache(): this {
     if (!this.config.options) {
       this.config.options = {};
@@ -214,15 +153,10 @@ export class QueryBuilder<
     return this;
   }
 
-  /**
-   * Sorguyu çalıştırır
-   */
-  public async get(): Promise<QueryResult<T>> {
+  public async get(): Promise<QueryResult<T & Partial<TRelations>>> {
     try {
-      // Önce translations'ın yüklenmesini bekle
       await this.initTranslationsPromise;
 
-      // Lokalize edilmiş tablo için locale kontrolü
       if (this.hasTranslations && !this.hasLocaleSet) {
         this.locale(this.defaultLocale);
       }
@@ -231,13 +165,13 @@ export class QueryBuilder<
       const countQuery = await this.buildCountQuery();
 
       const [data, totalResult] = await Promise.all([
-        this.db.all<T>(query.sql, query.params),
+        this.db.all<T & Partial<TRelations>>(query.sql, query.params),
         this.db.get<{ total: number }>(countQuery.sql, countQuery.params),
       ]);
 
       const total = totalResult?.total ?? 0;
-      const result: QueryResult<T> = {
-        data: this.transformResult(data),
+      const result: QueryResult<T & Partial<TRelations>> = {
+        data: await this.transformResult(data),
         total,
       };
 
@@ -265,51 +199,16 @@ export class QueryBuilder<
     }
   }
 
-  /**
-   * Sonuçları dönüştürür
-   */
-  private transformResult(data: T[]): T[] {
-    return data.map((item) => {
-      const result = { ...item };
-
-      // Seçili alanları kontrol et
-      if (this.selectedFields.size > 0) {
-        for (const key in result) {
-          if (!this.selectedFields.has(key as unknown as ExtractFields<T>)) {
-            delete result[key as keyof T];
-          }
-        }
-      }
-
-      // İlişkileri başlat
-      this.includedRelations.forEach((relation) => {
-        if (!(relation in result)) {
-          result[relation] = null as any;
-        }
-      });
-
-      return result;
-    });
-  }
-
-  /**
-   * Tek kayıt getirir
-   */
-  public async first(): Promise<T | null> {
+  public async first(): Promise<(T & Partial<TRelations>) | null> {
     this.limit(1);
     const result = await this.get();
     return result.data[0] ?? null;
   }
 
-  /**
-   * Kayıt sayısını getirir
-   */
   public async count(): Promise<number> {
     try {
-      // Önce translations'ın yüklenmesini bekle
       await this.initTranslationsPromise;
 
-      // Lokalize edilmiş tablo için locale kontrolü
       if (this.hasTranslations && !this.hasLocaleSet) {
         this.locale(this.defaultLocale);
       }
@@ -328,9 +227,175 @@ export class QueryBuilder<
     }
   }
 
-  /**
-   * Gets available locales
-   */
+  private async transformResult(data: (T & Partial<TRelations>)[]): Promise<(T & Partial<TRelations>)[]> {
+    return data.map((item) => {
+      const result = { ...item };
+
+      if (this.selectedFields.size > 0) {
+        for (const key in result) {
+          if (!this.selectedFields.has(key as keyof (T & TTranslation))) {
+            delete result[key];
+          }
+        }
+      }
+
+      return result;
+    });
+  }
+
+  private async loadRelations(items: (T & Partial<TRelations>)[]): Promise<void> {
+    if (!this.config.include || !items.length)
+      return;
+
+    for (const [relationField, options] of Object.entries(this.config.include)) {
+      if (!options)
+        continue;
+
+      const relationInfo = await this.getRelationInfo(relationField);
+      if (!relationInfo)
+        continue;
+
+      const targetIds = await this.getRelationTargetIds(items, relationField);
+      if (!targetIds.length)
+        continue;
+
+      const relatedItems = await this.getRelatedItems(relationInfo.target_model, targetIds, options);
+      await this.attachRelatedItems(items, relationField, relationInfo.type, relatedItems);
+    }
+  }
+
+  private async getRelationInfo(relationField: string) {
+    return this.db.get<{
+      type: 'one-to-one' | 'one-to-many'
+      target_model: string
+    }>(
+      `SELECT type, target_model FROM tbl_contentrain_relations
+       WHERE source_model = @sourceModel
+       AND field_id = @fieldId
+       LIMIT 1`,
+      {
+        sourceModel: this.tableName.replace(/^tbl_/, ''),
+        fieldId: relationField,
+      },
+    );
+  }
+
+  private async getRelationTargetIds(items: (T & Partial<TRelations>)[], relationField: string) {
+    const result = await this.db.all<{ target_id: string }>(
+      `SELECT target_id FROM tbl_contentrain_relations
+       WHERE source_model = @sourceModel
+       AND field_id = @fieldId
+       AND source_id IN (${items.map((_, i) => `@id${i}`).join(', ')})`,
+      {
+        sourceModel: this.tableName.replace(/^tbl_/, ''),
+        fieldId: relationField,
+        ...items.reduce((acc, item, i) => ({ ...acc, [`id${i}`]: item.id }), {}),
+      },
+    );
+
+    return result.map(r => r.target_id);
+  }
+
+  private async getRelatedItems<M extends ContentItem, MT extends BaseTranslation>(
+    targetModel: string,
+    targetIds: string[],
+    options: RelationConfig<M>,
+  ): Promise<M[]> {
+    const builder = new QueryBuilder<M, MT>(this.db, targetModel.replace(/^tbl_/, ''));
+
+    builder.where('id', 'in', targetIds);
+
+    if (options.select?.length) {
+      builder.select(options.select as Array<keyof (M & MT)>);
+    }
+
+    if (this.config.options?.locale) {
+      builder.locale(this.config.options.locale);
+    }
+
+    const result = await builder.get();
+    return result.data;
+  }
+
+  private async attachRelatedItems(
+    items: (T & Partial<TRelations>)[],
+    relationField: string,
+    relationType: 'one-to-one' | 'one-to-many',
+    relatedItems: any[],
+  ) {
+    for (const item of items) {
+      const itemRelations = await this.db.all<{ target_id: string }>(
+        `SELECT target_id FROM tbl_contentrain_relations
+         WHERE source_model = @sourceModel
+         AND field_id = @fieldId
+         AND source_id = @sourceId`,
+        {
+          sourceModel: this.tableName.replace(/^tbl_/, ''),
+          fieldId: relationField,
+          sourceId: item.id,
+        },
+      );
+
+      const related = relatedItems.filter(r =>
+        itemRelations.some(ir => ir.target_id === r.id),
+      );
+
+      if (related.length > 0) {
+        const relationKey = relationField as keyof (T & Partial<TRelations>);
+        (item as any)[relationKey] = relationType === 'one-to-one' ? related[0] : related;
+      }
+    }
+  }
+
+  private async buildQuery(): Promise<{ sql: string, params: Record<string, unknown> }> {
+    const params: Record<string, unknown> = {};
+    const parts: string[] = [];
+
+    if (this.hasTranslations) {
+      const hasTranslationFields = this.hasTranslationFieldsInQuery();
+
+      if (hasTranslationFields && !this.hasLocaleSet) {
+        const availableLocales = await this.getAvailableLocales();
+        throw new ValidationError({
+          code: ErrorCode.LOCALE_REQUIRED,
+          message: 'This table has translation support. You need to use .locale() method to access translation fields.',
+          details: {
+            tableName: this.tableName,
+            availableLocales,
+            example: `queryBuilder.locale('${availableLocales[0] || 'en'}')`,
+          },
+        });
+      }
+
+      if (this.hasLocaleSet) {
+        await this.buildTranslationJoinQuery(parts, params);
+      }
+      else {
+        this.buildSimpleQuery(parts);
+      }
+    }
+    else {
+      this.buildSimpleQuery(parts);
+    }
+
+    this.buildWhereClause(parts, params);
+    this.buildOrderByClause(parts);
+    this.buildPaginationClauses(parts, params);
+
+    return {
+      sql: parts.join(' '),
+      params,
+    };
+  }
+
+  private hasTranslationFieldsInQuery(): boolean {
+    const systemFields = ['id', 'created_at', 'updated_at', 'status'];
+    return !!(
+      this.config.select?.some(field => !systemFields.includes(String(field)))
+      || this.config.where?.some(where => !systemFields.includes(String(where.field)))
+    );
+  }
+
   private async getAvailableLocales(): Promise<string[]> {
     try {
       const translationTable = `${this.tableName}_translations`;
@@ -344,336 +409,161 @@ export class QueryBuilder<
     }
   }
 
-  /**
-   * SQL sorgusunu oluşturur
-   */
-  private async buildQuery(): Promise<{ sql: string, params: Record<string, unknown> }> {
-    const params: Record<string, unknown> = {};
-    const parts: string[] = [];
+  private async buildTranslationJoinQuery(parts: string[], params: Record<string, unknown>): Promise<void> {
+    const translationTable = `${this.tableName}_translations`;
+    const mainAlias = 'm';
+    const translationAlias = 't';
 
-    // Çevirisi olan tablolar için çeviri kontrolü
-    if (this.hasTranslations) {
-      // Çeviri alanlarına erişmeye çalışıyor ama locale ayarlanmamış
-      const hasTranslationFields = this.config.select?.some(field =>
-        !['id', 'created_at', 'updated_at', 'status'].includes(String(field)))
-      || this.config.where?.some(where =>
-        !['id', 'created_at', 'updated_at', 'status'].includes(String(where.field)));
-
-      if (hasTranslationFields && !this.hasLocaleSet) {
-        const availableLocales = await this.getAvailableLocales();
-        throw new ValidationError({
-          code: ErrorCode.LOCALE_REQUIRED,
-          message: 'This table has translation support. You need to use .locale() method to access translation fields.',
-          details: {
-            tableName: this.tableName,
-            availableLocales,
-            example: `queryBuilder.locale('${JSON.stringify(availableLocales)}')`,
-            note: 'Translation fields are only accessible when a locale is set.',
-          },
-        });
-      }
-    }
-
-    // Çevirisi olan tablolar için JOIN yapısı
-    if (this.hasTranslations && this.hasLocaleSet) {
-      const translationTable = `${this.tableName}_translations`;
-
-      // Çeviri tablosunun varlığını tekrar kontrol et
-      const hasTranslationTable = await this.checkTranslationTable();
-
-      if (!hasTranslationTable) {
-        // Çeviri tablosu yoksa normal sorgu yap
-        const fields = this.config.select?.length ? this.config.select.map(String) : ['*'];
-        parts.push(`SELECT ${fields.join(', ')} FROM ${this.tableName}`);
-      }
-      else {
-        const locale = this.config.options?.locale;
-
-        // Ana tablo ve çeviri tablosu için alias'lar
-        const mainAlias = 'm';
-        const translationAlias = 't';
-
-        // SELECT kısmını güncelle
-        let selectFields: string[];
-        if (this.config.select?.length) {
-          // Seçili alanları ana tablo ve çeviri tablosuna göre ayır
-          selectFields = this.config.select.map((field) => {
-            const fieldStr = String(field);
-            // Sistem alanları ana tablodan
-            if (['id', 'created_at', 'updated_at', 'status'].includes(fieldStr)) {
-              return `${mainAlias}.${fieldStr}`;
-            }
-            // Diğer alanlar çeviri tablosundan
-            return `${translationAlias}.${fieldStr}`;
-          });
-        }
-        else {
-          // Tüm alanları seç
-          selectFields = [
-            // Sistem alanları
-            `${mainAlias}.id`,
-            `${mainAlias}.created_at`,
-            `${mainAlias}.updated_at`,
-            `${mainAlias}.status`,
-            // Çeviri tablosundan tüm alanlar (id ve locale hariç)
-            `${translationAlias}.*`,
-          ];
-        }
-
-        parts.push(`SELECT ${selectFields.join(', ')} FROM ${this.tableName} ${mainAlias}`);
-        parts.push(`JOIN ${translationTable} ${translationAlias} ON ${mainAlias}.id = ${translationAlias}.id AND ${translationAlias}.locale = @locale`);
-        params.locale = locale;
-      }
+    let selectFields: string[];
+    if (this.config.select?.length) {
+      selectFields = this.config.select.map((field) => {
+        const fieldStr = String(field);
+        const isSystemField = ['id', 'created_at', 'updated_at', 'status'].includes(fieldStr);
+        return isSystemField
+          ? `${mainAlias}.${fieldStr}`
+          : `${translationAlias}.${fieldStr}`;
+      });
     }
     else {
-      // Normal tablo için standart sorgu
-      const fields = this.config.select?.length ? this.config.select.map(String) : ['*'];
-      parts.push(`SELECT ${fields.join(', ')} FROM ${this.tableName}`);
+      selectFields = [
+        `${mainAlias}.id`,
+        `${mainAlias}.created_at`,
+        `${mainAlias}.updated_at`,
+        `${mainAlias}.status`,
+        `${translationAlias}.*`,
+      ];
     }
 
-    // WHERE koşulları
-    if (this.config.where?.length) {
-      const conditions = this.buildWhereConditions(params);
-      if (conditions) {
-        parts.push(`WHERE ${conditions}`);
-      }
-    }
-
-    // ORDER BY
-    if (this.config.orderBy?.length) {
-      const orderBy = this.config.orderBy
-        .map(({ field, direction }) => {
-          let fieldName = String(field);
-
-          // Çevirisi olan tablolarda alias ekle
-          if (this.hasTranslations && this.hasLocaleSet) {
-            const isSystemField = ['id', 'created_at', 'updated_at', 'status'].includes(fieldName);
-            fieldName = `${isSystemField ? 'm' : 't'}.${fieldName}`;
-          }
-
-          return `${fieldName} ${direction.toUpperCase()}`;
-        })
-        .join(', ');
-      parts.push(`ORDER BY ${orderBy}`);
-    }
-
-    // LIMIT & OFFSET
-    if (this.config.pagination) {
-      if (this.config.pagination.limit) {
-        parts.push('LIMIT @limit');
-        params.limit = this.config.pagination.limit;
-      }
-      if (this.config.pagination.offset) {
-        parts.push('OFFSET @offset');
-        params.offset = this.config.pagination.offset;
-      }
-    }
-
-    return {
-      sql: parts.join(' '),
-      params,
-    };
+    parts.push(`SELECT ${selectFields.join(', ')} FROM ${this.tableName} ${mainAlias}`);
+    parts.push(`JOIN ${translationTable} ${translationAlias} ON ${mainAlias}.id = ${translationAlias}.id AND ${translationAlias}.locale = @locale`);
+    params.locale = this.config.options?.locale;
   }
 
-  /**
-   * Toplam kayıt sayısı sorgusunu oluşturur
-   */
-  private async buildCountQuery(): Promise<{ sql: string, params: Record<string, unknown> }> {
-    const params: Record<string, unknown> = {};
-    const parts: string[] = [];
-
-    // Çevirisi olan tablolar için çeviri kontrolü
-    if (this.hasTranslations) {
-      // Çeviri alanlarına erişmeye çalışıyor ama locale ayarlanmamış
-      const hasTranslationFields = this.config.where?.some(where =>
-        !['id', 'created_at', 'updated_at', 'status'].includes(String(where.field)));
-
-      if (hasTranslationFields && !this.hasLocaleSet) {
-        const availableLocales = await this.getAvailableLocales();
-        throw new ValidationError({
-          code: ErrorCode.LOCALE_REQUIRED,
-          message: 'This table has translation support. You need to use .locale() method to access translation fields.',
-          details: {
-            tableName: this.tableName,
-            availableLocales,
-            example: `queryBuilder.locale('${availableLocales[0] || 'en'}')`,
-            note: 'Translation fields are only accessible when a locale is set.',
-          },
-        });
-      }
-    }
-
-    if (this.hasTranslations && this.hasLocaleSet) {
-      const translationTable = `${this.tableName}_translations`;
-      const locale = this.config.options?.locale || this.defaultLocale;
-
-      parts.push(`SELECT COUNT(DISTINCT m.id) as total FROM ${this.tableName} m`);
-      parts.push(`JOIN ${translationTable} t ON m.id = t.id AND t.locale = @locale`);
-      params.locale = locale;
-    }
-    else {
-      parts.push(`SELECT COUNT(*) as total FROM ${this.tableName}`);
-    }
-
-    if (this.config.where?.length) {
-      const conditions = this.buildWhereConditions(params);
-      if (conditions) {
-        parts.push(`WHERE ${conditions}`);
-      }
-    }
-
-    return {
-      sql: parts.join(' '),
-      params,
-    };
+  private buildSimpleQuery(parts: string[]): void {
+    const fields = this.config.select?.length ? this.config.select.map(String) : ['*'];
+    parts.push(`SELECT ${fields.join(', ')} FROM ${this.tableName}`);
   }
 
-  /**
-   * WHERE koşullarını oluşturur
-   */
-  private buildWhereConditions(params: Record<string, unknown>): string {
-    return this.config.where!
+  private buildWhereClause(parts: string[], params: Record<string, unknown>): void {
+    if (!this.config.where?.length)
+      return;
+
+    const conditions = this.config.where
       .map(({ field, operator, value }, index) => {
         const paramName = `p${index}`;
-
-        // Array operatörleri için özel işlem
-        if (operator === 'in' || operator === 'nin') {
-          const values = Array.isArray(value) ? value : [value];
-          values.forEach((val, i) => {
-            params[`${paramName}_${i}`] = val;
-          });
-        }
-        else {
-          params[paramName] = value;
-        }
-
-        // Alan adını hazırla
         const isSystemField = ['id', 'created_at', 'updated_at', 'status'].includes(String(field));
         const fieldName = this.hasTranslations && this.hasLocaleSet
           ? `${isSystemField ? 'm' : 't'}.${String(field)}`
           : String(field);
 
-        // Operatör işleme
-        switch (operator) {
-          case 'eq':
-            return `${fieldName} = @${paramName}`;
-          case 'ne':
-            return `${fieldName} != @${paramName}`;
-          case 'gt':
-            return `${fieldName} > @${paramName}`;
-          case 'gte':
-            return `${fieldName} >= @${paramName}`;
-          case 'lt':
-            return `${fieldName} < @${paramName}`;
-          case 'lte':
-            return `${fieldName} <= @${paramName}`;
-          case 'contains':
-            params[paramName] = `%${String(value)}%`;
-            return `${fieldName} LIKE @${paramName}`;
-          case 'startsWith':
-            params[paramName] = `${String(value)}%`;
-            return `${fieldName} LIKE @${paramName}`;
-          case 'endsWith':
-            params[paramName] = `%${String(value)}`;
-            return `${fieldName} LIKE @${paramName}`;
-          case 'in': {
-            const values = Array.isArray(value) ? value : [value];
-            return `${fieldName} IN (${values.map((_, i) => `@${paramName}_${i}`).join(', ')})`;
-          }
-          case 'nin': {
-            const values = Array.isArray(value) ? value : [value];
-            return `${fieldName} NOT IN (${values.map((_, i) => `@${paramName}_${i}`).join(', ')})`;
-          }
-          default:
-            throw new ValidationError({
-              code: ErrorCode.INVALID_OPERATOR,
-              message: 'Invalid operator',
-              details: { operator },
-            });
+        if (operator === 'in' || operator === 'nin') {
+          const values = Array.isArray(value) ? value : [value];
+          values.forEach((val, i) => {
+            params[`${paramName}_${i}`] = val;
+          });
+          const placeholders = values.map((_, i) => `@${paramName}_${i}`).join(', ');
+          return `${fieldName} ${operator === 'in' ? 'IN' : 'NOT IN'} (${placeholders})`;
         }
+
+        params[paramName] = this.formatValue(operator, value);
+        return this.buildOperatorCondition(fieldName, operator, paramName);
       })
       .join(' AND ');
-  }
 
-  /**
-   * İlişkili verileri yükler
-   */
-  private async loadRelations(items: T[]): Promise<void> {
-    if (!this.config.include)
-      return;
-
-    const include = this.config.include as Required<IncludeClause<T>>;
-    for (const [relationField, config] of Object.entries(include)) {
-      if (!config)
-        continue;
-
-      // İlişki ID'lerini topla
-      const relationIds = new Set<string>();
-      const relationIdField = `${this.fieldNormalizer.normalize(relationField)}_id`;
-
-      for (const item of items) {
-        const relationId = item[relationIdField as keyof T];
-        if (typeof relationId === 'string') {
-          relationIds.add(relationId);
-        }
-        else if (Array.isArray(relationId)) {
-          relationId.forEach(id => relationIds.add(id));
-        }
-      }
-
-      if (relationIds.size === 0)
-        continue;
-
-      // İlişkili verileri getir
-      const fields = (config as RelationConfig<BaseQueryModel>).select ?? ['*'];
-      const targetModelId = this.getTargetModelId(relationField);
-      const relationTableName = this.fieldNormalizer.normalizeTableName(targetModelId);
-
-      const builder = new QueryBuilder<BaseQueryModel>(this.db, relationTableName as TableName<TTable>);
-
-      // ID'lere göre filtrele
-      const ids = Array.from(relationIds);
-      builder.where('id', 'in' as const, ids);
-
-      if (fields.length > 0) {
-        builder.select(fields as Array<ExtractFields<BaseQueryModel>>);
-      }
-
-      if ((config as RelationConfig<BaseQueryModel>).include) {
-        builder.include((config as RelationConfig<BaseQueryModel>).include as any);
-      }
-
-      if (this.config.options?.locale) {
-        builder.locale(this.config.options.locale);
-      }
-
-      const relations = await builder.get();
-
-      // İlişkili verileri ana veriye bağla
-      for (const item of items) {
-        const relationId = item[relationIdField as keyof T];
-        if (typeof relationId === 'string') {
-          const relatedItem = relations.data.find(r => r.id === relationId);
-          if (relatedItem) {
-            const relationKey = relationField as keyof T;
-            item[relationKey] = relatedItem as any;
-          }
-        }
-        else if (Array.isArray(relationId)) {
-          const relatedItems = relations.data.filter(r => relationId.includes(r.id));
-          if (relatedItems.length > 0) {
-            const relationKey = relationField as keyof T;
-            item[relationKey] = relatedItems as any;
-          }
-        }
-      }
+    if (conditions) {
+      parts.push(`WHERE ${conditions}`);
     }
   }
 
-  private getTargetModelId(relationField: string): string {
-    // İlişki alanından gerçek model ID'sini çıkar
-    const normalized = this.fieldNormalizer.normalize(relationField);
-    // İlişki tanımından hedef model bilgisini al
-    return normalized.replace(/^my-/, '').replace(/-/g, '_');
+  private formatValue(operator: string, value: unknown): unknown {
+    switch (operator) {
+      case 'contains':
+        return `%${String(value)}%`;
+      case 'startsWith':
+        return `${String(value)}%`;
+      case 'endsWith':
+        return `%${String(value)}`;
+      default:
+        return value;
+    }
+  }
+
+  private buildOperatorCondition(field: string, operator: string, param: string): string {
+    switch (operator) {
+      case 'eq':
+        return `${field} = @${param}`;
+      case 'ne':
+        return `${field} != @${param}`;
+      case 'gt':
+        return `${field} > @${param}`;
+      case 'gte':
+        return `${field} >= @${param}`;
+      case 'lt':
+        return `${field} < @${param}`;
+      case 'lte':
+        return `${field} <= @${param}`;
+      case 'contains':
+      case 'startsWith':
+      case 'endsWith':
+        return `${field} LIKE @${param}`;
+      default:
+        throw new ValidationError({
+          code: ErrorCode.INVALID_OPERATOR,
+          message: 'Invalid operator',
+          details: { operator },
+        });
+    }
+  }
+
+  private buildOrderByClause(parts: string[]): void {
+    if (!this.config.orderBy?.length)
+      return;
+
+    const orderBy = this.config.orderBy
+      .map(({ field, direction }) => {
+        let fieldName = String(field);
+        if (this.hasTranslations && this.hasLocaleSet) {
+          const isSystemField = ['id', 'created_at', 'updated_at', 'status'].includes(fieldName);
+          fieldName = `${isSystemField ? 'm' : 't'}.${fieldName}`;
+        }
+        return `${fieldName} ${direction.toUpperCase()}`;
+      })
+      .join(', ');
+
+    parts.push(`ORDER BY ${orderBy}`);
+  }
+
+  private buildPaginationClauses(parts: string[], params: Record<string, unknown>): void {
+    if (this.config.pagination?.limit) {
+      parts.push('LIMIT @limit');
+      params.limit = this.config.pagination.limit;
+    }
+
+    if (this.config.pagination?.offset) {
+      parts.push('OFFSET @offset');
+      params.offset = this.config.pagination.offset;
+    }
+  }
+
+  private async buildCountQuery(): Promise<{ sql: string, params: Record<string, unknown> }> {
+    const params: Record<string, unknown> = {};
+    const parts: string[] = [];
+
+    if (this.hasTranslations && this.hasLocaleSet) {
+      const translationTable = `${this.tableName}_translations`;
+      parts.push(`SELECT COUNT(DISTINCT m.id) as total FROM ${this.tableName} m`);
+      parts.push(`JOIN ${translationTable} t ON m.id = t.id AND t.locale = @locale`);
+      params.locale = this.config.options?.locale || this.defaultLocale;
+    }
+    else {
+      parts.push(`SELECT COUNT(*) as total FROM ${this.tableName}`);
+    }
+
+    this.buildWhereClause(parts, params);
+
+    return {
+      sql: parts.join(' '),
+      params,
+    };
   }
 }

@@ -32,14 +32,6 @@ export class ContentAnalyzer {
    * Analyzes model content
    */
   async analyzeContent(model: ModelConfig): Promise<LocalizedContentResult | DefaultContentResult> {
-    console.log('\n=== İçerik Analizi Başlıyor ===');
-    console.log('Model:', model.id);
-    console.log('İlişki alanları:', model.fields.filter(f => f.fieldType === 'relation').map(f => ({
-      fieldId: f.fieldId,
-      componentId: f.componentId,
-      reference: f.options?.reference?.form?.reference?.value,
-    })));
-
     const modelDir = join(this.contentDir, model.id);
 
     try {

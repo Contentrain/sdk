@@ -62,29 +62,51 @@ async function exportToMarkdown(dbFile: string, outputFile: string) {
   const db = new DatabaseAdapter(dbFile);
   await db.initialize();
   // Markdown içeriğini oluştur
-  let markdownContent = '# Database Structure\n\n';
+  let markdownContent = '# Database Structure & Content\n\n';
 
   // Tüm tabloları al
-  const tables = db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'').all();
+  const tables: { name: string }[] = db.prepare('SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'').all();
 
   for (const table of tables) {
-    markdownContent += `## ${table.name}\n\n`;
+    markdownContent += `## Table: ${table.name}\n\n`;
+
+    // Sütun bilgilerini al
+    const columns: { name: string, type: string, pk: number }[] = db.prepare(`PRAGMA table_info(${table.name})`).all();
     markdownContent += '| Column | Type | Primary Key |\n';
     markdownContent += '|--------|------|------------|\n';
-
-    // Her tablo için sütun bilgilerini getir
-    const columns = db.prepare(`PRAGMA table_info(${table.name})`).all();
 
     for (const col of columns) {
       markdownContent += `| ${col.name} | ${col.type || 'UNKNOWN'} | ${col.pk ? '✅' : ''} |\n`;
     }
 
     markdownContent += '\n'; // Boşluk ekleyerek Markdown'ı düzenli yap
+
+    // 📌 Tablo içeriğini al
+    const rows: Record<string, unknown>[] = db.prepare(`SELECT * FROM ${table.name}`).all();
+
+    if (rows.length > 0) {
+      // ✅ İlk satırın anahtarlarını al (sütun başlıkları)
+      const headers = Object.keys(rows[0]);
+      markdownContent += `### Data in ${table.name}\n\n`;
+      markdownContent += `| ${headers.join(' | ')} |\n`;
+      markdownContent += `| ${headers.map(() => '---').join(' | ')} |\n`;
+
+      // ✅ Tüm satırları ekleyelim
+      for (const row of rows) {
+        const values = headers.map(header => row[header] !== null ? row[header] : 'NULL'); // Boş veriler için 'NULL'
+        markdownContent += `| ${values.join(' | ')} |\n`;
+      }
+
+      markdownContent += '\n'; // Boşluk bırak
+    }
+    else {
+      markdownContent += `⚠️ **No data found in ${table.name}**\n\n`;
+    }
   }
 
   // Dosyaya yaz
   await writeFile(outputFile, markdownContent, 'utf8');
-  console.log(`✅ Database structure exported to ${outputFile}`);
+  console.log(`✅ Database structure & content exported to ${outputFile}`);
 
   // Veritabanını kapat
   db.close();
