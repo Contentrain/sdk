@@ -16,237 +16,359 @@ import type {
 // Base Types
 export type ModelLocales<T extends string> = T;
 
+export type ContentStatus = 'draft' | 'changed' | 'publish';
+
 export interface IBaseModel<T extends string | never = never> {
   id: string;
   created_at: string;
   updated_at: string;
-  status: 'draft' | 'changed' | 'publish';
+  status: ContentStatus;
   translations?: T extends string
     ? Record<ModelLocales<T>, IBaseTranslation<T>>
     : never;
+  [key: string]: unknown;
 }
 
 export interface IBaseTranslation<T extends string> {
   id: string;
   locale: ModelLocales<T>;
+  [key: string]: unknown;
 }
 
 // ServicesItems Interface
 export interface IServices extends IBaseModel<ModelLocales<'services'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  title: string;
-  description?: string;
-  image?: string;
-
-  reference_id?: string;
-  reference?: IReferences | null;
+  
 }
 
 export interface IServicesTranslation extends IBaseTranslation<'services'> {
-  title: string;
+  title?: string;
   description?: string;
   image?: string;
+}
+
+// Query Builder Types
+export type servicesWhereField = keyof Pick<IServices, 'id' | 'status' | 'reference_id'>;
+export type servicesOrderField = keyof Pick<IServices, 'id' | 'created_at' | 'updated_at' | 'status' | 'reference_id'>;
+export type servicesSelectField = keyof Pick<IServices, 'id' | 'created_at' | 'updated_at' | 'status' | 'reference_id'>;
+export type servicesIncludeField = keyof Pick<IServices, >;
+
+export interface servicesQueryBuilder extends QueryBuilder<IServices> {
+  where<F extends servicesWhereField>(
+    field: F,
+    operator: OperatorForType<IServices[F]>,
+    value: IServices[F] | IServices[F][]
+  ): this;
+
+  orderBy(field: servicesOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: servicesSelectField[]): this;
+  include(relations: servicesIncludeField | servicesIncludeField[]): this;
 }
 
 // ProcessItems Interface
 export interface IProcesses extends IBaseModel<ModelLocales<'processes'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  title: string;
-  description: string;
-  icon: string;
+  
 }
 
 export interface IProcessesTranslation extends IBaseTranslation<'processes'> {
-  title: string;
-  description: string;
-  icon: string;
+  title?: string;
+  description?: string;
+  icon?: string;
+}
+
+// Query Builder Types
+export type processesWhereField = keyof Pick<IProcesses, 'id' | 'status'>;
+export type processesOrderField = keyof Pick<IProcesses, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type processesSelectField = keyof Pick<IProcesses, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type processesIncludeField = keyof Pick<IProcesses, >;
+
+export interface processesQueryBuilder extends QueryBuilder<IProcesses> {
+  where<F extends processesWhereField>(
+    field: F,
+    operator: OperatorForType<IProcesses[F]>,
+    value: IProcesses[F] | IProcesses[F][]
+  ): this;
+
+  orderBy(field: processesOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: processesSelectField[]): this;
+  include(relations: processesIncludeField | processesIncludeField[]): this;
 }
 
 // TabItems Interface
 export interface ITabitems extends IBaseModel<ModelLocales<'tabitems'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  link: string;
-  description: string;
-  image: string;
-
-  category_id: string;
-  category: IWorkcategories[] | null;
+  
 }
 
 export interface ITabitemsTranslation extends IBaseTranslation<'tabitems'> {
-  link: string;
-  description: string;
-  image: string;
+  link?: string;
+  description?: string;
+  image?: string;
+}
+
+// Query Builder Types
+export type tabitemsWhereField = keyof Pick<ITabitems, 'id' | 'status' | 'category_id'>;
+export type tabitemsOrderField = keyof Pick<ITabitems, 'id' | 'created_at' | 'updated_at' | 'status' | 'category_id'>;
+export type tabitemsSelectField = keyof Pick<ITabitems, 'id' | 'created_at' | 'updated_at' | 'status' | 'category_id'>;
+export type tabitemsIncludeField = keyof Pick<ITabitems, >;
+
+export interface tabitemsQueryBuilder extends QueryBuilder<ITabitems> {
+  where<F extends tabitemsWhereField>(
+    field: F,
+    operator: OperatorForType<ITabitems[F]>,
+    value: ITabitems[F] | ITabitems[F][]
+  ): this;
+
+  orderBy(field: tabitemsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: tabitemsSelectField[]): this;
+  include(relations: tabitemsIncludeField | tabitemsIncludeField[]): this;
 }
 
 // WorkItems Interface
 export interface IWorkitems extends IBaseModel<ModelLocales<'workitems'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  title: string;
-  image?: string;
-  description: string;
-  link: string;
-  order: number;
-
-  category_id: string;
-  category: IWorkcategories | null;
+  
 }
 
 export interface IWorkitemsTranslation extends IBaseTranslation<'workitems'> {
-  title: string;
+  title?: string;
   image?: string;
-  description: string;
-  link: string;
-  order: number;
+  description?: string;
+  link?: string;
+  field_order?: number;
+}
+
+// Query Builder Types
+export type workitemsWhereField = keyof Pick<IWorkitems, 'id' | 'status' | 'category_id'>;
+export type workitemsOrderField = keyof Pick<IWorkitems, 'id' | 'created_at' | 'updated_at' | 'status' | 'category_id'>;
+export type workitemsSelectField = keyof Pick<IWorkitems, 'id' | 'created_at' | 'updated_at' | 'status' | 'category_id'>;
+export type workitemsIncludeField = keyof Pick<IWorkitems, >;
+
+export interface workitemsQueryBuilder extends QueryBuilder<IWorkitems> {
+  where<F extends workitemsWhereField>(
+    field: F,
+    operator: OperatorForType<IWorkitems[F]>,
+    value: IWorkitems[F] | IWorkitems[F][]
+  ): this;
+
+  orderBy(field: workitemsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: workitemsSelectField[]): this;
+  include(relations: workitemsIncludeField | workitemsIncludeField[]): this;
 }
 
 // WorkCategories Interface
 export interface IWorkcategories extends IBaseModel<ModelLocales<'workcategories'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  category: string;
-  order: number;
+  
 }
 
 export interface IWorkcategoriesTranslation extends IBaseTranslation<'workcategories'> {
-  category: string;
-  order: number;
+  category?: string;
+  field_order?: number;
+}
+
+// Query Builder Types
+export type workcategoriesWhereField = keyof Pick<IWorkcategories, 'id' | 'status'>;
+export type workcategoriesOrderField = keyof Pick<IWorkcategories, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type workcategoriesSelectField = keyof Pick<IWorkcategories, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type workcategoriesIncludeField = keyof Pick<IWorkcategories, >;
+
+export interface workcategoriesQueryBuilder extends QueryBuilder<IWorkcategories> {
+  where<F extends workcategoriesWhereField>(
+    field: F,
+    operator: OperatorForType<IWorkcategories[F]>,
+    value: IWorkcategories[F] | IWorkcategories[F][]
+  ): this;
+
+  orderBy(field: workcategoriesOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: workcategoriesSelectField[]): this;
+  include(relations: workcategoriesIncludeField | workcategoriesIncludeField[]): this;
 }
 
 // FaqItems Interface
 export interface IFaqitems extends IBaseModel<ModelLocales<'faqitems'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  question: string;
-  answer: string;
-  order: number;
+  
 }
 
 export interface IFaqitemsTranslation extends IBaseTranslation<'faqitems'> {
-  question: string;
-  answer: string;
-  order: number;
+  question?: string;
+  answer?: string;
+  field_order?: number;
+}
+
+// Query Builder Types
+export type faqitemsWhereField = keyof Pick<IFaqitems, 'id' | 'status'>;
+export type faqitemsOrderField = keyof Pick<IFaqitems, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type faqitemsSelectField = keyof Pick<IFaqitems, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type faqitemsIncludeField = keyof Pick<IFaqitems, >;
+
+export interface faqitemsQueryBuilder extends QueryBuilder<IFaqitems> {
+  where<F extends faqitemsWhereField>(
+    field: F,
+    operator: OperatorForType<IFaqitems[F]>,
+    value: IFaqitems[F] | IFaqitems[F][]
+  ): this;
+
+  orderBy(field: faqitemsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: faqitemsSelectField[]): this;
+  include(relations: faqitemsIncludeField | faqitemsIncludeField[]): this;
 }
 
 // Sections Interface
 export interface ISections extends IBaseModel<ModelLocales<'sections'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  title: string;
-  description: string;
-  buttontext?: string;
-  buttonlink?: string;
-  name: string;
-  subtitle?: string;
+  
 }
 
 export interface ISectionsTranslation extends IBaseTranslation<'sections'> {
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
   buttontext?: string;
   buttonlink?: string;
-  name: string;
+  name?: string;
   subtitle?: string;
+}
+
+// Query Builder Types
+export type sectionsWhereField = keyof Pick<ISections, 'id' | 'status'>;
+export type sectionsOrderField = keyof Pick<ISections, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type sectionsSelectField = keyof Pick<ISections, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type sectionsIncludeField = keyof Pick<ISections, >;
+
+export interface sectionsQueryBuilder extends QueryBuilder<ISections> {
+  where<F extends sectionsWhereField>(
+    field: F,
+    operator: OperatorForType<ISections[F]>,
+    value: ISections[F] | ISections[F][]
+  ): this;
+
+  orderBy(field: sectionsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: sectionsSelectField[]): this;
+  include(relations: sectionsIncludeField | sectionsIncludeField[]): this;
 }
 
 // SocialLinks Interface
 export interface ISociallinks extends IBaseModel<never> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
   link: string;
   icon: string;
-
-  service_id?: string;
-  service?: IServices | null;
 }
 
 
 
+// Query Builder Types
+export type sociallinksWhereField = keyof Pick<ISociallinks, 'id' | 'status' | 'link' | 'icon' | 'service_id'>;
+export type sociallinksOrderField = keyof Pick<ISociallinks, 'id' | 'created_at' | 'updated_at' | 'status' | 'link' | 'icon' | 'service_id'>;
+export type sociallinksSelectField = keyof Pick<ISociallinks, 'id' | 'created_at' | 'updated_at' | 'status' | 'link' | 'icon' | 'service_id'>;
+export type sociallinksIncludeField = keyof Pick<ISociallinks, >;
+
+export interface sociallinksQueryBuilder extends QueryBuilder<ISociallinks> {
+  where<F extends sociallinksWhereField>(
+    field: F,
+    operator: OperatorForType<ISociallinks[F]>,
+    value: ISociallinks[F] | ISociallinks[F][]
+  ): this;
+
+  orderBy(field: sociallinksOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: sociallinksSelectField[]): this;
+  include(relations: sociallinksIncludeField | sociallinksIncludeField[]): this;
+}
+
 // References Interface
 export interface IReferences extends IBaseModel<never> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
   logo: string;
 }
 
 
 
+// Query Builder Types
+export type referencesWhereField = keyof Pick<IReferences, 'id' | 'status' | 'logo'>;
+export type referencesOrderField = keyof Pick<IReferences, 'id' | 'created_at' | 'updated_at' | 'status' | 'logo'>;
+export type referencesSelectField = keyof Pick<IReferences, 'id' | 'created_at' | 'updated_at' | 'status' | 'logo'>;
+export type referencesIncludeField = keyof Pick<IReferences, >;
+
+export interface referencesQueryBuilder extends QueryBuilder<IReferences> {
+  where<F extends referencesWhereField>(
+    field: F,
+    operator: OperatorForType<IReferences[F]>,
+    value: IReferences[F] | IReferences[F][]
+  ): this;
+
+  orderBy(field: referencesOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: referencesSelectField[]): this;
+  include(relations: referencesIncludeField | referencesIncludeField[]): this;
+}
+
 // MetaTags Interface
 export interface IMetaTags extends IBaseModel<ModelLocales<'meta-tags'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  name: string;
-  content: string;
-  description?: string;
+  
 }
 
 export interface IMetaTagsTranslation extends IBaseTranslation<'meta-tags'> {
-  name: string;
-  content: string;
+  name?: string;
+  content?: string;
   description?: string;
+}
+
+// Query Builder Types
+export type meta_tagsWhereField = keyof Pick<IMetaTags, 'id' | 'status'>;
+export type meta_tagsOrderField = keyof Pick<IMetaTags, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type meta_tagsSelectField = keyof Pick<IMetaTags, 'id' | 'created_at' | 'updated_at' | 'status'>;
+export type meta_tagsIncludeField = keyof Pick<IMetaTags, >;
+
+export interface meta_tagsQueryBuilder extends QueryBuilder<IMetaTags> {
+  where<F extends meta_tagsWhereField>(
+    field: F,
+    operator: OperatorForType<IMetaTags[F]>,
+    value: IMetaTags[F] | IMetaTags[F][]
+  ): this;
+
+  orderBy(field: meta_tagsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: meta_tagsSelectField[]): this;
+  include(relations: meta_tagsIncludeField | meta_tagsIncludeField[]): this;
 }
 
 // Testimonial Items Interface
 export interface ITestimonialItems extends IBaseModel<ModelLocales<'testimonial-items'>> {
-  ID: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  name: string;
-  description: string;
-  title: string;
-  image: string;
-
-  creative_work_id: string;
-  creative_work: IWorkitems | null;
+  
 }
 
 export interface ITestimonialItemsTranslation extends IBaseTranslation<'testimonial-items'> {
-  name: string;
-  description: string;
-  title: string;
-  image: string;
+  name?: string;
+  description?: string;
+  title?: string;
+  image?: string;
+}
+
+// Query Builder Types
+export type testimonial_itemsWhereField = keyof Pick<ITestimonialItems, 'id' | 'status' | 'creative_work_id'>;
+export type testimonial_itemsOrderField = keyof Pick<ITestimonialItems, 'id' | 'created_at' | 'updated_at' | 'status' | 'creative_work_id'>;
+export type testimonial_itemsSelectField = keyof Pick<ITestimonialItems, 'id' | 'created_at' | 'updated_at' | 'status' | 'creative_work_id'>;
+export type testimonial_itemsIncludeField = keyof Pick<ITestimonialItems, >;
+
+export interface testimonial_itemsQueryBuilder extends QueryBuilder<ITestimonialItems> {
+  where<F extends testimonial_itemsWhereField>(
+    field: F,
+    operator: OperatorForType<ITestimonialItems[F]>,
+    value: ITestimonialItems[F] | ITestimonialItems[F][]
+  ): this;
+
+  orderBy(field: testimonial_itemsOrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: testimonial_itemsSelectField[]): this;
+  include(relations: testimonial_itemsIncludeField | testimonial_itemsIncludeField[]): this;
 }
 
 // ServicesItems Query Types
-export type ServicesWhereClause = WhereClause<IServices>;
-export type ServicesOrderByClause = OrderByClause<IServices>;
+export type ServicesTableFields = 'reference_id' | 'title' | 'description' | 'image';
+
+export type ServicesWhereClause = WhereClause<IServices, ServicesTableFields>;
+export type ServicesOrderByClause = OrderByClause<IServices, ServicesTableFields>;
 export type ServicesRelationOptions = RelationOptions<IServices>;
 export type ServicesIncludeClause = IncludeClause<IServices>;
 
 export interface ServicesQueryConfig extends QueryConfig<IServices> {
-  select?: Array<keyof IServices>;
+  select?: ServicesTableFields[];
   where?: ServicesWhereClause[];
   orderBy?: ServicesOrderByClause[];
   include?: ServicesIncludeClause;
 }
 
-export interface ServicesQueryBuilder extends QueryBuilder<IServices> {
-  where: <K extends keyof IServices>(
+export interface ServicesQueryBuilder extends QueryBuilder<IServices, ServicesTableFields> {
+  where: <K extends ServicesTableFields>(
     field: K,
     operator: OperatorForType<IServices[K]>,
     value: IServices[K] | IServices[K][],
@@ -257,7 +379,7 @@ export interface ServicesQueryBuilder extends QueryBuilder<IServices> {
     options?: ServicesRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IServices, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: ServicesTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface ServicesRepository {
@@ -269,20 +391,22 @@ export interface ServicesRepository {
 }
 
 // ProcessItems Query Types
-export type ProcessesWhereClause = WhereClause<IProcesses>;
-export type ProcessesOrderByClause = OrderByClause<IProcesses>;
+export type ProcessesTableFields = 'title' | 'description' | 'icon';
+
+export type ProcessesWhereClause = WhereClause<IProcesses, ProcessesTableFields>;
+export type ProcessesOrderByClause = OrderByClause<IProcesses, ProcessesTableFields>;
 export type ProcessesRelationOptions = RelationOptions<IProcesses>;
 export type ProcessesIncludeClause = IncludeClause<IProcesses>;
 
 export interface ProcessesQueryConfig extends QueryConfig<IProcesses> {
-  select?: Array<keyof IProcesses>;
+  select?: ProcessesTableFields[];
   where?: ProcessesWhereClause[];
   orderBy?: ProcessesOrderByClause[];
   include?: ProcessesIncludeClause;
 }
 
-export interface ProcessesQueryBuilder extends QueryBuilder<IProcesses> {
-  where: <K extends keyof IProcesses>(
+export interface ProcessesQueryBuilder extends QueryBuilder<IProcesses, ProcessesTableFields> {
+  where: <K extends ProcessesTableFields>(
     field: K,
     operator: OperatorForType<IProcesses[K]>,
     value: IProcesses[K] | IProcesses[K][],
@@ -293,7 +417,7 @@ export interface ProcessesQueryBuilder extends QueryBuilder<IProcesses> {
     options?: ProcessesRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IProcesses, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: ProcessesTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface ProcessesRepository {
@@ -305,20 +429,22 @@ export interface ProcessesRepository {
 }
 
 // TabItems Query Types
-export type TabitemsWhereClause = WhereClause<ITabitems>;
-export type TabitemsOrderByClause = OrderByClause<ITabitems>;
+export type TabitemsTableFields = 'category_id' | 'link' | 'description' | 'image';
+
+export type TabitemsWhereClause = WhereClause<ITabitems, TabitemsTableFields>;
+export type TabitemsOrderByClause = OrderByClause<ITabitems, TabitemsTableFields>;
 export type TabitemsRelationOptions = RelationOptions<ITabitems>;
 export type TabitemsIncludeClause = IncludeClause<ITabitems>;
 
 export interface TabitemsQueryConfig extends QueryConfig<ITabitems> {
-  select?: Array<keyof ITabitems>;
+  select?: TabitemsTableFields[];
   where?: TabitemsWhereClause[];
   orderBy?: TabitemsOrderByClause[];
   include?: TabitemsIncludeClause;
 }
 
-export interface TabitemsQueryBuilder extends QueryBuilder<ITabitems> {
-  where: <K extends keyof ITabitems>(
+export interface TabitemsQueryBuilder extends QueryBuilder<ITabitems, TabitemsTableFields> {
+  where: <K extends TabitemsTableFields>(
     field: K,
     operator: OperatorForType<ITabitems[K]>,
     value: ITabitems[K] | ITabitems[K][],
@@ -329,7 +455,7 @@ export interface TabitemsQueryBuilder extends QueryBuilder<ITabitems> {
     options?: TabitemsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof ITabitems, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: TabitemsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface TabitemsRepository {
@@ -341,20 +467,22 @@ export interface TabitemsRepository {
 }
 
 // WorkItems Query Types
-export type WorkitemsWhereClause = WhereClause<IWorkitems>;
-export type WorkitemsOrderByClause = OrderByClause<IWorkitems>;
+export type WorkitemsTableFields = 'category_id' | 'title' | 'image' | 'description' | 'link' | 'field_order';
+
+export type WorkitemsWhereClause = WhereClause<IWorkitems, WorkitemsTableFields>;
+export type WorkitemsOrderByClause = OrderByClause<IWorkitems, WorkitemsTableFields>;
 export type WorkitemsRelationOptions = RelationOptions<IWorkitems>;
 export type WorkitemsIncludeClause = IncludeClause<IWorkitems>;
 
 export interface WorkitemsQueryConfig extends QueryConfig<IWorkitems> {
-  select?: Array<keyof IWorkitems>;
+  select?: WorkitemsTableFields[];
   where?: WorkitemsWhereClause[];
   orderBy?: WorkitemsOrderByClause[];
   include?: WorkitemsIncludeClause;
 }
 
-export interface WorkitemsQueryBuilder extends QueryBuilder<IWorkitems> {
-  where: <K extends keyof IWorkitems>(
+export interface WorkitemsQueryBuilder extends QueryBuilder<IWorkitems, WorkitemsTableFields> {
+  where: <K extends WorkitemsTableFields>(
     field: K,
     operator: OperatorForType<IWorkitems[K]>,
     value: IWorkitems[K] | IWorkitems[K][],
@@ -365,7 +493,7 @@ export interface WorkitemsQueryBuilder extends QueryBuilder<IWorkitems> {
     options?: WorkitemsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IWorkitems, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: WorkitemsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface WorkitemsRepository {
@@ -377,20 +505,22 @@ export interface WorkitemsRepository {
 }
 
 // WorkCategories Query Types
-export type WorkcategoriesWhereClause = WhereClause<IWorkcategories>;
-export type WorkcategoriesOrderByClause = OrderByClause<IWorkcategories>;
+export type WorkcategoriesTableFields = 'category' | 'field_order';
+
+export type WorkcategoriesWhereClause = WhereClause<IWorkcategories, WorkcategoriesTableFields>;
+export type WorkcategoriesOrderByClause = OrderByClause<IWorkcategories, WorkcategoriesTableFields>;
 export type WorkcategoriesRelationOptions = RelationOptions<IWorkcategories>;
 export type WorkcategoriesIncludeClause = IncludeClause<IWorkcategories>;
 
 export interface WorkcategoriesQueryConfig extends QueryConfig<IWorkcategories> {
-  select?: Array<keyof IWorkcategories>;
+  select?: WorkcategoriesTableFields[];
   where?: WorkcategoriesWhereClause[];
   orderBy?: WorkcategoriesOrderByClause[];
   include?: WorkcategoriesIncludeClause;
 }
 
-export interface WorkcategoriesQueryBuilder extends QueryBuilder<IWorkcategories> {
-  where: <K extends keyof IWorkcategories>(
+export interface WorkcategoriesQueryBuilder extends QueryBuilder<IWorkcategories, WorkcategoriesTableFields> {
+  where: <K extends WorkcategoriesTableFields>(
     field: K,
     operator: OperatorForType<IWorkcategories[K]>,
     value: IWorkcategories[K] | IWorkcategories[K][],
@@ -401,7 +531,7 @@ export interface WorkcategoriesQueryBuilder extends QueryBuilder<IWorkcategories
     options?: WorkcategoriesRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IWorkcategories, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: WorkcategoriesTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface WorkcategoriesRepository {
@@ -413,20 +543,22 @@ export interface WorkcategoriesRepository {
 }
 
 // FaqItems Query Types
-export type FaqitemsWhereClause = WhereClause<IFaqitems>;
-export type FaqitemsOrderByClause = OrderByClause<IFaqitems>;
+export type FaqitemsTableFields = 'question' | 'answer' | 'field_order';
+
+export type FaqitemsWhereClause = WhereClause<IFaqitems, FaqitemsTableFields>;
+export type FaqitemsOrderByClause = OrderByClause<IFaqitems, FaqitemsTableFields>;
 export type FaqitemsRelationOptions = RelationOptions<IFaqitems>;
 export type FaqitemsIncludeClause = IncludeClause<IFaqitems>;
 
 export interface FaqitemsQueryConfig extends QueryConfig<IFaqitems> {
-  select?: Array<keyof IFaqitems>;
+  select?: FaqitemsTableFields[];
   where?: FaqitemsWhereClause[];
   orderBy?: FaqitemsOrderByClause[];
   include?: FaqitemsIncludeClause;
 }
 
-export interface FaqitemsQueryBuilder extends QueryBuilder<IFaqitems> {
-  where: <K extends keyof IFaqitems>(
+export interface FaqitemsQueryBuilder extends QueryBuilder<IFaqitems, FaqitemsTableFields> {
+  where: <K extends FaqitemsTableFields>(
     field: K,
     operator: OperatorForType<IFaqitems[K]>,
     value: IFaqitems[K] | IFaqitems[K][],
@@ -437,7 +569,7 @@ export interface FaqitemsQueryBuilder extends QueryBuilder<IFaqitems> {
     options?: FaqitemsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IFaqitems, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: FaqitemsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface FaqitemsRepository {
@@ -449,20 +581,22 @@ export interface FaqitemsRepository {
 }
 
 // Sections Query Types
-export type SectionsWhereClause = WhereClause<ISections>;
-export type SectionsOrderByClause = OrderByClause<ISections>;
+export type SectionsTableFields = 'title' | 'description' | 'buttontext' | 'buttonlink' | 'name' | 'subtitle';
+
+export type SectionsWhereClause = WhereClause<ISections, SectionsTableFields>;
+export type SectionsOrderByClause = OrderByClause<ISections, SectionsTableFields>;
 export type SectionsRelationOptions = RelationOptions<ISections>;
 export type SectionsIncludeClause = IncludeClause<ISections>;
 
 export interface SectionsQueryConfig extends QueryConfig<ISections> {
-  select?: Array<keyof ISections>;
+  select?: SectionsTableFields[];
   where?: SectionsWhereClause[];
   orderBy?: SectionsOrderByClause[];
   include?: SectionsIncludeClause;
 }
 
-export interface SectionsQueryBuilder extends QueryBuilder<ISections> {
-  where: <K extends keyof ISections>(
+export interface SectionsQueryBuilder extends QueryBuilder<ISections, SectionsTableFields> {
+  where: <K extends SectionsTableFields>(
     field: K,
     operator: OperatorForType<ISections[K]>,
     value: ISections[K] | ISections[K][],
@@ -473,7 +607,7 @@ export interface SectionsQueryBuilder extends QueryBuilder<ISections> {
     options?: SectionsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof ISections, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: SectionsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface SectionsRepository {
@@ -485,20 +619,22 @@ export interface SectionsRepository {
 }
 
 // SocialLinks Query Types
-export type SociallinksWhereClause = WhereClause<ISociallinks>;
-export type SociallinksOrderByClause = OrderByClause<ISociallinks>;
+export type SociallinksTableFields = 'link' | 'icon' | 'service_id';
+
+export type SociallinksWhereClause = WhereClause<ISociallinks, SociallinksTableFields>;
+export type SociallinksOrderByClause = OrderByClause<ISociallinks, SociallinksTableFields>;
 export type SociallinksRelationOptions = RelationOptions<ISociallinks>;
 export type SociallinksIncludeClause = IncludeClause<ISociallinks>;
 
 export interface SociallinksQueryConfig extends QueryConfig<ISociallinks> {
-  select?: Array<keyof ISociallinks>;
+  select?: SociallinksTableFields[];
   where?: SociallinksWhereClause[];
   orderBy?: SociallinksOrderByClause[];
   include?: SociallinksIncludeClause;
 }
 
-export interface SociallinksQueryBuilder extends QueryBuilder<ISociallinks> {
-  where: <K extends keyof ISociallinks>(
+export interface SociallinksQueryBuilder extends QueryBuilder<ISociallinks, SociallinksTableFields> {
+  where: <K extends SociallinksTableFields>(
     field: K,
     operator: OperatorForType<ISociallinks[K]>,
     value: ISociallinks[K] | ISociallinks[K][],
@@ -509,7 +645,7 @@ export interface SociallinksQueryBuilder extends QueryBuilder<ISociallinks> {
     options?: SociallinksRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof ISociallinks, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: SociallinksTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface SociallinksRepository {
@@ -521,20 +657,22 @@ export interface SociallinksRepository {
 }
 
 // References Query Types
-export type ReferencesWhereClause = WhereClause<IReferences>;
-export type ReferencesOrderByClause = OrderByClause<IReferences>;
+export type ReferencesTableFields = 'logo';
+
+export type ReferencesWhereClause = WhereClause<IReferences, ReferencesTableFields>;
+export type ReferencesOrderByClause = OrderByClause<IReferences, ReferencesTableFields>;
 export type ReferencesRelationOptions = RelationOptions<IReferences>;
 export type ReferencesIncludeClause = IncludeClause<IReferences>;
 
 export interface ReferencesQueryConfig extends QueryConfig<IReferences> {
-  select?: Array<keyof IReferences>;
+  select?: ReferencesTableFields[];
   where?: ReferencesWhereClause[];
   orderBy?: ReferencesOrderByClause[];
   include?: ReferencesIncludeClause;
 }
 
-export interface ReferencesQueryBuilder extends QueryBuilder<IReferences> {
-  where: <K extends keyof IReferences>(
+export interface ReferencesQueryBuilder extends QueryBuilder<IReferences, ReferencesTableFields> {
+  where: <K extends ReferencesTableFields>(
     field: K,
     operator: OperatorForType<IReferences[K]>,
     value: IReferences[K] | IReferences[K][],
@@ -545,7 +683,7 @@ export interface ReferencesQueryBuilder extends QueryBuilder<IReferences> {
     options?: ReferencesRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IReferences, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: ReferencesTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface ReferencesRepository {
@@ -557,20 +695,22 @@ export interface ReferencesRepository {
 }
 
 // MetaTags Query Types
-export type MetaTagsWhereClause = WhereClause<IMetaTags>;
-export type MetaTagsOrderByClause = OrderByClause<IMetaTags>;
+export type MetaTagsTableFields = 'name' | 'content' | 'description';
+
+export type MetaTagsWhereClause = WhereClause<IMetaTags, MetaTagsTableFields>;
+export type MetaTagsOrderByClause = OrderByClause<IMetaTags, MetaTagsTableFields>;
 export type MetaTagsRelationOptions = RelationOptions<IMetaTags>;
 export type MetaTagsIncludeClause = IncludeClause<IMetaTags>;
 
 export interface MetaTagsQueryConfig extends QueryConfig<IMetaTags> {
-  select?: Array<keyof IMetaTags>;
+  select?: MetaTagsTableFields[];
   where?: MetaTagsWhereClause[];
   orderBy?: MetaTagsOrderByClause[];
   include?: MetaTagsIncludeClause;
 }
 
-export interface MetaTagsQueryBuilder extends QueryBuilder<IMetaTags> {
-  where: <K extends keyof IMetaTags>(
+export interface MetaTagsQueryBuilder extends QueryBuilder<IMetaTags, MetaTagsTableFields> {
+  where: <K extends MetaTagsTableFields>(
     field: K,
     operator: OperatorForType<IMetaTags[K]>,
     value: IMetaTags[K] | IMetaTags[K][],
@@ -581,7 +721,7 @@ export interface MetaTagsQueryBuilder extends QueryBuilder<IMetaTags> {
     options?: MetaTagsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof IMetaTags, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: MetaTagsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface MetaTagsRepository {
@@ -593,20 +733,22 @@ export interface MetaTagsRepository {
 }
 
 // Testimonial Items Query Types
-export type TestimonialItemsWhereClause = WhereClause<ITestimonialItems>;
-export type TestimonialItemsOrderByClause = OrderByClause<ITestimonialItems>;
+export type TestimonialItemsTableFields = 'creative_work_id' | 'name' | 'description' | 'title' | 'image';
+
+export type TestimonialItemsWhereClause = WhereClause<ITestimonialItems, TestimonialItemsTableFields>;
+export type TestimonialItemsOrderByClause = OrderByClause<ITestimonialItems, TestimonialItemsTableFields>;
 export type TestimonialItemsRelationOptions = RelationOptions<ITestimonialItems>;
 export type TestimonialItemsIncludeClause = IncludeClause<ITestimonialItems>;
 
 export interface TestimonialItemsQueryConfig extends QueryConfig<ITestimonialItems> {
-  select?: Array<keyof ITestimonialItems>;
+  select?: TestimonialItemsTableFields[];
   where?: TestimonialItemsWhereClause[];
   orderBy?: TestimonialItemsOrderByClause[];
   include?: TestimonialItemsIncludeClause;
 }
 
-export interface TestimonialItemsQueryBuilder extends QueryBuilder<ITestimonialItems> {
-  where: <K extends keyof ITestimonialItems>(
+export interface TestimonialItemsQueryBuilder extends QueryBuilder<ITestimonialItems, TestimonialItemsTableFields> {
+  where: <K extends TestimonialItemsTableFields>(
     field: K,
     operator: OperatorForType<ITestimonialItems[K]>,
     value: ITestimonialItems[K] | ITestimonialItems[K][],
@@ -617,7 +759,7 @@ export interface TestimonialItemsQueryBuilder extends QueryBuilder<ITestimonialI
     options?: TestimonialItemsRelationOptions,
   ) => this;
 
-  orderBy: (field: keyof ITestimonialItems, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: TestimonialItemsTableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface TestimonialItemsRepository {

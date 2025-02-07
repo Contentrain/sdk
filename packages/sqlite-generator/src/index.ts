@@ -16,6 +16,7 @@ import { ModelAnalyzer } from './analyzer/ModelAnalyzer';
 import { RelationAnalyzer } from './analyzer/RelationAnalyzer';
 import { TypeGenerator } from './generators/TypeGenerator';
 import { MigrationManager } from './migration/MigrationManager';
+import { QueryBuilder } from './query/QueryBuilder';
 import { SchemaBuilder } from './schema/SchemaBuilder';
 import { ContentrainError, ErrorCode, ValidationError } from './types/errors';
 import { DatabaseOptimizer } from './utils/DatabaseOptimizer';
@@ -24,11 +25,14 @@ import { SecurityManager } from './utils/SecurityManager';
 export { DatabaseAdapter } from './adapters/DatabaseAdapter';
 export { TypeGenerator } from './generators/TypeGenerator';
 export { MigrationManager } from './migration/MigrationManager';
+export { QueryBuilder } from './query/QueryBuilder';
 export { SchemaBuilder } from './schema/SchemaBuilder';
 
 export * from './types/content';
+export * from './types/database';
 export * from './types/errors';
 export * from './types/model';
+export * from './types/query';
 export { DatabaseOptimizer } from './utils/DatabaseOptimizer';
 export { SecurityManager } from './utils/SecurityManager';
 
@@ -147,16 +151,19 @@ export class SQLiteGenerator {
       // 3. Model ve içerikleri analiz et
       const { models, content } = await this.analyzeContent();
 
-      // 4. Tip tanımlarını oluştur
-      await this.typeGenerator.generateTypes(models);
-
-      // 5. Veritabanı şemasını oluştur
+      // 4. Veritabanı şemasını oluştur
       await this.schemaBuilder?.buildSchema(models);
 
-      // 6. Verileri migrate et
+      // 5. Şema bilgilerini topla
+      const dbSchema = await this.collectDatabaseSchema();
+
+      // 6. Tip tanımlarını oluştur
+      await this.typeGenerator.generateTypes(models, dbSchema);
+
+      // 7. Verileri migrate et
       await this.migrationManager?.executeMigrations(models, content);
 
-      // 7. Veritabanını optimize et
+      // 8. Veritabanını optimize et
       this.databaseOptimizer?.optimize();
 
       console.info('SQLite veritabanı ve tip tanımları başarıyla oluşturuldu.');
@@ -265,5 +272,88 @@ export class SQLiteGenerator {
    */
   private isLocalizedContent(content: LocalizedContentResult | DefaultContentResult): content is LocalizedContentResult {
     return 'translations' in content;
+  }
+
+  /**
+   * Veritabanı şema bilgilerini toplar
+   */
+  private async collectDatabaseSchema() {
+    if (!this.dbAdapter) {
+      throw new Error('Database adapter not initialized');
+    }
+
+    // Tüm tabloları al
+    const tables = await this.dbAdapter.all<{ name: string }>(
+      'SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'',
+    );
+
+    const schema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }> = {};
+
+    // Her tablo için detaylı bilgi topla
+    for (const { name } of tables) {
+      // Kolon bilgileri
+      const columns = await this.dbAdapter.all(
+        `PRAGMA table_info(${name})`,
+      );
+
+      // Foreign key bilgileri
+      const foreignKeys = await this.dbAdapter.all(
+        `PRAGMA foreign_key_list(${name})`,
+      );
+
+      // Index bilgileri
+      const indexes = await this.dbAdapter.all(
+        `PRAGMA index_list(${name})`,
+      );
+
+      const indexDetails = await Promise.all(
+        indexes.map(async (idx: any) => {
+          const columns = await this.dbAdapter!.all(
+            `PRAGMA index_info(${idx.name})`,
+          );
+          return {
+            name: idx.name,
+            unique: idx.unique === 1,
+            columns: columns.map((col: any) => col.name),
+          };
+        }),
+      );
+
+      schema[name] = {
+        columns: columns.map((col: any) => ({
+          name: col.name,
+          type: col.type,
+          notNull: col.notnull === 1,
+          defaultValue: col.dflt_value,
+          primaryKey: col.pk === 1,
+        })),
+        foreignKeys: foreignKeys.map((fk: any) => ({
+          from: fk.from,
+          table: fk.table,
+          to: fk.to,
+        })),
+        indexes: indexDetails,
+      };
+    }
+
+    return schema;
   }
 }

@@ -1,7 +1,6 @@
-import type { ModelConfig, ModelField, RelationType } from '../types/model';
+import type { ModelConfig } from '../types/model';
 import { writeFile } from 'node:fs/promises';
 import { FieldNormalizer } from '../normalizer/FieldNormalizer';
-import { TYPE_MAPPING } from '../types/model';
 
 export class TypeGenerator {
   private fieldNormalizer: FieldNormalizer;
@@ -13,19 +12,61 @@ export class TypeGenerator {
   /**
    * Tip tanımlarını oluşturur
    */
-  async generateTypes(models: ModelConfig[]): Promise<void> {
-    const declarations = this.generateDeclarations(models);
+  async generateTypes(
+    models: ModelConfig[],
+    dbSchema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }>,
+  ): Promise<void> {
+    const declarations = this.generateDeclarations(models, dbSchema);
     await writeFile(this.typesPath, declarations, 'utf-8');
   }
 
   /**
    * Tip tanımlarını oluşturur
    */
-  private generateDeclarations(models: ModelConfig[]): string {
+  private generateDeclarations(
+    models: ModelConfig[],
+    dbSchema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }>,
+  ): string {
     const imports = this.generateImports();
     const baseTypes = this.generateBaseTypes();
-    const interfaces = models.map(model => this.generateModelInterface(model)).join('\n\n');
-    const queryTypes = models.map(model => this.generateQueryTypes(model)).join('\n\n');
+    const interfaces = models.map(model => this.generateModelInterface(model, dbSchema, models)).join('\n\n');
+    const queryTypes = models.map(model => this.generateQueryTypes(model, dbSchema)).join('\n\n');
 
     return `${imports}\n\n${baseTypes}\n\n${interfaces}\n\n${queryTypes}\n`;
   }
@@ -57,29 +98,97 @@ import type {
     return `// Base Types
 export type ModelLocales<T extends string> = T;
 
+export type ContentStatus = 'draft' | 'changed' | 'publish';
+
 export interface IBaseModel<T extends string | never = never> {
   id: string;
   created_at: string;
   updated_at: string;
-  status: 'draft' | 'changed' | 'publish';
+  status: ContentStatus;
   translations?: T extends string
     ? Record<ModelLocales<T>, IBaseTranslation<T>>
     : never;
+  [key: string]: unknown;
 }
 
 export interface IBaseTranslation<T extends string> {
   id: string;
   locale: ModelLocales<T>;
+  [key: string]: unknown;
 }`;
   }
 
   /**
    * Model arayüzünü oluşturur
    */
-  private generateModelInterface(model: ModelConfig): string {
+  private generateModelInterface(
+    model: ModelConfig,
+    dbSchema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }>,
+    allModels: ModelConfig[],
+  ): string {
     const localeType = model.localization ? `ModelLocales<'${model.id}'>` : 'never';
-    const fields = this.generateFields(model.fields);
-    const relationFields = this.generateRelationFields(model);
+
+    // Tablo adını normalize et
+    const tableName = this.fieldNormalizer.normalizeTableName(model.id);
+    const tableSchema = dbSchema[tableName];
+
+    if (!tableSchema) {
+      throw new Error(`Table schema not found for model: ${model.id}`);
+    }
+
+    // Ana tablo alanlarını DB şemasından al
+    const mainFields = tableSchema.columns
+      .filter(col => !col.name.endsWith('_id') && !['id', 'created_at', 'updated_at', 'status'].includes(col.name))
+      .map((col) => {
+        const type = this.getSQLiteTypeToTS(col.type);
+        return `${col.name}${col.notNull ? '' : '?'}: ${type};`;
+      })
+      .join('\n  ');
+
+    // İlişki alanlarını DB şemasından al
+    const relationFields = tableSchema.foreignKeys
+      .map((fk) => {
+        const targetModelId = fk.table.replace(/^tbl_/, '');
+        const targetModel = allModels.find((m: ModelConfig) =>
+          this.fieldNormalizer.normalizeTableName(m.id) === fk.table,
+        );
+        if (!targetModel)
+          return '';
+
+        const fieldName = fk.from.replace(/_id$/, '');
+        const isOneToMany = model.fields.some(f =>
+          f.fieldType === 'relation'
+          && f.componentId === 'one-to-many'
+          && this.fieldNormalizer.normalize(f.fieldId) === fieldName,
+        );
+
+        const typeName = `I${this.pascalCase(targetModelId)}`;
+        return [
+          `${fk.from}: string;`,
+          `${fieldName}: ${isOneToMany ? `${typeName}[]` : typeName} | null;`,
+          `${fieldName}Query?: ${typeName}QueryBuilder;`,
+        ].join('\n  ');
+      })
+      .filter(Boolean)
+      .join('\n\n  ');
 
     // Özel karakterleri temizle
     const sanitizedModelId = this.sanitizeIdentifier(model.id);
@@ -87,10 +196,73 @@ export interface IBaseTranslation<T extends string> {
 
     return `// ${model.name} Interface
 export interface ${interfaceName} extends IBaseModel<${localeType}> {
-  ${fields}${relationFields ? `\n\n  ${relationFields}` : ''}
+  ${mainFields}${relationFields ? `\n\n  ${relationFields}` : ''}
 }
 
-${model.localization ? this.generateTranslationInterface(model) : ''}`;
+${model.localization ? this.generateTranslationInterface(model, dbSchema) : ''}
+
+// Query Builder Types
+export type ${sanitizedModelId}WhereField = keyof Pick<${interfaceName}, ${this.generateWhereFields(tableSchema.columns)}>;
+export type ${sanitizedModelId}OrderField = keyof Pick<${interfaceName}, ${this.generateOrderFields(tableSchema.columns)}>;
+export type ${sanitizedModelId}SelectField = keyof Pick<${interfaceName}, ${this.generateSelectFields(tableSchema.columns)}>;
+export type ${sanitizedModelId}IncludeField = keyof Pick<${interfaceName}, ${this.generateIncludeFields(tableSchema.foreignKeys)}>;
+
+export interface ${sanitizedModelId}QueryBuilder extends QueryBuilder<${interfaceName}> {
+  where<F extends ${sanitizedModelId}WhereField>(
+    field: F,
+    operator: OperatorForType<${interfaceName}[F]>,
+    value: ${interfaceName}[F] | ${interfaceName}[F][]
+  ): this;
+
+  orderBy(field: ${sanitizedModelId}OrderField, direction?: 'asc' | 'desc'): this;
+  select(fields: ${sanitizedModelId}SelectField[]): this;
+  include(relations: ${sanitizedModelId}IncludeField | ${sanitizedModelId}IncludeField[]): this;
+}`;
+  }
+
+  private generateWhereFields(columns: Array<{ name: string }>): string {
+    return columns
+      .map(col => `'${col.name}'`)
+      .filter(name => !['created_at', 'updated_at'].includes(name.replace(/'/g, '')))
+      .join(' | ');
+  }
+
+  private generateOrderFields(columns: Array<{ name: string }>): string {
+    return columns
+      .map(col => `'${col.name}'`)
+      .join(' | ');
+  }
+
+  private generateSelectFields(columns: Array<{ name: string }>): string {
+    return columns
+      .map(col => `'${col.name}'`)
+      .join(' | ');
+  }
+
+  private generateIncludeFields(foreignKeys: Array<{ from: string }>): string {
+    return foreignKeys
+      .map(fk => `'${fk.from.replace(/_id$/, '')}'`)
+      .join(' | ');
+  }
+
+  /**
+   * SQLite tipini TypeScript tipine dönüştürür
+   */
+  private getSQLiteTypeToTS(sqliteType: string): string {
+    switch (sqliteType.toUpperCase()) {
+      case 'INTEGER':
+        return 'number';
+      case 'REAL':
+        return 'number';
+      case 'TEXT':
+        return 'string';
+      case 'BLOB':
+        return 'Buffer';
+      case 'BOOLEAN':
+        return 'boolean';
+      default:
+        return 'unknown';
+    }
   }
 
   /**
@@ -102,75 +274,50 @@ ${model.localization ? this.generateTranslationInterface(model) : ''}`;
   }
 
   /**
-   * Alanları oluşturur
-   */
-  private generateFields(fields: ModelField[]): string {
-    return fields
-      .filter(field => field.fieldType !== 'relation')
-      .map((field) => {
-        const type = this.getTypeScriptType(field);
-        const isRequired = field.validations?.['required-field']?.value;
-        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
-        return `${sanitizedFieldId}${isRequired ? '' : '?'}: ${type};`;
-      })
-      .join('\n  ');
-  }
-
-  /**
-   * İlişki alanlarını oluşturur
-   */
-  private generateRelationFields(model: ModelConfig): string {
-    const relationFields = model.fields.filter(field => field.fieldType === 'relation');
-    if (!relationFields.length)
-      return '';
-
-    return relationFields
-      .map((field) => {
-        const targetModel = field.options?.reference?.form?.reference?.value;
-        if (!targetModel)
-          return '';
-
-        const isOneToMany = field.componentId === 'one-to-many';
-        const sanitizedTargetModel = this.sanitizeIdentifier(targetModel);
-        const typeName = `I${this.pascalCase(sanitizedTargetModel)}`;
-        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
-
-        return [
-          `${sanitizedFieldId}_id${field.validations?.['required-field']?.value ? '' : '?'}: string;`,
-          `${sanitizedFieldId}${field.validations?.['required-field']?.value ? '' : '?'}: ${isOneToMany ? `${typeName}[]` : typeName} | null;`,
-        ].join('\n  ');
-      })
-      .filter(Boolean)
-      .join('\n\n  ');
-  }
-
-  /**
    * Çeviri arayüzünü oluşturur
    */
-  private generateTranslationInterface(model: ModelConfig): string {
+  private generateTranslationInterface(
+    model: ModelConfig,
+    dbSchema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }>,
+  ): string {
     const sanitizedModelId = this.sanitizeIdentifier(model.id);
-    const localizedFields = model.fields
-      .filter(field => field.localized)
-      .map((field) => {
-        const type = this.getTypeScriptType(field);
-        const isRequired = field.validations?.['required-field']?.value;
-        const sanitizedFieldId = this.sanitizeIdentifier(field.fieldId);
-        return `${sanitizedFieldId}${isRequired ? '' : '?'}: ${type};`;
+    const translationTableName = `${this.fieldNormalizer.normalizeTableName(model.id)}_translations`;
+    const translationSchema = dbSchema[translationTableName];
+
+    if (!translationSchema) {
+      throw new Error(`Translation table schema not found for model: ${model.id}`);
+    }
+
+    // Çeviri alanlarını DB şemasından al
+    const translationFields = translationSchema.columns
+      .filter(col => !['id', 'locale'].includes(col.name))
+      .map((col) => {
+        const type = this.getSQLiteTypeToTS(col.type);
+        return `${col.name}${col.notNull ? '' : '?'}: ${type};`;
       })
       .join('\n  ');
 
     return `export interface I${this.pascalCase(sanitizedModelId)}Translation extends IBaseTranslation<'${model.id}'> {
-  ${localizedFields}
+  ${translationFields}
 }`;
-  }
-
-  /**
-   * TypeScript tipini alır
-   */
-  private getTypeScriptType(field: ModelField): string {
-    const baseType = TYPE_MAPPING[field.componentId] || 'unknown';
-    const isArray = field.componentId === 'select';
-    return isArray ? `${baseType}[]` : baseType;
   }
 
   /**
@@ -186,25 +333,63 @@ ${model.localization ? this.generateTranslationInterface(model) : ''}`;
   /**
    * Sorgu tiplerini oluşturur
    */
-  private generateQueryTypes(model: ModelConfig): string {
+  private generateQueryTypes(
+    model: ModelConfig,
+    dbSchema: Record<string, {
+      columns: Array<{
+        name: string
+        type: string
+        notNull: boolean
+        defaultValue: any
+        primaryKey: boolean
+      }>
+      foreignKeys: Array<{
+        from: string
+        table: string
+        to: string
+      }>
+      indexes: Array<{
+        name: string
+        unique: boolean
+        columns: string[]
+      }>
+    }>,
+  ): string {
     const modelName = this.pascalCase(model.id);
     const interfaceName = `I${modelName}`;
 
+    // Tablo adlarını al
+    const mainTableName = this.fieldNormalizer.normalizeTableName(model.id);
+    const translationTableName = `${mainTableName}_translations`;
+
+    // Ana tablo ve çeviri tablosu için kullanılabilecek alanları DB şemasından al
+    const mainTableFields = dbSchema[mainTableName]?.columns
+      .map(col => `'${col.name}'`)
+      .filter(name => !['id', 'created_at', 'updated_at', 'status'].includes(name.replace(/'/g, ''))) || [];
+
+    const translationFields = dbSchema[translationTableName]?.columns
+      .map(col => `'${col.name}'`)
+      .filter(name => !['id', 'locale'].includes(name.replace(/'/g, ''))) || [];
+
+    const allFields = [...mainTableFields, ...translationFields];
+
     return `// ${model.name} Query Types
-export type ${modelName}WhereClause = WhereClause<${interfaceName}>;
-export type ${modelName}OrderByClause = OrderByClause<${interfaceName}>;
+export type ${modelName}TableFields = ${allFields.join(' | ')};
+
+export type ${modelName}WhereClause = WhereClause<${interfaceName}, ${modelName}TableFields>;
+export type ${modelName}OrderByClause = OrderByClause<${interfaceName}, ${modelName}TableFields>;
 export type ${modelName}RelationOptions = RelationOptions<${interfaceName}>;
 export type ${modelName}IncludeClause = IncludeClause<${interfaceName}>;
 
 export interface ${modelName}QueryConfig extends QueryConfig<${interfaceName}> {
-  select?: Array<keyof ${interfaceName}>;
+  select?: ${modelName}TableFields[];
   where?: ${modelName}WhereClause[];
   orderBy?: ${modelName}OrderByClause[];
   include?: ${modelName}IncludeClause;
 }
 
-export interface ${modelName}QueryBuilder extends QueryBuilder<${interfaceName}> {
-  where: <K extends keyof ${interfaceName}>(
+export interface ${modelName}QueryBuilder extends QueryBuilder<${interfaceName}, ${modelName}TableFields> {
+  where: <K extends ${modelName}TableFields>(
     field: K,
     operator: OperatorForType<${interfaceName}[K]>,
     value: ${interfaceName}[K] | ${interfaceName}[K][],
@@ -215,7 +400,7 @@ export interface ${modelName}QueryBuilder extends QueryBuilder<${interfaceName}>
     options?: ${modelName}RelationOptions,
   ) => this;
 
-  orderBy: (field: keyof ${interfaceName}, direction?: 'asc' | 'desc') => this;
+  orderBy: (field: ${modelName}TableFields, direction?: 'asc' | 'desc') => this;
 }
 
 export interface ${modelName}Repository {

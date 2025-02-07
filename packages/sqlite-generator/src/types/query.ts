@@ -1,4 +1,53 @@
-import type { ContentItem } from './content';
+/**
+ * Tablo konfigürasyonu için tipler
+ */
+export type TableName<T> = T extends { __tableName: infer U } ? U : T extends string ? T : never;
+
+export interface TableConfig<T extends string> {
+  __tableName: T
+}
+
+/**
+ * Base model yapısı
+ */
+export interface BaseQueryModel {
+  id: string
+  created_at: string
+  updated_at: string
+  status: 'draft' | 'changed' | 'publish'
+  _relations?: {
+    [K: string]: BaseQueryModel | BaseQueryModel[]
+  }
+}
+
+/**
+ * İlişki tiplerini çıkart
+ */
+export type ExtractRelations<T> = {
+  [K in keyof T]: T[K] extends BaseQueryModel | BaseQueryModel[] | null | undefined ? K : never
+}[keyof T];
+
+/**
+ * İlişki olmayan tipleri çıkart
+ */
+export type ExtractFields<T> = {
+  [K in keyof T]: T[K] extends BaseQueryModel | BaseQueryModel[] | null | undefined ? never : K
+}[keyof T];
+
+/**
+ * Alan tipine göre operatör seçimi
+ */
+export type OperatorForType<T> = T extends string
+  ? StringOperator | ArrayOperator
+  : T extends number
+    ? NumericOperator | ArrayOperator
+    : T extends boolean
+      ? 'eq' | 'ne'
+      : T extends Date
+        ? NumericOperator | ArrayOperator
+        : T extends Array<any>
+          ? ArrayOperator
+          : never;
 
 /**
  * String operatörleri
@@ -16,25 +65,9 @@ export type NumericOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte';
 export type ArrayOperator = 'in' | 'nin';
 
 /**
- * Tüm operatörler
- */
-export type Operator = StringOperator | NumericOperator | ArrayOperator;
-
-/**
- * Alan tipine göre operatör seçimi
- */
-export type OperatorForType<T> = T extends (infer _U)[]
-  ? ArrayOperator
-  : T extends string
-    ? StringOperator | ArrayOperator
-    : T extends number
-      ? NumericOperator | ArrayOperator
-      : never;
-
-/**
  * Filtre yapısı
  */
-export interface WhereClause<T, K extends keyof T = keyof T> {
+export interface WhereClause<T, K extends ExtractFields<T> = ExtractFields<T>> {
   field: K
   operator: OperatorForType<T[K]>
   value: T[K] | T[K][]
@@ -43,25 +76,47 @@ export interface WhereClause<T, K extends keyof T = keyof T> {
 /**
  * Sıralama yapısı
  */
-export interface OrderByClause<T> {
-  field: keyof T
+export interface OrderByClause<T, K extends ExtractFields<T> = ExtractFields<T>> {
+  field: K
   direction: 'asc' | 'desc'
 }
 
 /**
  * İlişki seçenekleri
  */
-export interface RelationOptions<T> {
+export interface RelationConfig<T = any> {
   select?: Array<keyof T>
   where?: WhereClause<T>[]
-  include?: Record<keyof T, RelationOptions<any>>
+  orderBy?: OrderByClause<T>[]
+  include?: Record<string, RelationConfig<any>>
+}
+
+export interface RelationOptions<T extends BaseQueryModel> {
+  select?: Array<ExtractFields<T>>
+  where?: WhereClause<T>[]
+  orderBy?: OrderByClause<T>[]
+  include?: {
+    [K in ExtractRelations<T>]?: T[K] extends Array<infer U>
+      ? U extends BaseQueryModel
+        ? RelationOptions<U>
+        : never
+      : T[K] extends BaseQueryModel
+        ? RelationOptions<T[K]>
+        : never
+  }
 }
 
 /**
  * İlişki yapısı
  */
-export type IncludeClause<T> = {
-  [K in keyof T]?: RelationOptions<T[K]>;
+export type IncludeClause<T extends BaseQueryModel> = {
+  [K in ExtractRelations<T>]?: T[K] extends Array<infer U>
+    ? U extends BaseQueryModel
+      ? RelationOptions<U>
+      : never
+    : T[K] extends BaseQueryModel
+      ? RelationOptions<T[K]>
+      : never
 };
 
 /**
@@ -85,8 +140,8 @@ export interface QueryOptions {
 /**
  * Sorgu yapılandırması
  */
-export interface QueryConfig<T extends ContentItem> {
-  select?: Array<keyof T>
+export interface QueryConfig<T extends BaseQueryModel> {
+  select?: Array<ExtractFields<T>>
   where?: WhereClause<T>[]
   orderBy?: OrderByClause<T>[]
   include?: IncludeClause<T>
@@ -110,11 +165,20 @@ export interface QueryResult<T> {
 /**
  * QueryBuilder arayüzü
  */
-export interface QueryBuilder<T extends ContentItem> {
+export interface QueryBuilder<
+  T extends BaseQueryModel,
+  TTable extends TableConfig<string> = any,
+> {
+  /**
+   * Tablo bilgisi
+   */
+  readonly tableName: TableName<TTable>
+  readonly hasTranslations: boolean
+
   /**
    * Filtre ekler
    */
-  where: <K extends keyof T>(
+  where: <K extends ExtractFields<T>>(
     field: K,
     operator: OperatorForType<T[K]>,
     value: T[K] | T[K][],
@@ -123,15 +187,26 @@ export interface QueryBuilder<T extends ContentItem> {
   /**
    * İlişki ekler
    */
-  include: <K extends keyof T>(
+  include: <K extends ExtractRelations<T>>(
     relations: K | K[],
-    options?: RelationOptions<T[K]>,
+    options?: T[K] extends Array<infer U>
+      ? U extends BaseQueryModel
+        ? RelationOptions<U>
+        : never
+      : T[K] extends BaseQueryModel
+        ? RelationOptions<T[K]>
+        : never,
   ) => this
+
+  /**
+   * Alan seçimi yapar
+   */
+  select: (fields: Array<ExtractFields<T>>) => this
 
   /**
    * Sıralama ekler
    */
-  orderBy: (field: keyof T, direction?: 'asc' | 'desc') => this
+  orderBy: (field: ExtractFields<T>, direction?: 'asc' | 'desc') => this
 
   /**
    * Limit ekler
@@ -182,7 +257,7 @@ export interface QueryBuilder<T extends ContentItem> {
 /**
  * Repository arayüzü
  */
-export interface Repository<T extends ContentItem> {
+export interface Repository<T extends BaseQueryModel> {
   /**
    * Yeni sorgu oluşturur
    */

@@ -1,23 +1,21 @@
 /**
  * Raw content item from JSON files
  */
-export interface RawContentItem {
+export interface RawContentItem extends Record<string, unknown> {
   ID: string
   createdAt: string
   updatedAt: string
   status: 'draft' | 'changed' | 'publish'
-  [key: string]: unknown
 }
 
 /**
  * Normalized content item for database
  */
-export interface ContentItem {
+export interface ContentItem extends Record<string, unknown> {
   id: string
   created_at: string
   updated_at: string
   status: 'draft' | 'changed' | 'publish'
-  [key: string]: unknown
 }
 
 /**
