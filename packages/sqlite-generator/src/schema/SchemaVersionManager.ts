@@ -1,5 +1,5 @@
 import type { Database } from '../types/database';
-import { ValidationError } from '../types/errors';
+import { ErrorCode, ValidationError } from '../types/errors';
 
 interface SchemaVersion {
   version: string
@@ -43,10 +43,11 @@ export class SchemaVersionManager {
     }
 
     if (this.compareVersions(currentVersion, targetVersion) > 0) {
-      throw new ValidationError(
-        'DOWNGRADE_NOT_SUPPORTED',
-        { currentVersion, targetVersion },
-      );
+      throw new ValidationError({
+        code: ErrorCode.DOWNGRADE_NOT_SUPPORTED,
+        message: 'Downgrade is not supported',
+        details: { currentVersion, targetVersion },
+      });
     }
 
     const steps = this.getMigrationSteps(currentVersion, targetVersion, migrations);

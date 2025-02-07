@@ -117,6 +117,7 @@ export enum ErrorCode {
 
   // New error code
   LOCALE_REQUIRED = 'LOCALE_REQUIRED',
+  DOWNGRADE_NOT_SUPPORTED = 'DOWNGRADE_NOT_SUPPORTED',
 }
 
 /**

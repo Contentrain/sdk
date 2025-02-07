@@ -165,15 +165,16 @@ export class SQLiteGenerator {
 
       // 8. Veritabanını optimize et
       this.databaseOptimizer?.optimize();
-
-      console.info('SQLite veritabanı ve tip tanımları başarıyla oluşturuldu.');
     }
     catch (error) {
-      console.error('Hata:', error instanceof Error ? error.message : String(error));
       if (error instanceof ContentrainError) {
-        console.error('Detaylar:', error.details);
+        throw error;
       }
-      throw error;
+      throw new ContentrainError({
+        code: ErrorCode.SCHEMA_CREATION_FAILED,
+        message: 'Failed to create database schema',
+        cause: error instanceof Error ? error : undefined,
+      });
     }
     finally {
       // Bağlantıyı kapat

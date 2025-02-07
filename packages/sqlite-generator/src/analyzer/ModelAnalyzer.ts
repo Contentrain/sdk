@@ -87,14 +87,11 @@ export class ModelAnalyzer {
    */
   public async analyzeModels(modelsDir: string): Promise<ModelConfig[]> {
     try {
-      console.log('Model analizi başlıyor...');
       const { metadata, modelFields } = await this.readModelFiles(modelsDir);
-      console.log('Model dosyaları okundu:', metadata.map(m => m.modelId));
 
       // İlk aşama: Temel model yapılarını oluştur
       const models: ModelConfig[] = [];
       for (const meta of metadata) {
-        console.log(`${meta.modelId} modeli yükleniyor...`);
         const fields = modelFields[meta.modelId];
         if (!fields) {
           throw new ValidationError({
@@ -106,11 +103,9 @@ export class ModelAnalyzer {
 
         // Temel model validasyonları
         this.validateModelMetadata(meta);
-        console.log(`${meta.modelId} meta verileri doğrulandı.`);
 
         // Alan validasyonları (ilişkiler hariç)
         const normalizedFields = this.validateAndNormalizeFields(fields, meta, false);
-        console.log(`${meta.modelId} alanları doğrulandı.`);
 
         models.push({
           id: meta.modelId,
@@ -121,28 +116,22 @@ export class ModelAnalyzer {
           createdBy: meta.createdBy,
           fields: normalizedFields,
         });
-        console.log(`${meta.modelId} modeli yüklendi.`);
       }
 
       // İkinci aşama: İlişkileri doğrula
-      console.log('İlişki doğrulaması başlıyor...');
       for (const model of models) {
-        console.log(`${model.id} modeli için ilişkiler doğrulanıyor...`);
         const relationFields = model.fields.filter(f => f.fieldType === 'relation');
         for (const field of relationFields) {
           this.validateRelationField(field, model, models);
         }
-        console.log(`${model.id} modeli için ilişkiler doğrulandı.`);
       }
 
       // Model ilişkilerini doğrula
       this.validateModelRelationships(models);
-      console.log('Model analizi tamamlandı.');
 
       return models;
     }
     catch (error) {
-      console.error('Model analizi başarısız oldu:', error);
       throw new ContentrainError({
         code: ErrorCode.MODEL_ANALYSIS_FAILED,
         message: 'Model analysis failed',
@@ -264,10 +253,6 @@ export class ModelAnalyzer {
     meta: { modelId: string, localization: boolean },
     validateRelations = true,
   ): ModelField[] {
-    console.log('\n=== Model Alanları Normalize Ediliyor ===');
-    console.log(`Model: ${meta.modelId}`);
-    console.log('Alan sayısı:', fields.length);
-
     if (!Array.isArray(fields)) {
       throw new ValidationError({
         code: ErrorCode.INVALID_FIELDS_TYPE,
@@ -286,7 +271,6 @@ export class ModelAnalyzer {
         localized: false, // Sistem alanları asla lokalize edilemez
       };
       normalizedFields.set(field.fieldId, field);
-      console.log(`Sistem alanı eklendi: ${field.fieldId}`);
     }
 
     // Özel alanları doğrula ve normalize et
@@ -299,18 +283,12 @@ export class ModelAnalyzer {
         });
       }
 
-      // Alan zaten eklenmiş mi kontrol et
-      if (normalizedFields.has(field.fieldId)) {
-        console.log(`Alan zaten mevcut, güncelleniyor: ${field.fieldId}`);
-      }
-
       if (field.fieldType === 'relation' && !validateRelations) {
         // İlişki alanları için özel işlem
         normalizedFields.set(field.fieldId, {
           ...field,
           localized: false, // İlişki alanları asla lokalize edilemez
         });
-        console.log(`İlişki alanı eklendi: ${field.fieldId}`);
         continue;
       }
 
@@ -324,7 +302,6 @@ export class ModelAnalyzer {
         ...field,
         localized: isLocalized,
       });
-      console.log(`Alan eklendi: ${field.fieldId} (localized: ${isLocalized})`);
     }
 
     return Array.from(normalizedFields.values());
@@ -452,8 +429,6 @@ export class ModelAnalyzer {
    * Validates relation field
    */
   private validateRelationField(field: ModelField, model: ModelConfig, models: ModelConfig[]): void {
-    console.log(`${model.id} modelinde ${field.fieldId} ilişkisi doğrulanıyor...`);
-
     const reference = field.options?.reference;
     if (!reference?.value || !reference.form.reference.value) {
       throw new ValidationError({
@@ -493,7 +468,5 @@ export class ModelAnalyzer {
         });
       }
     }
-
-    console.log(`${model.id} modelinde ${field.fieldId} ilişkisi doğrulandı.`);
   }
 }

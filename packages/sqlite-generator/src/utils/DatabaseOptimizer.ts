@@ -87,6 +87,9 @@ export class DatabaseOptimizer {
     }
   }
 
+  /**
+   * Creates indexes
+   */
   async createIndexes(indexes: IndexConfig[]): Promise<void> {
     await this.db.transaction(async () => {
       for (const index of indexes) {

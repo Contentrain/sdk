@@ -40,8 +40,6 @@ export class MigrationManager {
     translations?: TranslationItem[]
     relations?: RelationItem[]
   }>): Promise<MigrationResult[]> {
-    console.log('Migrasyon başlatılıyor...');
-
     this.models = models;
     const results: MigrationResult[] = [];
 
@@ -56,7 +54,6 @@ export class MigrationManager {
       await this.db.transaction(async () => {
         for (const migration of sortedMigrations) {
           try {
-            console.log(`${migration.modelId} için migrasyon başlatılıyor...`);
             await this.executeMigration(migration);
 
             migration.isCompleted = true;
@@ -67,8 +64,6 @@ export class MigrationManager {
             });
           }
           catch (error) {
-            console.error(`${migration.modelId} için migrasyon hatası:`, error);
-
             migration.error = error instanceof Error ? error.message : String(error);
             results.push({
               success: false,

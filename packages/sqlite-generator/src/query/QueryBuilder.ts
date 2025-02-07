@@ -35,10 +35,7 @@ export class QueryBuilder<
     modelId: TableName<TTable>,
   ) {
     this.fieldNormalizer = new FieldNormalizer();
-    // Model ID'yi normalize et
     this.tableName = this.fieldNormalizer.normalizeTableName(modelId) as TableName<TTable>;
-
-    // Çeviri tablosunun varlığını kontrol et
     this.initTranslationsPromise = this.initTranslations().catch((error) => {
       console.error('Failed to initialize translations:', error);
       this.hasTranslations = false;
@@ -47,33 +44,30 @@ export class QueryBuilder<
 
   private initTranslationsPromise: Promise<void>;
 
-  /**
-   * Çeviri tablosunun varlığını kontrol eder ve hasTranslations'ı ayarlar
-   */
   private async initTranslations(): Promise<void> {
-    console.log('Debug - Initializing translations for:', this.tableName);
     const hasTranslations = await this.checkTranslationTable();
-    console.log('Debug - Has translations:', hasTranslations);
     this.hasTranslations = hasTranslations;
   }
 
   /**
-   * Çeviri tablosunun varlığını kontrol eder
+   * Checks translation table
    */
   private async checkTranslationTable(): Promise<boolean> {
     try {
       const translationTable = `${this.tableName}_translations`;
-      console.log('Debug - Checking translation table:', translationTable);
       const result = await this.db.get<{ name: string }>(
         'SELECT name FROM sqlite_master WHERE type = @type AND name = @name',
         { type: 'table', name: translationTable },
       );
-      console.log('Debug - Translation table check result:', result);
       return result?.name === translationTable;
     }
     catch (error) {
-      console.error('Debug - Translation table check error:', error);
-      return false;
+      throw new ValidationError({
+        code: ErrorCode.INVALID_QUERY_PARAMETER,
+        message: 'Translation table not found',
+        details: { tableName: this.tableName },
+        cause: error instanceof Error ? error : undefined,
+      });
     }
   }
 
@@ -334,6 +328,9 @@ export class QueryBuilder<
     }
   }
 
+  /**
+   * Gets available locales
+   */
   private async getAvailableLocales(): Promise<string[]> {
     try {
       const translationTable = `${this.tableName}_translations`;
@@ -342,8 +339,7 @@ export class QueryBuilder<
       );
       return result.map(row => row.locale);
     }
-    catch (error) {
-      console.error('Failed to get available locales:', error);
+    catch {
       return [];
     }
   }
@@ -354,17 +350,6 @@ export class QueryBuilder<
   private async buildQuery(): Promise<{ sql: string, params: Record<string, unknown> }> {
     const params: Record<string, unknown> = {};
     const parts: string[] = [];
-
-    console.log('Debug - Query State:', {
-      tableName: this.tableName,
-      hasTranslations: this.hasTranslations,
-      hasLocaleSet: this.hasLocaleSet,
-      locale: this.config.options?.locale,
-      select: this.config.select,
-      where: this.config.where,
-      orderBy: this.config.orderBy,
-      pagination: this.config.pagination,
-    });
 
     // Çevirisi olan tablolar için çeviri kontrolü
     if (this.hasTranslations) {
@@ -384,7 +369,6 @@ export class QueryBuilder<
             availableLocales,
             example: `queryBuilder.locale('${JSON.stringify(availableLocales)}')`,
             note: 'Translation fields are only accessible when a locale is set.',
-
           },
         });
       }
@@ -396,14 +380,9 @@ export class QueryBuilder<
 
       // Çeviri tablosunun varlığını tekrar kontrol et
       const hasTranslationTable = await this.checkTranslationTable();
-      console.log('Debug - Translation Table:', {
-        table: translationTable,
-        exists: hasTranslationTable,
-      });
 
       if (!hasTranslationTable) {
         // Çeviri tablosu yoksa normal sorgu yap
-        console.log('Debug - Fallback to normal query');
         const fields = this.config.select?.length ? this.config.select.map(String) : ['*'];
         parts.push(`SELECT ${fields.join(', ')} FROM ${this.tableName}`);
       }
@@ -448,7 +427,6 @@ export class QueryBuilder<
     }
     else {
       // Normal tablo için standart sorgu
-      console.log('Debug - Normal query');
       const fields = this.config.select?.length ? this.config.select.map(String) : ['*'];
       parts.push(`SELECT ${fields.join(', ')} FROM ${this.tableName}`);
     }
@@ -490,10 +468,6 @@ export class QueryBuilder<
         params.offset = this.config.pagination.offset;
       }
     }
-
-    // Debug için sorguyu yazdır
-    console.log('Generated SQL:', parts.join(' '));
-    console.log('Parameters:', params);
 
     return {
       sql: parts.join(' '),
@@ -629,31 +603,32 @@ export class QueryBuilder<
       return;
 
     const include = this.config.include as Required<IncludeClause<T>>;
-    for (const [relation, config] of Object.entries(include)) {
+    for (const [relationField, config] of Object.entries(include)) {
       if (!config)
         continue;
 
       // İlişki ID'lerini topla
       const relationIds = new Set<string>();
+      const relationIdField = `${this.fieldNormalizer.normalize(relationField)}_id`;
+
       for (const item of items) {
-        const relationId = item[`${relation}_id` as keyof T];
+        const relationId = item[relationIdField as keyof T];
         if (typeof relationId === 'string') {
           relationIds.add(relationId);
         }
-        // Array tipindeki ilişkiler için
         else if (Array.isArray(relationId)) {
           relationId.forEach(id => relationIds.add(id));
         }
       }
 
-      if (relationIds.size === 0) {
+      if (relationIds.size === 0)
         continue;
-      }
 
       // İlişkili verileri getir
       const fields = (config as RelationConfig<BaseQueryModel>).select ?? ['*'];
-      // İlişki tablosunun adını düzelt
-      const relationTableName = this.fieldNormalizer.normalizeTableName(relation);
+      const targetModelId = this.getTargetModelId(relationField);
+      const relationTableName = this.fieldNormalizer.normalizeTableName(targetModelId);
+
       const builder = new QueryBuilder<BaseQueryModel>(this.db, relationTableName as TableName<TTable>);
 
       // ID'lere göre filtrele
@@ -676,23 +651,29 @@ export class QueryBuilder<
 
       // İlişkili verileri ana veriye bağla
       for (const item of items) {
-        const relationId = item[`${relation}_id` as keyof T];
+        const relationId = item[relationIdField as keyof T];
         if (typeof relationId === 'string') {
           const relatedItem = relations.data.find(r => r.id === relationId);
           if (relatedItem) {
-            const relationKey = relation as keyof T;
+            const relationKey = relationField as keyof T;
             item[relationKey] = relatedItem as any;
           }
         }
-        // Array tipindeki ilişkiler için
         else if (Array.isArray(relationId)) {
           const relatedItems = relations.data.filter(r => relationId.includes(r.id));
           if (relatedItems.length > 0) {
-            const relationKey = relation as keyof T;
+            const relationKey = relationField as keyof T;
             item[relationKey] = relatedItems as any;
           }
         }
       }
     }
+  }
+
+  private getTargetModelId(relationField: string): string {
+    // İlişki alanından gerçek model ID'sini çıkar
+    const normalized = this.fieldNormalizer.normalize(relationField);
+    // İlişki tanımından hedef model bilgisini al
+    return normalized.replace(/^my-/, '').replace(/-/g, '_');
   }
 }

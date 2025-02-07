@@ -1,4 +1,4 @@
-import type { BaseQueryModel } from '@contentrain/sqlite-generator';
+import type { BaseQueryModel, RelationOptions } from '@contentrain/sqlite-generator';
 import { writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,15 +16,15 @@ interface Service extends BaseQueryModel {
   title: string
   description: string
   icon: string
-  reference_id: string
-  reference: Reference
+  reference_id: string // İlişki alanı _id ile bitmeli
+  reference: Reference | null // Tekil ilişki null olabilir
 }
 
 interface SocialLink extends BaseQueryModel {
   icon: string
   link: string
-  service_id: string
-  service: Service
+  service_id: string // İlişki alanı _id ile bitmeli
+  service: Service | null // Tekil ilişki null olabilir
 }
 
 interface WorkCategory extends BaseQueryModel {
@@ -34,8 +34,8 @@ interface WorkCategory extends BaseQueryModel {
 
 interface TabItem extends BaseQueryModel {
   description: string
-  category_id: string[]
-  category: WorkCategory[]
+  category_id: string[] // Çoklu ilişki için string array
+  category: WorkCategory[] // Çoklu ilişki için array
 }
 
 interface WorkItem extends BaseQueryModel {
@@ -48,8 +48,8 @@ interface WorkItem extends BaseQueryModel {
 interface TestimonialItem extends BaseQueryModel {
   title: string
   description: string
-  creative_work_id: string
-  creative_work: WorkItem
+  creative_work_id: string // İlişki alanı _id ile bitmeli
+  creative_work: WorkItem | null // Tekil ilişki null olabilir
 }
 
 interface Section extends BaseQueryModel {
@@ -61,11 +61,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const dbPath = join(__dirname, '../db/contentrain.db');
-// Önce yardımcı bir fonksiyon ekleyelim
-function getTableName(modelName: string): string {
-  // tire ve boşlukları alt çizgiye çevir
-  return modelName;
-}
 
 async function runTests() {
   const output: string[] = [];
@@ -74,16 +69,21 @@ async function runTests() {
 
   try {
     // Ana tablo yapısını kontrol et
-    const tableInfo = await db.all('PRAGMA table_info(tbl_workitems)');
-    console.log('Ana tablo yapısı:', JSON.stringify(tableInfo, null, 2));
-
-    // Translation tablosunun yapısını kontrol et
-    const translationInfo = await db.all('PRAGMA table_info(tbl_workitems_translations)');
-    console.log('Translation tablo yapısı:', JSON.stringify(translationInfo, null, 2));
-
+    const tableInfo = await db.all('PRAGMA table_info(tbl_services)');
+    console.log('Services Ana tablo yapısı:', JSON.stringify(tableInfo, null, 2));
+    const socialLinksTableInfo = await db.all('PRAGMA table_info(tbl_sociallinks)');
+    console.log('SocialLinks Ana tablo yapısı:', JSON.stringify(socialLinksTableInfo, null, 2));
+    const relationsTableInfo = await db.all('PRAGMA table_info(tbl_contentrain_relations)');
+    console.log('Relations Ana tablo yapısı:', JSON.stringify(relationsTableInfo, null, 2));
+    // const allTables = await db.all('PRAGMA table_list');
+    // console.log('Tüm tablolar:', JSON.stringify(allTables, null, 2));
+    const relationContentrainRelations = await db.get('SELECT COUNT(*) AS count FROM tbl_contentrain_relations');
+    console.log(`Toplam Kayıt Sayısı: ${relationContentrainRelations.count}`);
     // Sorguyu düzelt
-    const workItemsQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'))
+    const workItemsQuery = new QueryBuilder<WorkItem>(db, 'workitems')
+
       .locale('tr') // Translation tablosundan veri çek
+
       .select(['title', 'description', 'field_order']) // Translation alanları
       .orderBy('field_order', 'asc')
       .limit(4);
@@ -96,8 +96,7 @@ async function runTests() {
 
     // Sayfalama
     output.push('### Sayfalama');
-    const pagedItemsQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'))
-
+    const pagedItemsQuery = new QueryBuilder<WorkItem>(db, 'workitems')
       .locale('tr')
       .limit(3)
       .offset(1);
@@ -113,11 +112,11 @@ async function runTests() {
 
     // Bire-Bir İlişki
     output.push('### Bire-Bir İlişki');
-    const testimonialQuery = new QueryBuilder<TestimonialItem>(db, getTableName('testimonial_items'))
+    const testimonialQuery = new QueryBuilder<TestimonialItem>(db, 'testimonial_items')
       .locale('tr')
       .include('creative_work', {
         select: ['title', 'description'],
-      })
+      } as RelationOptions<WorkItem>)
       .limit(3);
 
     const testimonials = await testimonialQuery.get();
@@ -128,7 +127,7 @@ async function runTests() {
 
     // Bire-Çok İlişki
     output.push('### Bire-Çok İlişki');
-    const tabItemsQuery = new QueryBuilder<TabItem>(db, getTableName('tabitems'))
+    const tabItemsQuery = new QueryBuilder<TabItem>(db, 'tabitems')
       .locale('tr')
       .include('category', {
         select: ['category', 'description'],
@@ -145,7 +144,7 @@ async function runTests() {
 
     // Çoklu Filtreler
     output.push('### Çoklu Filtreler');
-    const complexQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'))
+    const complexQuery = new QueryBuilder<WorkItem>(db, 'workitems')
       .locale('tr')
       .where('field_order', 'gt', 4)
       .orderBy('field_order', 'asc')
@@ -158,7 +157,7 @@ async function runTests() {
 
     // Dizi Operatörleri
     output.push('### Dizi Operatörleri');
-    const statusQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'))
+    const statusQuery = new QueryBuilder<WorkItem>(db, 'workitems')
       .locale('tr')
       .where('status', 'eq', 'publish');
 
@@ -173,7 +172,7 @@ async function runTests() {
 
     // Farklı Dillerde İçerik
     output.push('### Farklı Dillerde İçerik');
-    const sectionsQuery = new QueryBuilder<Section>(db, getTableName('sections'))
+    const sectionsQuery = new QueryBuilder<Section>(db, 'sections')
       .limit(1);
 
     const sectionsResult = await sectionsQuery.get();
@@ -182,12 +181,12 @@ async function runTests() {
       const id = sectionsResult.data[0].id;
 
       // TR içerik
-      const trQuery = new QueryBuilder<Section>(db, getTableName('sections'))
+      const trQuery = new QueryBuilder<Section>(db, 'sections')
         .where('id', 'eq', id)
         .locale('tr');
 
       // EN içerik
-      const enQuery = new QueryBuilder<Section>(db, getTableName('sections'))
+      const enQuery = new QueryBuilder<Section>(db, 'sections')
         .where('id', 'eq', id)
         .locale('en');
 
@@ -205,11 +204,11 @@ async function runTests() {
 
     // Services -> References İlişkisi
     output.push('### Services -> References İlişkisi');
-    const servicesQuery = new QueryBuilder<Service>(db, getTableName('services'))
+    const servicesQuery = new QueryBuilder<Service>(db, 'services')
       .locale('en')
       .include('reference', {
         select: ['logo', 'name'],
-      });
+      } as RelationOptions<Reference>);
 
     const services = await servicesQuery.get();
     for (const service of services.data) {
@@ -219,10 +218,10 @@ async function runTests() {
 
     // Sociallinks -> Services İlişkisi
     output.push('### Sociallinks -> Services İlişkisi');
-    const socialLinksQuery = new QueryBuilder<SocialLink>(db, getTableName('sociallinks'))
+    const socialLinksQuery = new QueryBuilder<SocialLink>(db, 'sociallinks')
       .include('service', {
         select: ['title', 'description'],
-      })
+      } as RelationOptions<Service>)
       .limit(3);
 
     const socialLinks = await socialLinksQuery.get();
@@ -233,11 +232,11 @@ async function runTests() {
 
     // TR Dili İçin İlişkili İçerik
     output.push('### TR Dili İçin İlişkili İçerik');
-    const trServicesQuery = new QueryBuilder<Service>(db, getTableName('services'))
+    const trServicesQuery = new QueryBuilder<Service>(db, 'services')
       .locale('tr')
       .include('reference', {
         select: ['logo', 'name'],
-      });
+      } as RelationOptions<Reference>);
 
     const trServices = await trServicesQuery.get();
     for (const service of trServices.data) {
@@ -247,11 +246,11 @@ async function runTests() {
 
     // EN Dili İçin İlişkili İçerik
     output.push('### EN Dili İçin İlişkili İçerik');
-    const enServicesQuery = new QueryBuilder<Service>(db, getTableName('services'))
+    const enServicesQuery = new QueryBuilder<Service>(db, 'services')
       .locale('en')
       .include('reference', {
         select: ['logo', 'name'],
-      });
+      } as RelationOptions<Reference>);
 
     const enServices = await enServicesQuery.get();
     for (const service of enServices.data) {
@@ -263,7 +262,7 @@ async function runTests() {
     output.push('## 5. Metadata ve Assets');
 
     // Model Metadata
-    const workitemsQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'));
+    const workitemsQuery = new QueryBuilder<WorkItem>(db, 'workitems');
     const totalCount = await workitemsQuery.count();
 
     output.push(`- Model: ${JSON.stringify({
@@ -277,7 +276,7 @@ async function runTests() {
     }, null, 2)}`);
 
     // Asset Sayısı
-    const assetsQuery = new QueryBuilder<WorkItem>(db, getTableName('workitems'))
+    const assetsQuery = new QueryBuilder<WorkItem>(db, 'workitems')
       .locale('tr') // Çeviri tablosunu kullanmak için locale ekle
       .where('image', 'ne', '');
     const assetCount = await assetsQuery.count();

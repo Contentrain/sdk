@@ -152,12 +152,9 @@ export class FieldNormalizer {
    * Example: myFieldName -> my_field_name
    */
   public normalize(fieldName: string): string {
-    console.log(`Alan adı normalize ediliyor: ${fieldName}`);
-
     // 1. Sistem alanı kontrolü
     if (this.SYSTEM_FIELDS.has(fieldName)) {
       const normalizedName = this.SYSTEM_FIELDS.get(fieldName)!;
-      console.log('Sistem alanı dönüşümü:', { original: fieldName, normalized: normalizedName });
       return normalizedName;
     }
 
@@ -168,22 +165,15 @@ export class FieldNormalizer {
       .replace(this.KEBAB_CASE_REGEX, '_')
       .toLowerCase();
 
-    console.log('Snake case dönüşümü:', { original: fieldName, snakeCase });
-
     // 3. Rezerve kelime kontrolü
     if (this.RESERVED_KEYWORDS.has(snakeCase)) {
       const prefixedName = `field_${snakeCase}`;
-      console.log('Rezerve kelime dönüşümü:', { original: snakeCase, normalized: prefixedName });
       return prefixedName;
     }
 
     // 4. Özel karakter kontrolü
     const sanitized = snakeCase.replace(/[^a-z0-9_]/g, '_');
-    if (sanitized !== snakeCase) {
-      console.log('Özel karakter dönüşümü:', { original: snakeCase, sanitized });
-    }
 
-    console.log('Final dönüşüm:', { original: fieldName, normalized: sanitized });
     return sanitized;
   }
 

@@ -58,9 +58,12 @@ program
       console.info(`Tip tanımları oluşturuldu: ${join(cwd(), options.output, options.typesFile)}`);
     }
     catch (error) {
-      console.error('\nHata:', error instanceof Error ? error.message : String(error));
       if (error instanceof ContentrainError) {
+        console.error('Hata:', error.message);
         console.error('Detaylar:', error.details);
+      }
+      else {
+        console.error('Hata:', error instanceof Error ? error.message : String(error));
       }
       exit(1);
     }

@@ -57,15 +57,9 @@ export class ContentAnalyzer {
    * Reads localized content
    */
   private async readLocalizedContent(modelDir: string, modelId: string): Promise<LocalizedContentResult> {
-    console.log('\n=== Lokalize İçerik Okunuyor ===');
-    console.log(`Model: ${modelId}`);
-    console.log(`Dizin: ${modelDir}`);
-
     const translations: TranslationMap = {};
     const mainTableContentItems = new Map<string, ContentItem>();
     const localeFiles = await this.findLocaleFiles(modelDir);
-
-    console.log('Bulunan dil dosyaları:', localeFiles);
 
     if (!localeFiles.length) {
       throw new ValidationError({
@@ -78,17 +72,13 @@ export class ContentAnalyzer {
     // Her dil dosyasını oku
     for (const file of localeFiles) {
       const locale = this.getLocaleFromPath(file);
-      console.log(`\nDil dosyası işleniyor: ${file}`);
-      console.log(`Locale: ${locale}`);
 
       if (!this.isValidLocale(locale)) {
-        console.warn(`[${modelId}] Geçersiz locale bulundu: ${locale}`);
         continue;
       }
 
       try {
         const content = await this.readJSONFile(file);
-        console.log('Dosya içeriği okundu, kayıt sayısı:', Array.isArray(content) ? content.length : 'Geçersiz format');
 
         if (!Array.isArray(content)) {
           throw new ValidationError({
@@ -99,15 +89,10 @@ export class ContentAnalyzer {
         }
 
         const validItems = content.filter(item => this.validationManager.isValidContentItem(item));
-        console.log(`Geçerli kayıt sayısı: ${validItems.length}`);
 
         // Ana tablo için içerikleri hazırla
         for (const item of validItems) {
           const normalized = this.normalizeContentItem(item);
-          console.log(`Ana tablo kaydı işleniyor - ID: ${normalized.id}`);
-          if (mainTableContentItems.has(normalized.id)) {
-            console.log(`ID ${normalized.id} zaten ana tablo listesinde mevcut`);
-          }
           mainTableContentItems.set(normalized.id, normalized);
         }
 
@@ -116,10 +101,8 @@ export class ContentAnalyzer {
           const normalized = this.normalizeContentItem(item);
           return { ...normalized, locale };
         });
-        console.log(`${locale} diline ${translations[locale].length} çeviri eklendi`);
       }
       catch (error) {
-        console.error(`Dosya işlenirken hata: ${file}`, error);
         if (error instanceof ValidationError)
           throw error;
         throw new ContentrainError({
@@ -130,11 +113,6 @@ export class ContentAnalyzer {
         });
       }
     }
-
-    console.log('\n=== İçerik Okuma Özeti ===');
-    console.log(`Toplam benzersiz ID sayısı: ${mainTableContentItems.size}`);
-    console.log(`Dil sayısı: ${Object.keys(translations).length}`);
-    console.log(`Diller: ${Object.keys(translations).join(', ')}`);
 
     return {
       contentItems: Array.from(mainTableContentItems.values()),
