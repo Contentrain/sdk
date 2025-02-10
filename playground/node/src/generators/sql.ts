@@ -1,63 +1,52 @@
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { DatabaseAdapter, SQLiteGenerator } from '@contentrain/sqlite-generator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-async function generateDatabase() {
+export async function generateDatabase() {
   try {
+    // Önce gerekli dizinleri oluştur
+    const outputDir = join(__dirname, '../outputs');
+    const dbDir = join(outputDir, 'db');
+    const typesDir = join(outputDir, 'types');
+    const migrationsDir = join(outputDir, 'migrations');
+
+    await mkdir(dbDir, { recursive: true });
+    await mkdir(typesDir, { recursive: true });
+    await mkdir(migrationsDir, { recursive: true });
+
     // SQLite generator'ı yapılandır
     const generator = new SQLiteGenerator({
-      // Model tanımlamalarının bulunduğu dizin
-      modelsDir: join(__dirname, '../../contentrain/models'),
-      // İçerik dosyalarının bulunduğu dizin
-      contentDir: join(__dirname, '../../contentrain'),
-      // Çıktı dizini
-      outputDir: join(__dirname, '../db'),
-      // Veritabanı dosya adı
+      modelsDir: join(__dirname, '../../../contentrain/models'),
+      contentDir: join(__dirname, '../../../contentrain'),
+      outputDir: dbDir,
       dbName: 'contentrain.db',
-      // Tip tanımları dosya adı
-      typesFile: 'contentrain.d.ts',
-      // Önbellek yapılandırması
-      cache: {
-        enabled: true,
-        ttl: 300,
-      },
-      // Güvenlik yapılandırması
-      security: {
-        validateInput: true,
-        maxInputLength: 1000,
-      },
-      // Veritabanı optimizasyon yapılandırması
-      optimization: {
-        enableWAL: true,
-        cacheSize: 2000,
-        pageSize: 4096,
-        journalSize: 67108864,
-      },
+      typesFile: join(typesDir, 'contentrain-sql.d.ts'),
     });
 
     // Veritabanını oluştur
     await generator.generate();
 
-    console.log('SQLite veritabanı başarıyla oluşturuldu!');
-    console.log(`Veritabanı konumu: ${join(__dirname, '../db/contentrain.db')}`);
-    console.log(`Tip tanımları konumu: ${join(__dirname, '../db/contentrain.d.ts')}`);
+    console.log('SQLite database created successfully!');
+    console.log(`Database location: ${join(__dirname, '../outputs/db/contentrain.db')}`);
+    console.log(`Types location: ${join(__dirname, '../outputs/types/contentrain.d.ts')}`);
   }
   catch (error) {
-    console.error('Veritabanı oluşturulurken hata oluştu:', error);
+    console.error('Error occurred while creating database:', error);
     if (error instanceof Error) {
-      console.error('Hata detayları:', error.message);
+      console.error('Error details:', error.message);
       console.error('Stack:', error.stack);
     }
     throw error;
   }
 }
 
-async function exportToMarkdown(dbFile: string, outputFile: string) {
+export async function exportToMarkdown(dbPath?: string, outputPath?: string) {
+  const dbFile = dbPath || join(__dirname, '../outputs/db/contentrain.db');
+  const outputFile = outputPath || join(__dirname, '../outputs/markdowns/database_structure.md');
   // Veritabanını aç
   const db = new DatabaseAdapter(dbFile);
   await db.initialize();
@@ -111,13 +100,3 @@ async function exportToMarkdown(dbFile: string, outputFile: string) {
   // Veritabanını kapat
   db.close();
 }
-
-// Fonksiyonu çalıştır
-
-void generateDatabase().then(async () => {
-  const dbPath = join(__dirname, '../db/contentrain.db');
-  await exportToMarkdown(dbPath, join(__dirname, './database_structure.md'));
-}).catch((error) => {
-  console.error('Beklenmeyen hata:', error);
-  exit(1);
-});

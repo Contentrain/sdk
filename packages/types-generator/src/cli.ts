@@ -9,13 +9,13 @@ const program = new Command();
 
 program
   .name('contentrain-generate')
-  .description('Contentrain model şemalarından TypeScript tip tanımları üretir')
-  .version('1.0.0')
-  .option('-m, --models <path>', 'Model dizininin yolu')
-  .option('-o, --output <path>', 'Çıktı dizininin yolu')
-  .option('-c, --content <path>', 'İçerik dizininin yolu')
-  .option('-l, --lint', 'Tip tanımlarını lint et ve formatla')
-  .option('-d, --debug', 'Debug modunda çalıştır')
+  .description('Generate types for Contentrain Query')
+  .version('2.1.0')
+  .option('-m, --models <path>', 'Path to the models directory')
+  .option('-o, --output <path>', 'Path to the output directory')
+  .option('-c, --content <path>', 'Path to the Contentrain content directory')
+  .option('-l, --lint', 'Lint and format the generated types')
+  .option('-d, --debug', 'Run in debug mode')
   .parse(process.argv);
 
 async function main() {
@@ -51,20 +51,22 @@ async function main() {
   catch (error: unknown) {
     if (options.debug) {
       if (error instanceof Error) {
-        console.error('❌ Hata detayları:', {
+        console.error('❌ Error details:', {
           message: error.message,
           cause: error.cause,
           stack: error.stack,
         });
       }
+
       else {
-        console.error('❌ Hata detayları:', error);
+        console.error('❌ Error details:', error);
       }
     }
     else {
-      console.error('❌ Tip tanımları oluşturulurken hata:', error instanceof Error ? error.message : String(error));
-      console.error('Daha fazla detay için -d veya --debug seçeneğini kullanın');
+      console.error('❌ Error while generating types:', error instanceof Error ? error.message : String(error));
+      console.error('Use the --debug option for more details');
     }
+
     process.exit(1);
   }
 }

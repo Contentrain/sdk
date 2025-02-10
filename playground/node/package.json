@@ -10,10 +10,12 @@
     "type": "module",
     "scripts": {
         "build": "tsc",
-        "start": "tsx src/index.ts",
-        "dev": "tsx watch src/index.ts",
-        "sql-query": "tsx src/sql-query.ts",
-        "sql-generate": "tsx src/sql.ts"
+        "start": "pnpm clean && tsx src/index.ts",
+        "dev": "pnpm clean && tsx watch src/index.ts",
+        "clean-db": "rm -rf src/outputs/db/*",
+        "clean-types": "rm -rf src/outputs/types/*",
+        "clean-markdown": "rm -rf src/outputs/markdowns/*",
+        "clean": "pnpm clean-db && pnpm clean-types && pnpm clean-markdown"
     },
     "dependencies": {
         "@contentrain/query": "workspace:*",
