@@ -14,7 +14,7 @@ interface TestRecord {
 
 describe('sQLiteLoader', () => {
   let loader: BaseSQLiteLoader;
-  const dbPath = join(__dirname, '../../../../../../playground/node/db/contentrain.db');
+  const dbPath = join(__dirname, '../../../../../../playground/node/src/outputs/db/contentrain.db');
 
   beforeEach(() => {
     loader = new BaseSQLiteLoader(dbPath);

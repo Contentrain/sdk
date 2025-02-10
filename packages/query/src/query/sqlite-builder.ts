@@ -4,6 +4,9 @@ import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, 
 import { RelationLoader } from '../loader/relation-loader';
 import { logger } from '../utils/logger';
 
+const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at', 'status'] as const;
+type SystemField = typeof SYSTEM_FIELDS[number];
+
 export class SQLiteQueryBuilder<T extends DBRecord> {
   private filters: Filter[] = [];
   private includes: Include = {};
@@ -18,6 +21,28 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
     private connection: BaseSQLiteLoader,
   ) {
     this.relationLoader = new RelationLoader(connection.databasePath);
+  }
+
+  private isSystemField(field: string): field is SystemField {
+    return SYSTEM_FIELDS.includes(field as SystemField);
+  }
+
+  private isRelationField(field: string): boolean {
+    return field.endsWith('_id');
+  }
+
+  private requiresTranslation(field: string): boolean {
+    return !this.isSystemField(field) && !this.isRelationField(field);
+  }
+
+  private validateLocaleForTranslatedFields() {
+    const hasTranslatedField = [...this.filters, ...this.sorting].some(
+      item => this.requiresTranslation(item.field),
+    );
+
+    if (hasTranslatedField && !this.options.locale) {
+      throw new Error('Locale is required when querying translated fields');
+    }
   }
 
   where<K extends keyof T>(
@@ -69,26 +94,26 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
   }
 
   private buildQuery(): { sql: string, params: any[] } {
-    const hasLocale = !!this.options.locale;
+    this.validateLocaleForTranslatedFields();
+
     const tableName = `tbl_${this.model}`;
     const params: any[] = [];
 
     // Ana sorgu
-    let sql = `SELECT m.*${hasLocale ? ', t.*' : ''}`;
+    let sql = 'SELECT m.*, t.*';
     sql += ` FROM ${tableName} m`;
 
-    // Çeviri tablosu join
-    if (hasLocale) {
-      sql += ` LEFT JOIN ${tableName}_translations t
-        ON m.id = t.id AND t.locale = ?`;
+    // Translation tablosu join
+    sql += ` LEFT JOIN ${tableName}_translations t ON m.id = t.id`;
+    if (this.options.locale) {
+      sql += ' AND t.locale = ?';
       params.push(this.options.locale);
     }
 
     // Koşullar
     const conditions: string[] = [];
     this.filters.forEach(({ field, operator, value }) => {
-      // Çeviri alanları için doğru tabloyu kullan
-      const fieldPrefix = this.isTranslatedField(field) && hasLocale ? 't.' : 'm.';
+      const fieldPrefix = this.requiresTranslation(field) ? 't.' : 'm.';
 
       switch (operator) {
         case 'contains':
@@ -145,8 +170,8 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
     // Sıralama
     if (this.sorting.length) {
       sql += ` ORDER BY ${this.sorting.map((s) => {
-        const prefix = this.isTranslatedField(s.field) && hasLocale ? 't.' : 'm.';
-        return `${prefix}${s.field} ${s.direction}`;
+        const prefix = this.requiresTranslation(s.field) ? 't.' : 'm.';
+        return `COALESCE(${prefix}${s.field}, 0) ${s.direction}`;
       }).join(', ')}`;
     }
 
@@ -162,12 +187,6 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
     }
 
     return { sql, params };
-  }
-
-  private isTranslatedField(field: string): boolean {
-    // Model yapısına göre hangi alanların çeviri gerektirdiğini kontrol et
-    const translatedFields = ['title', 'description', 'image'];
-    return translatedFields.includes(field);
   }
 
   async get(): Promise<QueryResult<T>> {
