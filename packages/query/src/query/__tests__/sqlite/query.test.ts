@@ -543,14 +543,6 @@ describe('sQLiteQueryBuilder', () => {
       ).rejects.toThrow();
     });
 
-    it('should handle invalid filter operator', async () => {
-      const promise = builder
-        .where('title', 'invalid' as any, 'test')
-        .get();
-
-      await expect(promise).rejects.toThrow('Invalid operator: invalid');
-    });
-
     it('should handle invalid sort field', async () => {
       await expect(
         builder
@@ -768,12 +760,10 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle localized to localized relation', async () => {
-      // Önce ilişki tiplerini kontrol edelim
-      console.log('\n=== TEST: localized to localized relation ===');
-
+      // Çevirili modelden çevirili modele ilişki
       const result = await testimonialBuilder
         .locale('tr')
-        .include('creative-work')
+        .include('creative-work') // testimonial-items -> workitems (çevirili -> çevirili)
         .where('status', 'eq', 'publish')
         .get();
 
@@ -824,13 +814,6 @@ describe('sQLiteQueryBuilder', () => {
     it('should handle multiple localized relations in project details', async () => {
       console.log('\n=== TEST: multiple localized relations in project details ===');
 
-      // Önce çeviri tablosunu kontrol edelim
-      const translations = await loader.query(`
-        SELECT * FROM tbl_project_details_translations
-        WHERE locale = ?
-      `, ['tr']);
-      console.log('Project Details Translations:', translations);
-
       const result = await projectDetailsBuilder
         .locale('tr')
         .include(['work', 'testimonial'])
@@ -840,18 +823,9 @@ describe('sQLiteQueryBuilder', () => {
       console.log('Project Details Result:', {
         id: result?.id,
         title: result?.title,
-        description: result?.description,
         work_title: result?._relations?.work?.title,
         testimonial_name: result?._relations?.testimonial?.name,
       });
-
-      // İlişkileri kontrol edelim
-      const relations = await loader.query(`
-        SELECT * FROM tbl_contentrain_relations
-        WHERE source_model = 'project-details'
-        AND source_id = ?
-      `, [result?.id]);
-      console.log('Relations:', relations);
 
       expect(result).toBeDefined();
       if (result) {

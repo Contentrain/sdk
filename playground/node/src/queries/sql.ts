@@ -314,7 +314,7 @@ ${servicesWithRefs.data.map(item => `- **${item.title}**
 ## 3. Bire-Çok İlişki Örnekleri
 
 ### Tab Items ve Çoklu Kategorileri
-${tabItemsMultiCategory.data.map(item => `- **${item.title}**
+${tabItemsMultiCategory.data.map(item => `- **${item.id}**
   - Kategoriler: ${item._relations?.category?.map(c => c.category).join(', ')}
   - Açıklama: ${item.description}
   - Link: ${item.link}

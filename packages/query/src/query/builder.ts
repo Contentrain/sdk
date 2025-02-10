@@ -2,7 +2,9 @@ import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType, ContentrainLocales } from '../types/model';
 import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
 import type { QueryExecutor } from './executor';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
+
+const logger = loggers.query;
 
 export class ContentrainQueryBuilder<
   TFields extends BaseContentrainType,
@@ -45,7 +47,7 @@ export class ContentrainQueryBuilder<
   }
 
   include<K extends keyof TRelations>(relation: K | K[]): this {
-    logger.debug('Adding relation:', relation);
+    logger.debug('Adding relation', { relation: typeof relation === 'string' ? { name: relation } : { names: relation } });
 
     if (typeof relation === 'string') {
       this.includes[relation] = {};
@@ -72,19 +74,19 @@ export class ContentrainQueryBuilder<
   }
 
   limit(count: number): this {
-    logger.debug('Adding limit:', count);
+    logger.debug('Adding limit', { value: count });
     this.pagination.limit = count;
     return this;
   }
 
   offset(count: number): this {
-    logger.debug('Adding offset:', count);
+    logger.debug('Adding offset', { value: count });
     this.pagination.offset = count;
     return this;
   }
 
   locale(code: TLocales): this {
-    logger.debug('Setting locale:', code);
+    logger.debug('Setting locale', { code });
     this.options.locale = code;
     return this;
   }

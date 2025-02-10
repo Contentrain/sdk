@@ -1,6 +1,8 @@
 import type { Database } from 'better-sqlite3';
 import BetterSQLite from 'better-sqlite3';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
+
+const logger = loggers.sqlite;
 
 export class SQLiteConnection {
   private db: Database;
@@ -23,7 +25,7 @@ export class SQLiteConnection {
       return stmt.all(...params) as T[];
     }
     catch (error) {
-      logger.error('Query error:', { sql, params, error });
+      logger.error('Query error', { sql, params, error });
       throw error;
     }
   }
@@ -34,7 +36,7 @@ export class SQLiteConnection {
       return stmt.get(...params) as T | undefined;
     }
     catch (error) {
-      logger.error('Get error:', { sql, params, error });
+      logger.error('Get error', { sql, params, error });
       throw error;
     }
   }

@@ -3,7 +3,9 @@ import type { BaseContentrainType, FieldMetadata, ModelMetadata } from '../types
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { MemoryCache } from '../cache/memory';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
+
+const logger = loggers.loader;
 
 export class ContentLoader {
   private options: ContentLoaderOptions;
@@ -299,19 +301,19 @@ export class ContentLoader {
       });
 
       const relations = this.relations.get(model);
-      logger.debug('Debug - Relations:', relations);
+      logger.debug('Debug - Relations:', { relations: relations || {} });
 
       if (!relations)
         throw new Error(`No relations found for model: ${model}`);
 
       const relation = relations.find(r => r.foreignKey === relationField);
-      logger.debug('Debug - Found relation:', relation);
+      logger.debug('Debug - Found relation:', { relation: relation || {} });
 
       if (!relation)
         throw new Error(`No relation found for field: ${String(relationField)}`);
 
       // İlişkili modeli yükle
-      logger.debug('Debug - Related model loading:', relation.model);
+      logger.debug('Debug - Related model loading:', { model: relation.model });
       const relatedContent = await this.load<R>(relation.model);
       logger.debug('Debug - İlişkili model yüklendi:', {
         model: relation.model,
@@ -365,7 +367,7 @@ export class ContentLoader {
         logger.debug('Debug - Processing one-to-one relation');
         // For one-to-one relations, process only items with relation field
         const itemsWithRelation = data.filter(item => item[relationField] !== undefined);
-        logger.debug('Debug - Items with relations:', itemsWithRelation.length);
+        logger.debug('Debug - Items with relations:', { count: itemsWithRelation.length });
 
         return itemsWithRelation.map((item) => {
           const relatedItem = relatedData.find((r: R) => r.ID === item[relationField]);
@@ -388,13 +390,15 @@ export class ContentLoader {
           ),
         );
 
-        logger.debug('Debug - Unique IDs:', Array.from(uniqueIds));
+        logger.debug('Debug - Total count:', { total: uniqueIds.size });
 
         const items = Array.from(uniqueIds)
           .map(id => relatedData.find((r: R) => r.ID === id))
           .filter(Boolean) as R[];
 
-        logger.debug('Debug - Matching items:', items.length);
+        logger.debug('Debug - Unique IDs:', { ids: Array.from(uniqueIds) });
+
+        logger.debug('Debug - Matching items:', { count: items.length });
 
         if (items.length !== uniqueIds.size) {
           throw new Error('Failed to resolve relation: Some related items not found');

@@ -66,9 +66,9 @@ describe('contentrainTypesGenerator Tests', () => {
       const modelPath = path.join(mockPaths.models, 'processes.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
       const metadata = (generator as any).getMetadata();
-
       const { typeDefinition, relations } = (generator as any).generateTypeForModel(modelContent, metadata);
 
+      console.log(typeDefinition, 'Type Definition');
       expect(typeDefinition).toContain('title: string');
       expect(typeDefinition).toContain('description: string');
       expect(typeDefinition).toContain('icon: string');

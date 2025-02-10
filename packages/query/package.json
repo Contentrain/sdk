@@ -31,12 +31,13 @@
     },
     "scripts": {
         "dev": "NODE_ENV=development tsup --watch",
-        "build": "tsup && rm -rf dist/types dist/cache dist/loader dist/query",
+        "build": "NODE_ENV=production tsup && rm -rf dist/types dist/cache dist/loader dist/query",
         "dev:watch": "tsup --watch",
         "test": "vitest watch",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
-        "clean": "rm -rf dist"
+        "clean": "rm -rf dist",
+        "test:prod": "NODE_ENV=production vitest run"
     },
     "devDependencies": {
         "@types/node": "^20.10.6",
@@ -51,5 +52,9 @@
         "better-sqlite3": "^11.8.1",
         "debug": "^4.4.0",
         "tiny-lru": "^11.2.11"
+    },
+    "peerDependencies": {
+        "better-sqlite3": "^11.8.1",
+        "debug": "^4.4.0"
     }
 }

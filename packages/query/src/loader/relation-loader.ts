@@ -1,8 +1,10 @@
 import type { DBRecord, DBRelation } from '../types/database';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
 import { normalizeTableName } from '../utils/normalizer';
 import { BaseSQLiteLoader } from './base-sqlite';
 import { TranslationLoader } from './translation-loader';
+
+const logger = loggers.relation;
 
 export class RelationLoader extends BaseSQLiteLoader {
   private translationLoader: TranslationLoader;
@@ -21,7 +23,19 @@ export class RelationLoader extends BaseSQLiteLoader {
       if (!sourceIds.length)
         return [];
 
-      logger.debug('Loading relations with params:', { model, fieldId, sourceIdsCount: sourceIds.length });
+      // Model çeviri durumunu kontrol et
+      const hasSourceTranslations = await this.translationLoader.hasTranslations(model);
+      logger.debug('Source model translation check:', {
+        model,
+        hasTranslations: hasSourceTranslations,
+      });
+
+      logger.debug('Loading relations with params:', {
+        model,
+        fieldId,
+        sourceIdsCount: sourceIds.length,
+        hasSourceTranslations,
+      });
 
       // İlişkileri yükle
       const query = `
@@ -36,11 +50,21 @@ export class RelationLoader extends BaseSQLiteLoader {
         query,
         [model, ...sourceIds, fieldId],
       );
-      logger.debug('Loaded relations result:', {
+
+      // Hedef modelin çeviri durumunu kontrol et
+      const targetModel = relations[0]?.target_model;
+      const hasTargetTranslations = targetModel
+        ? await this.translationLoader.hasTranslations(targetModel)
+        : false;
+
+      logger.debug('Relations loaded:', {
         count: relations.length,
         firstRelation: relations[0],
         model,
         fieldId,
+        relationType: relations[0]?.type,
+        targetModel,
+        hasTargetTranslations,
       });
 
       return relations;
@@ -62,12 +86,22 @@ export class RelationLoader extends BaseSQLiteLoader {
       const targetModel = relations[0].target_model;
       const targetIds = relations.map(r => r.target_id);
       const targetTable = normalizeTableName(targetModel);
+      const relationType = relations[0].type;
 
-      logger.debug('Loading related content with params:', {
+      // Kaynak ve hedef modellerin çeviri durumunu kontrol et
+      const sourceModel = relations[0].source_model;
+      const hasSourceTranslations = await this.translationLoader.hasTranslations(sourceModel);
+      const hasTargetTranslations = await this.translationLoader.hasTranslations(targetModel);
+
+      logger.debug('Loading related content:', {
+        sourceModel,
         targetModel,
         targetTable,
         targetIdsCount: targetIds.length,
         locale,
+        relationType,
+        hasSourceTranslations,
+        hasTargetTranslations,
         firstRelation: relations[0],
       });
 
@@ -79,43 +113,59 @@ export class RelationLoader extends BaseSQLiteLoader {
 
       logger.debug('Related content query:', { query, targetIds });
       const data = await this.connection.query<T>(query, targetIds);
-      logger.debug('Loaded related content result:', {
+      logger.debug('Base content loaded:', {
         count: data.length,
         firstItem: data[0],
         targetModel,
         targetTable,
       });
 
-      // Çevirisi varsa yükle
-      if (locale) {
-        const hasTranslations = await this.translationLoader.hasTranslations(targetModel);
-        logger.debug('Translation check:', { targetModel, hasTranslations });
+      // Çeviri durumuna göre işlem yap
+      if (locale && hasTargetTranslations) {
+        logger.debug('Loading translations for target model:', {
+          targetModel,
+          locale,
+          hasTargetTranslations,
+        });
 
-        if (hasTranslations) {
-          const translations = await this.translationLoader.loadTranslations(
-            targetModel,
-            targetIds,
-            locale,
-          );
-          logger.debug('Loaded translations:', {
-            count: Object.keys(translations).length,
-            firstTranslation: Object.values(translations)[0],
-            targetModel,
-            locale,
-          });
+        const translations = await this.translationLoader.loadTranslations(
+          targetModel,
+          targetIds,
+          locale,
+        );
 
-          // Çevirileri ana veriye ekle
-          return data.map(item => ({
-            ...item,
-            ...translations[item.id],
-          }));
-        }
+        logger.debug('Translations loaded:', {
+          count: Object.keys(translations).length,
+          firstTranslation: Object.values(translations)[0],
+          targetModel,
+          locale,
+        });
+
+        // Çevirileri ana veriye ekle
+        const mergedData = data.map(item => ({
+          ...item,
+          ...translations[item.id],
+        }));
+
+        logger.debug('Content merged with translations:', {
+          originalCount: data.length,
+          mergedCount: mergedData.length,
+          hasTranslations: Object.keys(translations).length > 0,
+        });
+
+        return mergedData;
       }
 
       return data;
     }
     catch (error) {
-      logger.error('Load related content error:', { relations, locale, error });
+      logger.error('Load related content error:', {
+        relations,
+        locale,
+        error,
+        sourceModel: relations[0]?.source_model,
+        targetModel: relations[0]?.target_model,
+      });
       throw error;
     }
   }
@@ -128,12 +178,53 @@ export class RelationLoader extends BaseSQLiteLoader {
         WHERE source_model = ?
       `;
 
-      logger.debug('Getting relation types:', { model, query });
-      const results = await this.connection.query<{ field_id: string, type: 'one-to-one' | 'one-to-many' }>(
+      // Model çeviri durumunu kontrol et
+      const hasTranslations = await this.translationLoader.hasTranslations(model);
+
+      logger.debug('Getting relation types:', {
+        model,
         query,
-        [model],
+        hasTranslations,
+      });
+
+      const results = await this.connection.query<{
+        field_id: string
+        type: 'one-to-one' | 'one-to-many'
+      }>(query, [model]);
+
+      // Her ilişki için hedef modelin çeviri durumunu kontrol et
+      const relationDetails = await Promise.all(
+        results.map(async ({ field_id, type }) => {
+          const targetModelQuery = `
+            SELECT DISTINCT target_model
+            FROM tbl_contentrain_relations
+            WHERE source_model = ?
+            AND field_id = ?
+          `;
+          const [targetResult] = await this.connection.query<{ target_model: string }>(
+            targetModelQuery,
+            [model, field_id],
+          );
+
+          const targetModel = targetResult?.target_model;
+          const hasTargetTranslations = targetModel
+            ? await this.translationLoader.hasTranslations(targetModel)
+            : false;
+
+          return {
+            field_id,
+            type,
+            targetModel,
+            hasTargetTranslations,
+          };
+        }),
       );
-      logger.debug('Got relation types:', results);
+
+      logger.debug('Relation types loaded:', {
+        model,
+        hasTranslations,
+        relations: relationDetails,
+      });
 
       return results.reduce((acc, { field_id, type }) => {
         acc[field_id] = type;

@@ -1,6 +1,8 @@
 import type { CacheEntry, CacheStats, MemoryCacheOptions } from '../types/loader';
 import { lru } from 'tiny-lru';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
+
+const logger = loggers.cache;
 
 export class MemoryCache {
   private cache;

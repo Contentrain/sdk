@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
@@ -7,8 +8,15 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   splitting: false,
-  sourcemap: true,
-  minify: false,
+  sourcemap: process.env.NODE_ENV === 'development',
+  minify: process.env.NODE_ENV === 'production',
   keepNames: true,
   outDir: 'dist',
+  // Production optimizasyonları
+  esbuildOptions(options) {
+    if (process.env.NODE_ENV === 'production') {
+      options.drop = ['console', 'debugger'];
+      options.pure = ['debug'];
+    }
+  },
 });

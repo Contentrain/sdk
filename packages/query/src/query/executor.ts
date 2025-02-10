@@ -1,7 +1,9 @@
 import type { ContentLoader } from '../loader/content';
 import type { BaseContentrainType } from '../types/model';
 import type { ArrayOperator, Filter, Include, NumericOperator, QueryOptions, QueryResult, Sort, StringOperator } from '../types/query';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
+
+const logger = loggers.executor;
 
 export class QueryExecutor {
   private loader: ContentLoader;
@@ -23,7 +25,7 @@ export class QueryExecutor {
         // Invalid operator check
         const validOperators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains', 'startsWith', 'endsWith'];
         if (!validOperators.includes(operator)) {
-          logger.error('Invalid operator:', operator);
+          logger.error('Invalid operator', { operator: operator.toString() });
           throw new Error(`Invalid operator: ${operator}`);
         }
 
@@ -38,7 +40,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).includes(itemValue);
             default:
-              logger.error('Invalid array operator:', operator);
+              logger.error('Invalid array operator', { operator: operator.toString() });
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -50,7 +52,7 @@ export class QueryExecutor {
             case 'nin':
               return !(value as unknown[]).some((v: unknown) => itemValue.includes(v));
             default:
-              logger.error('Invalid array operator:', operator);
+              logger.error('Invalid array operator', { operator: operator.toString() });
               throw new Error(`Invalid array operator: ${operator}`);
           }
         }
@@ -223,21 +225,21 @@ export class QueryExecutor {
     let result = [...data];
     // Apply filters
     if (filters.length) {
-      logger.debug('Applying filters:', filters);
+      logger.debug('Applying filters', { filters: filters.map(f => ({ ...f })) });
       result = this.applyFilters(result, filters);
-      logger.debug('Remaining items after filtering:', result.length);
+      logger.debug('Remaining items', { count: result.length });
     }
 
     // Resolve relations
     if (Object.keys(includes).length) {
       logger.debug('Resolving relations:', includes);
       result = await this.resolveIncludes(model, result, includes, options);
-      logger.debug('Items after relation resolution:', result.length);
+      logger.debug('Items after relation resolution', { count: result.length });
     }
 
     // Apply sorting
     if (sorting.length) {
-      logger.debug('Applying sorting:', sorting);
+      logger.debug('Applying sorting', { sorting: sorting.map(s => ({ ...s })) });
       result = this.applySorting(result, sorting);
     }
 

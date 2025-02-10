@@ -1,6 +1,8 @@
 import type { DBRecord } from '../types/database';
-import { logger } from '../utils/logger';
+import { loggers } from '../utils/logger';
 import { SQLiteConnection } from './sqlite';
+
+const logger = loggers.sqlite;
 
 export class BaseSQLiteLoader {
   protected connection: SQLiteConnection;
@@ -26,7 +28,7 @@ export class BaseSQLiteLoader {
       );
     }
     catch (error) {
-      logger.error('Find by ID error:', { model, id, error });
+      logger.error('Find by ID error', { model, id, error });
       throw error;
     }
   }
@@ -46,7 +48,7 @@ export class BaseSQLiteLoader {
       );
     }
     catch (error) {
-      logger.error('Find all error:', { model, conditions, error });
+      logger.error('Find all error', { model, conditions, error });
       throw error;
     }
   }
