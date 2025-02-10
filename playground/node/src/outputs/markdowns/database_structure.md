@@ -571,6 +571,65 @@ Proje planını müşteri brifinglerine göre tasarladık, ön ucu ve arka ucu g
 | b770c71013d2 | tr | Murat Sus | Lanista ekibi, yenilikçi teknoloji ve yaklaşımları benimseyerek her türlü sorunu çözme konusunda büyük bir yeteneğe sahip. | Co-Founder, Bloom and Fresh | public/1729164933955_murat.png |
 | c421eb634cfa | tr | Ege Büyüktaşkın | Lanista Yazılım, ekibimle yakın iş birliği içinde çalışarak fikrimi hayata geçirdi ve süreci çok daha kolay hale getirdi. | Kurucu, Visiv | public/1728464446315_ege.jpeg |
 
+## Table: tbl_project_details
+
+| Column | Type | Primary Key |
+|--------|------|------------|
+| id | TEXT | ✅ |
+| created_at | TEXT |  |
+| updated_at | TEXT |  |
+| status | TEXT |  |
+| work_id | TEXT |  |
+| testimonial_id | TEXT |  |
+
+### Data in tbl_project_details
+
+| id | created_at | updated_at | status | work_id | testimonial_id |
+| --- | --- | --- | --- | --- | --- |
+| pd001 | 2024-01-15T10:00:00.000Z | 2024-01-15T10:00:00.000Z | publish | 8a8044e883e8 | 89ae53eb8370 |
+| pd002 | 2024-01-15T10:30:00.000Z | 2024-01-15T10:30:00.000Z | publish | 8a8044e883e9 | b770c71013d2 |
+| pd003 | 2024-01-15T11:00:00.000Z | 2024-01-15T11:00:00.000Z | publish | 8a8044e883eb | c421eb634cfa |
+
+## Table: tbl_project_details_translations
+
+| Column | Type | Primary Key |
+|--------|------|------------|
+| id | TEXT | ✅ |
+| locale | TEXT | ✅ |
+| title | TEXT |  |
+| description | TEXT |  |
+
+### Data in tbl_project_details_translations
+
+| id | locale | title | description |
+| --- | --- | --- | --- |
+| pd001 | en | Contentrain Project Details | A comprehensive Git-based headless CMS solution that combines modern development practices with content management. Built with scalability and developer experience in mind. |
+| pd002 | en | Bloom & Fresh Project Analysis | E-commerce platform modernization project focusing on frontend improvements using Vue.js and Nuxt.js, integrated with existing backend systems for optimal performance. |
+| pd003 | en | Visivi HR Platform Overview | Cross-platform mobile and web application development project for HR management, built with React Native for mobile and Vue.js/Nuxt.js for web interfaces. |
+| pd001 | tr | Contentrain Proje Detayları | Modern geliştirme pratiklerini içerik yönetimiyle birleştiren, Git tabanlı kapsamlı bir headless CMS çözümü. Ölçeklenebilirlik ve geliştirici deneyimi göz önünde bulundurularak oluşturuldu. |
+| pd002 | tr | Bloom & Fresh Proje Analizi | Vue.js ve Nuxt.js kullanarak frontend iyileştirmelerine odaklanan ve optimal performans için mevcut backend sistemleriyle entegre edilen e-ticaret platformu modernizasyon projesi. |
+| pd003 | tr | Visivi İK Platformu Genel Bakış | İK yönetimi için geliştirilen, mobil için React Native ve web arayüzleri için Vue.js/Nuxt.js kullanılarak oluşturulan çapraz platform mobil ve web uygulama geliştirme projesi. |
+
+## Table: tbl_project_stats
+
+| Column | Type | Primary Key |
+|--------|------|------------|
+| id | TEXT | ✅ |
+| created_at | TEXT |  |
+| updated_at | TEXT |  |
+| status | TEXT |  |
+| view_count | INTEGER |  |
+| work_id | TEXT |  |
+| reference_id | TEXT |  |
+
+### Data in tbl_project_stats
+
+| id | created_at | updated_at | status | view_count | work_id | reference_id |
+| --- | --- | --- | --- | --- | --- | --- |
+| ps001 | 2024-01-15T10:00:00.000Z | 2024-01-15T10:00:00.000Z | publish | 1500 | 8a8044e883e8 | 7fa159ae4aaf |
+| ps002 | 2024-01-15T10:30:00.000Z | 2024-01-15T10:30:00.000Z | publish | 2500 | 8a8044e883e9 | ca7bedf86bfb |
+| ps003 | 2024-01-15T11:00:00.000Z | 2024-01-15T11:00:00.000Z | publish | 1800 | 8a8044e883eb | ae0d98f178d1 |
+
 ## Table: tbl_contentrain_relations
 
 | Column | Type | Primary Key |
@@ -594,9 +653,21 @@ Proje planını müşteri brifinglerine göre tasarladık, ön ucu ve arka ucu g
 | 8a8044e883ea_category_59cbdac46c1e | workitems | 8a8044e883ea | workcategories | 59cbdac46c1e | category | one-to-one |
 | 8a8044e883eb_category_bcc834108adc | workitems | 8a8044e883eb | workcategories | bcc834108adc | category | one-to-one |
 | 8a8044e883ec_category_bcc834108adc | workitems | 8a8044e883ec | workcategories | bcc834108adc | category | one-to-one |
+| ps001_work_8a8044e883e8 | project-stats | ps001 | workitems | 8a8044e883e8 | work | one-to-one |
+| ps002_work_8a8044e883e9 | project-stats | ps002 | workitems | 8a8044e883e9 | work | one-to-one |
+| ps003_work_8a8044e883eb | project-stats | ps003 | workitems | 8a8044e883eb | work | one-to-one |
+| ps001_reference_7fa159ae4aaf | project-stats | ps001 | references | 7fa159ae4aaf | reference | one-to-one |
+| ps002_reference_ca7bedf86bfb | project-stats | ps002 | references | ca7bedf86bfb | reference | one-to-one |
+| ps003_reference_ae0d98f178d1 | project-stats | ps003 | references | ae0d98f178d1 | reference | one-to-one |
 | 89ae53eb8370_creative-work_51bf2dbbed29 | testimonial-items | 89ae53eb8370 | workitems | 51bf2dbbed29 | creative-work | one-to-one |
 | b770c71013d2_creative-work_8a8044e883e9 | testimonial-items | b770c71013d2 | workitems | 8a8044e883e9 | creative-work | one-to-one |
 | c421eb634cfa_creative-work_8a8044e883eb | testimonial-items | c421eb634cfa | workitems | 8a8044e883eb | creative-work | one-to-one |
+| pd001_work_8a8044e883e8 | project-details | pd001 | workitems | 8a8044e883e8 | work | one-to-one |
+| pd002_work_8a8044e883e9 | project-details | pd002 | workitems | 8a8044e883e9 | work | one-to-one |
+| pd003_work_8a8044e883eb | project-details | pd003 | workitems | 8a8044e883eb | work | one-to-one |
+| pd001_testimonial_89ae53eb8370 | project-details | pd001 | testimonial-items | 89ae53eb8370 | testimonial | one-to-one |
+| pd002_testimonial_b770c71013d2 | project-details | pd002 | testimonial-items | b770c71013d2 | testimonial | one-to-one |
+| pd003_testimonial_c421eb634cfa | project-details | pd003 | testimonial-items | c421eb634cfa | testimonial | one-to-one |
 | 50d81f2a3baf_reference_34e63b4829f0 | services | 50d81f2a3baf | references | 34e63b4829f0 | reference | one-to-one |
 | 9450777bee2f_reference_5c5955d57da8 | services | 9450777bee2f | references | 5c5955d57da8 | reference | one-to-one |
 | d00761480436_reference_7fa159ae4aaf | services | d00761480436 | references | 7fa159ae4aaf | reference | one-to-one |

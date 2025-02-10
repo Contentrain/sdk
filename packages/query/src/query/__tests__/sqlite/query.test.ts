@@ -8,6 +8,13 @@ import { SQLiteQueryBuilder } from '../../sqlite-builder';
 interface Reference extends DBRecord {
   logo: string
   status: ContentrainStatus
+  created_at: string
+  updated_at: string
+}
+
+interface Stats extends DBRecord {
+  view_count: number
+  status: ContentrainStatus
 }
 
 interface WorkItem extends DBRecord {
@@ -17,12 +24,15 @@ interface WorkItem extends DBRecord {
   image?: string
   field_order?: number
   _relations?: {
-    category?: Reference
+    category?: WorkCategory
+    reference?: Reference
+    stats?: Stats
   }
 }
 
 interface TestimonialItem extends DBRecord {
   title: string
+  name: string
   description: string
   creative_work_id: string
   _relations?: {
@@ -53,11 +63,55 @@ interface DBRelation extends DBRecord {
   target_id: string
 }
 
+interface Service extends DBRecord {
+  title: string
+  description: string
+  reference_id: string
+  status: ContentrainStatus
+  _relations?: {
+    reference?: Reference
+  }
+}
+
+interface SocialLink extends DBRecord {
+  link: string
+  icon: string
+  service_id: string
+  status: ContentrainStatus
+  _relations?: {
+    service: Service
+  }
+}
+
+interface ProjectDetails extends DBRecord {
+  title: string
+  description: string
+  work: string
+  testimonial: string
+  _relations?: {
+    work?: WorkItem
+    testimonial?: TestimonialItem
+  }
+}
+
+interface ProjectStats extends DBRecord {
+  view_count: number
+  work: string
+  reference: string
+  _relations?: {
+    work?: WorkItem
+    reference?: Reference
+  }
+}
+
 describe('sQLiteQueryBuilder', () => {
   let loader: BaseSQLiteLoader;
   let builder: SQLiteQueryBuilder<WorkItem>;
   let testimonialBuilder: SQLiteQueryBuilder<TestimonialItem>;
   let tabItemBuilder: SQLiteQueryBuilder<TabItem>;
+  let socialLinkBuilder: SQLiteQueryBuilder<SocialLink>;
+  let projectDetailsBuilder: SQLiteQueryBuilder<ProjectDetails>;
+  let projectStatsBuilder: SQLiteQueryBuilder<ProjectStats>;
   const dbPath = join(__dirname, '../../../../../../playground/node/src/outputs/db/contentrain.db');
 
   beforeEach(() => {
@@ -65,6 +119,9 @@ describe('sQLiteQueryBuilder', () => {
     builder = new SQLiteQueryBuilder<WorkItem>('workitems', loader);
     testimonialBuilder = new SQLiteQueryBuilder<TestimonialItem>('testimonial-items', loader);
     tabItemBuilder = new SQLiteQueryBuilder<TabItem>('tabitems', loader);
+    socialLinkBuilder = new SQLiteQueryBuilder<SocialLink>('sociallinks', loader);
+    projectDetailsBuilder = new SQLiteQueryBuilder<ProjectDetails>('project-details', loader);
+    projectStatsBuilder = new SQLiteQueryBuilder<ProjectStats>('project-stats', loader);
   });
 
   afterEach(async () => {
@@ -487,10 +544,11 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle invalid filter operator', async () => {
-      // @ts-expect-error: Testing invalid operator
-      await expect(builder.where('title', 'invalid', 'test').get())
-        .rejects
-        .toThrow();
+      const promise = builder
+        .where('title', 'invalid' as any, 'test')
+        .get();
+
+      await expect(promise).rejects.toThrow('Invalid operator: invalid');
     });
 
     it('should handle invalid sort field', async () => {
@@ -577,6 +635,341 @@ describe('sQLiteQueryBuilder', () => {
         if (item._relations?.category) {
           expect(item._relations.category.status).toBe('publish');
         }
+      });
+    });
+  });
+
+  describe('non-translatable models', () => {
+    describe('sociallinks', () => {
+      it('should load sociallinks without translations', async () => {
+        console.log('\n=== TEST: sociallinks without translations ===');
+
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish')
+          .get();
+
+        console.log('SocialLinks Result:', result.data.map(item => ({
+          id: item.id,
+          link: item.link,
+          icon: item.icon,
+          service_id: item.service_id,
+        })));
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.link).toBeDefined();
+          expect(item.icon).toBeDefined();
+          expect(item.service_id).toBeDefined();
+          expect(item.status).toBe('publish');
+        });
+      });
+
+      it('should load sociallinks with related service', async () => {
+        console.log('\n=== TEST: sociallinks with service relation ===');
+
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish')
+          .locale('tr') // Önce locale ayarla
+          .include('service') // Sonra ilişkiyi ekle
+          .get();
+
+        console.log('SocialLinks with Service:', result.data.map(item => ({
+          id: item.id,
+          link: item.link,
+          icon: item.icon,
+          service: item._relations?.service?.title,
+        })));
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.link).toBeDefined();
+          expect(item.icon).toBeDefined();
+          expect(item._relations?.service).toBeDefined();
+          expect(item._relations?.service?.title).toBeDefined();
+        });
+      });
+
+      it('should filter sociallinks by icon type', async () => {
+        console.log('\n=== TEST: filter sociallinks by icon ===');
+
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish')
+          .where('icon', 'contains', 'linkedin') // Veritabanındaki gerçek değer
+          .get();
+
+        console.log('LinkedIn Links:', result.data.map(item => ({
+          id: item.id,
+          link: item.link,
+          icon: item.icon,
+        })));
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.icon.toLowerCase()).toContain('linkedin');
+        });
+      });
+
+      it('should handle sociallinks without locale', async () => {
+        console.log('\n=== TEST: sociallinks without locale ===');
+
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish')
+          .get();
+
+        console.log('SocialLinks with Locale:', result.data.map(item => ({
+          id: item.id,
+          link: item.link,
+          icon: item.icon,
+        })));
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.link).toBeDefined();
+          expect(item.icon).toBeDefined();
+        });
+      });
+    });
+  });
+
+  describe('complex relation scenarios', () => {
+    it('should handle multiple relation types in single query', async () => {
+      // Bir modelde farklı ilişki tipleri
+      const result = await tabItemBuilder
+        .locale('tr')
+        .include('category') // one-to-many ilişki
+        .where('status', 'eq', 'publish')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item._relations?.category).toBeDefined();
+        expect(Array.isArray(item._relations?.category)).toBe(true);
+        if (item._relations?.category) {
+          item._relations.category.forEach((cat) => {
+            expect(cat.category).toBeDefined();
+          });
+        }
+      });
+    });
+
+    it('should handle non-localized to localized relation', async () => {
+      // Çevirisiz modelden çevirili modele ilişki
+      const result = await socialLinkBuilder
+        .locale('tr')
+        .include('service') // sociallinks -> services (çevirisiz -> çevirili)
+        .where('status', 'eq', 'publish')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.link).toBeDefined(); // çevirisiz alan
+        expect(item._relations?.service?.title).toBeDefined(); // çevirili alan
+      });
+    });
+
+    it('should handle localized to localized relation', async () => {
+      // Önce ilişki tiplerini kontrol edelim
+      console.log('\n=== TEST: localized to localized relation ===');
+
+      const result = await testimonialBuilder
+        .locale('tr')
+        .include('creative-work')
+        .where('status', 'eq', 'publish')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.title).toBeDefined(); // çevirili alan
+        expect(item._relations?.['creative-work']?.title).toBeDefined(); // çevirili alan
+      });
+    });
+
+    it('should handle localized to localized nested relation', async () => {
+      // İç içe çevirili ilişkiler
+      const result = await testimonialBuilder
+        .locale('tr')
+        .include('creative-work') // testimonial-items -> workitems -> workcategories
+        .where('status', 'eq', 'publish')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        const work = item._relations?.['creative-work'];
+        expect(work?.title).toBeDefined();
+        if (work?._relations?.category) {
+          expect(work._relations.category.category).toBeDefined();
+        }
+      });
+    });
+
+    it('should handle service with reference relation', async () => {
+      // Service ve referans ilişkisi
+      const serviceBuilder = new SQLiteQueryBuilder<Service>('services', loader);
+      const result = await serviceBuilder
+        .locale('tr')
+        .include('reference') // services -> references
+        .where('status', 'eq', 'publish')
+        .where('reference_id', 'ne', '')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.title).toBeDefined(); // çevirili alan
+        expect(item._relations?.reference?.logo).toBeDefined(); // çevirisiz alan
+      });
+    });
+  });
+
+  describe('multiple localized relations', () => {
+    it('should handle multiple localized relations in project details', async () => {
+      console.log('\n=== TEST: multiple localized relations in project details ===');
+
+      // Önce çeviri tablosunu kontrol edelim
+      const translations = await loader.query(`
+        SELECT * FROM tbl_project_details_translations
+        WHERE locale = ?
+      `, ['tr']);
+      console.log('Project Details Translations:', translations);
+
+      const result = await projectDetailsBuilder
+        .locale('tr')
+        .include(['work', 'testimonial'])
+        .where('status', 'eq', 'publish')
+        .first();
+
+      console.log('Project Details Result:', {
+        id: result?.id,
+        title: result?.title,
+        description: result?.description,
+        work_title: result?._relations?.work?.title,
+        testimonial_name: result?._relations?.testimonial?.name,
+      });
+
+      // İlişkileri kontrol edelim
+      const relations = await loader.query(`
+        SELECT * FROM tbl_contentrain_relations
+        WHERE source_model = 'project-details'
+        AND source_id = ?
+      `, [result?.id]);
+      console.log('Relations:', relations);
+
+      expect(result).toBeDefined();
+      if (result) {
+        // Ana içerik kontrolü
+        expect(result.title).toBeDefined();
+        expect(result.description).toBeDefined();
+
+        // İlişkili içeriklerin kontrolü
+        expect(result._relations?.work).toBeDefined();
+        expect(result._relations?.testimonial).toBeDefined();
+
+        // İlişkili içeriklerin çevirilerinin kontrolü
+        expect(result._relations?.work?.title).toBeDefined();
+        expect(result._relations?.testimonial?.name).toBeDefined();
+      }
+    });
+  });
+
+  describe('mixed relations', () => {
+    it('should handle both localized and non-localized relations in project stats', async () => {
+      console.log('\n=== TEST: mixed relations in project stats ===');
+
+      const result = await projectStatsBuilder
+        .locale('tr') // work ilişkisi için gerekli
+        .include(['work', 'reference'])
+        .where('status', 'eq', 'publish')
+        .first();
+
+      console.log('Project Stats Result:', {
+        id: result?.id,
+        view_count: result?.view_count,
+        work_title: result?._relations?.work?.title,
+        reference_logo: result?._relations?.reference?.logo,
+      });
+
+      expect(result).toBeDefined();
+      if (result) {
+        // Ana içerik kontrolü
+        expect(result.view_count).toBeDefined();
+
+        // Çevirili ilişki kontrolü (work)
+        expect(result._relations?.work).toBeDefined();
+        expect(result._relations?.work?.title).toBeDefined();
+
+        // Çevirisiz ilişki kontrolü (reference)
+        expect(result._relations?.reference).toBeDefined();
+        expect(result._relations?.reference?.logo).toBeDefined();
+      }
+    });
+
+    it('should filter project stats by view count and load relations', async () => {
+      console.log('\n=== TEST: filter project stats by view count ===');
+
+      const result = await projectStatsBuilder
+        .locale('tr')
+        .include(['work', 'reference'])
+        .where('view_count', 'gt', 2000)
+        .get();
+
+      console.log('Filtered Stats:', result.data.map(item => ({
+        id: item.id,
+        view_count: item.view_count,
+        work_title: item._relations?.work?.title,
+      })));
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.view_count).toBeGreaterThan(2000);
+        expect(item._relations?.work).toBeDefined();
+        expect(item._relations?.reference).toBeDefined();
+      });
+    });
+  });
+
+  describe('relation filtering scenarios', () => {
+    it('should find project details by work title', async () => {
+      console.log('\n=== TEST: find project details by work title ===');
+
+      const result = await projectDetailsBuilder
+        .locale('tr')
+        .include(['work'])
+        .where('status', 'eq', 'publish')
+        .get();
+
+      console.log('Project Details with Work:', result.data.map(item => ({
+        title: item.title,
+        work_title: item._relations?.work?.title,
+      })));
+
+      const contentrain = result.data.find(item =>
+        item._relations?.work?.title?.toLowerCase().includes('contentrain'),
+      );
+
+      expect(contentrain).toBeDefined();
+      expect(contentrain?._relations?.work?.title).toContain('Contentrain');
+    });
+
+    it('should load project stats with high view counts and their relations', async () => {
+      console.log('\n=== TEST: high view count projects ===');
+
+      const result = await projectStatsBuilder
+        .locale('tr')
+        .include(['work', 'reference'])
+        .where('view_count', 'gte', 2000)
+        .orderBy('view_count', 'desc')
+        .get();
+
+      console.log('High View Count Projects:', result.data.map(item => ({
+        view_count: item.view_count,
+        work_title: item._relations?.work?.title,
+        reference_logo: item._relations?.reference?.logo,
+      })));
+
+      expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.view_count).toBeGreaterThanOrEqual(2000);
+        expect(item._relations?.work).toBeDefined();
+        expect(item._relations?.reference).toBeDefined();
       });
     });
   });
