@@ -1,5 +1,6 @@
 import type { DBRecord, DBRelation } from '../types/database';
 import { logger } from '../utils/logger';
+import { normalizeTableName } from '../utils/normalizer';
 import { BaseSQLiteLoader } from './base-sqlite';
 import { TranslationLoader } from './translation-loader';
 
@@ -20,6 +21,8 @@ export class RelationLoader extends BaseSQLiteLoader {
       if (!sourceIds.length)
         return [];
 
+      logger.debug('Loading relations with params:', { model, fieldId, sourceIdsCount: sourceIds.length });
+
       // İlişkileri yükle
       const query = `
         SELECT * FROM tbl_contentrain_relations
@@ -28,12 +31,17 @@ export class RelationLoader extends BaseSQLiteLoader {
         AND field_id = ?
       `;
 
-      logger.debug('Loading relations:', { model, sourceIds, fieldId, query });
+      logger.debug('Loading relations query:', { query, model, fieldId });
       const relations = await this.connection.query<DBRelation>(
         query,
         [model, ...sourceIds, fieldId],
       );
-      logger.debug('Loaded relations:', relations);
+      logger.debug('Loaded relations result:', {
+        count: relations.length,
+        firstRelation: relations[0],
+        model,
+        fieldId,
+      });
 
       return relations;
     }
@@ -53,17 +61,30 @@ export class RelationLoader extends BaseSQLiteLoader {
 
       const targetModel = relations[0].target_model;
       const targetIds = relations.map(r => r.target_id);
+      const targetTable = normalizeTableName(targetModel);
 
-      logger.debug('Loading related content:', { targetModel, targetIds, locale });
+      logger.debug('Loading related content with params:', {
+        targetModel,
+        targetTable,
+        targetIdsCount: targetIds.length,
+        locale,
+        firstRelation: relations[0],
+      });
 
       // Ana içeriği yükle
       const query = `
-        SELECT * FROM tbl_${targetModel}
+        SELECT * FROM ${targetTable}
         WHERE id IN (${targetIds.map(() => '?').join(',')})
       `;
+
       logger.debug('Related content query:', { query, targetIds });
       const data = await this.connection.query<T>(query, targetIds);
-      logger.debug('Loaded related content:', data);
+      logger.debug('Loaded related content result:', {
+        count: data.length,
+        firstItem: data[0],
+        targetModel,
+        targetTable,
+      });
 
       // Çevirisi varsa yükle
       if (locale) {
@@ -76,7 +97,12 @@ export class RelationLoader extends BaseSQLiteLoader {
             targetIds,
             locale,
           );
-          logger.debug('Loaded translations:', translations);
+          logger.debug('Loaded translations:', {
+            count: Object.keys(translations).length,
+            firstTranslation: Object.values(translations)[0],
+            targetModel,
+            locale,
+          });
 
           // Çevirileri ana veriye ekle
           return data.map(item => ({

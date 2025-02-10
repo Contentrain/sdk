@@ -7,55 +7,69 @@ import { BaseSQLiteLoader, SQLiteQueryBuilder } from '@contentrain/query';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// SQLite için model tipleri
-interface IWorkItem extends DBRecord {
+// Model tipleri
+interface WorkItem extends DBRecord {
   title: string
   description: string
   image: string
   category_id: string
   link: string
-  field_order: number
+  status: string
+  created_at: string
+  updated_at: string
   _relations?: {
-    category: IWorkCategory
+    category: WorkCategory
   }
 }
 
-interface IWorkCategory extends DBRecord {
+interface WorkCategory extends DBRecord {
   category: string
-  field_order: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
-interface ITabItem extends DBRecord {
-  title: string
+interface TabItem extends DBRecord {
+  link: string
   description: string
-  field_order: number
+  image: string
+  status: string
+  category_id: string
+  created_at: string
+  updated_at: string
   _relations?: {
-    category: IWorkCategory[]
+    category: WorkCategory
   }
-
 }
 
-interface ITestimonialItem extends DBRecord {
+interface TestimonialItem extends DBRecord {
   name: string
   description: string
   title: string
   image: string
   creative_work_id: string
+  status: string
+  created_at: string
+  updated_at: string
   _relations?: {
-    creative_work: IWorkItem
+    'creative-work': WorkItem
   }
 }
 
-interface IReference extends DBRecord {
+interface Reference extends DBRecord {
   logo: string
+  status: string
+  created_at: string
+  updated_at: string
 }
 
-interface IService extends DBRecord {
-  title: string
-  description: string
+interface Service extends DBRecord {
   reference_id: string
+  status: string
+  created_at: string
+  updated_at: string
   _relations?: {
-    reference: IReference
+    reference: Reference
   }
 }
 
@@ -63,7 +77,7 @@ export async function sqlQueryExample() {
   let loader: BaseSQLiteLoader | null = null;
 
   try {
-    // Dizin yapısını kontrol et
+    // Dizin yapısını oluştur
     const outputDir = join(__dirname, '../outputs');
     const dbDir = join(outputDir, 'db');
     const markdownsDir = join(outputDir, 'markdowns');
@@ -73,174 +87,188 @@ export async function sqlQueryExample() {
 
     // SQLite bağlantısını başlat
     const dbPath = join(dbDir, 'contentrain.db');
-    console.log('📌 SQLite DB Path:', dbPath);
     loader = new BaseSQLiteLoader(dbPath);
-    console.log('✅ SQLite Loader başarıyla oluşturuldu');
 
-    console.log('\n=== 1. Temel Sorgular ===');
+    // Builder'ları oluştur
+    const workItemsBuilder = new SQLiteQueryBuilder<WorkItem>('workitems', loader);
+    const testimonialBuilder = new SQLiteQueryBuilder<TestimonialItem>('testimonial-items', loader);
+    const tabItemBuilder = new SQLiteQueryBuilder<TabItem>('tabitems', loader);
+    const serviceBuilder = new SQLiteQueryBuilder<Service>('services', loader);
 
+    // 1. Temel Sorgular
     // 1.1 Filtreleme ve Sıralama
-    console.log('\n--- Filtreleme ve Sıralama ---');
-    const workItemsBuilder = new SQLiteQueryBuilder<IWorkItem>('workitems', loader);
-    console.log('🔍 SQL Query Builder oluşturuldu. Tablo:', 'workitems');
-
-    let workItems;
-    try {
-      console.log('🔄 Sorgu oluşturuluyor...');
-      workItems = await workItemsBuilder
-        .locale('en')
-        .where('status', 'eq', 'publish')
-        .where('field_order', 'lt', 5)
-        .orderBy('field_order', 'asc')
-        .get();
-      console.log('✅ Sorgu başarıyla çalıştı');
-      console.log('📦 Sonuçlar:', workItems);
-    }
-    catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('❌ Sorgu çalıştırılırken hata oluştu:', error.message);
-        console.error('🔍 SQL Hatası:', error.message);
-        if ('code' in error) {
-          console.error('🔑 Hata Kodu:', (error as { code: string }).code);
-        }
-      }
-      throw error;
-    }
+    const workItems = await workItemsBuilder
+      .locale('en')
+      .where('status', 'eq', 'publish')
+      .orderBy('created_at', 'desc')
+      .get();
 
     // 1.2 Sayfalama
-    console.log('\n--- Sayfalama ---');
     const pagedItems = await workItemsBuilder
       .locale('en')
+      .orderBy('created_at', 'desc')
       .limit(3)
       .offset(1)
       .get();
 
-    console.log('Sayfalanmış Öğeler:', pagedItems.data.length);
-    console.log('Sayfalama Bilgisi:', pagedItems.pagination);
+    // 1.3 İlk Öğeyi Getirme
+    const firstItem = await workItemsBuilder
+      .locale('en')
+      .where('status', 'eq', 'publish')
+      .orderBy('created_at', 'desc')
+      .first();
 
-    console.log('\n=== 2. İlişki Sorguları ===');
-
+    // 2. İlişki Sorguları
     // 2.1 Bire-Bir İlişki
-    console.log('\n--- Bire-Bir İlişki ---');
-    const testimonialBuilder = new SQLiteQueryBuilder<ITestimonialItem>('testimonial_items', loader);
     const testimonials = await testimonialBuilder
       .locale('en')
-      .include('creative_work')
+      .where('status', 'eq', 'publish')
+      .include('creative-work')
       .get();
 
-    console.log('Referanslar ve İlişkili İşler:', testimonials.data.map(t => ({
-      title: t.title,
-      work: t._relations?.creative_work?.title,
-    })));
-
     // 2.2 Bire-Çok İlişki
-    console.log('\n--- Bire-Çok İlişki ---');
-    const tabItemBuilder = new SQLiteQueryBuilder<ITabItem>('tabitems', loader);
     const tabItems = await tabItemBuilder
       .locale('en')
       .where('status', 'eq', 'publish')
-      .include('category')
+      .include('workcategories')
+      .orderBy('created_at', 'desc')
       .get();
 
-    console.log('Tab Öğeleri ve Kategorileri:', tabItems.data.map(t => ({
-      description: t.description,
-      categories: t._relations?.category?.map(c => c.category),
-    })));
-
-    console.log('\n=== 3. Gelişmiş Sorgular ===');
-
-    // 3.1 Çoklu Filtreler ve Çeviriler
-    console.log('\n--- Çoklu Filtreler ve Çeviriler ---');
-    const serviceBuilder = new SQLiteQueryBuilder<IService>('services', loader);
-    const services = await serviceBuilder
-      .locale('tr')
+    // 3. Gelişmiş Sorgular
+    // 3.1 Çoklu Filtreler
+    const filteredServices = await serviceBuilder
+      .locale('en')
       .where('status', 'eq', 'publish')
       .include('reference')
       .get();
-    console.log('Filtrelenmiş Servisler:', services.data.length);
 
-    // 3.2 String Operasyonları
-    console.log('\n--- String Operasyonları ---');
-    const searchResults = await serviceBuilder
+    // 3.2 Sayısal Karşılaştırmalar
+    const orderedItems = await workItemsBuilder
       .locale('en')
-      .where('title', 'contains', 'API')
+      .where('status', 'eq', 'publish')
+      .orderBy('created_at', 'desc')
       .get();
-    console.log('Arama Sonuçları:', searchResults.data.length);
 
-    console.log('\n=== 4. Çoklu Dil Senaryoları ===');
+    // 3.3 String Operasyonları
+    const searchResults = await workItemsBuilder
+      .locale('en')
+      .where('title', 'startsWith', 'Con')
+      .get();
 
-    // 4.1 TR Dili İçin Sorgular
-    console.log('\n--- TR Dili İçin Sorgular ---');
+    // 4. Çoklu Dil Senaryoları
+    // 4.1 TR İçerik
     const trServices = await serviceBuilder
       .locale('tr')
+      .where('status', 'eq', 'publish')
       .include('reference')
+      .orderBy('created_at', 'desc')
       .get();
-    console.log('TR Servisler:', trServices.data.map(s => ({
-      title: s.title,
-      reference: s._relations?.reference?.logo,
-    })));
 
-    // 4.2 EN Dili İçin Sorgular
-    console.log('\n--- EN Dili İçin Sorgular ---');
+    // 4.2 EN İçerik
     const enServices = await serviceBuilder
       .locale('en')
+      .where('status', 'eq', 'publish')
       .include('reference')
+      .orderBy('created_at', 'desc')
       .get();
-    console.log('EN Servisler:', enServices.data.map(s => ({
-      title: s.title,
-      reference: s._relations?.reference?.logo,
-    })));
-    console.log(workItems, 'workItems');
-    // Sonuçları dosyaya yaz
-    const markdownContent = `
-# Contentrain SQLite Query Builder Test Sonuçları
 
+    // 4.3 Çoklu Dil Karşılaştırma
+    const trWorkItem = await workItemsBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .first();
+
+    const enWorkItem = await workItemsBuilder
+      .locale('en')
+      .where('id', 'eq', trWorkItem?.id || '')
+      .first();
+
+    // 5. Gelişmiş İlişki Sorguları
+    // 5.1 İç İçe İlişkiler
+    const nestedRelations = await workItemsBuilder
+      .locale('en')
+      .where('status', 'eq', 'publish')
+      .where('category_id', 'ne', '')
+      .include('workcategories')
+      .get();
+
+    // 5.2 İlişki Filtreleme
+    const categoryId = (await workItemsBuilder
+      .locale('en')
+      .where('category_id', 'ne', '')
+      .first())?.category_id;
+    console.log(categoryId, 'Found category id');
+    const filteredByRelation = categoryId
+      ? await workItemsBuilder
+        .locale('en')
+        .where('category_id', 'eq', categoryId)
+        .include('workcategories')
+        .get()
+      : null;
+
+    // Sonuçları markdown dosyasına yaz
+    const markdownContent = `
+# Contentrain SQLite Query Builder Örnekleri
 
 ## 1. Temel Sorgular
-### Filtreleme ve Sıralama
-${workItems.data.map(item => `- ${item.title} (Sıra: ${item.field_order})`).join('\n')}
+### 1.1 Filtreleme ve Sıralama
+${workItems.data.map(item => `- ${item.title} (Oluşturulma: ${item.created_at})`).join('\n')}
 
-### Sayfalama
+### 1.2 Sayfalama
 ${pagedItems.data.map(item => `- ${item.title}`).join('\n')}
 Sayfalama: Limit ${pagedItems.pagination?.limit}, Offset ${pagedItems.pagination?.offset}
 
-## 2. İlişki Sorguları
-### Bire-Bir İlişki
-${testimonials.data.map(t => `- ${t.title} -> ${t._relations?.creative_work?.title}`).join('\n')}
+### 1.3 İlk Öğe
+- ${firstItem?.title} (ID: ${firstItem?.id})
 
-### Bire-Çok İlişki
-${tabItems.data.map(t => `- ${t.description} -> ${t._relations?.category?.map(c => c.category).join(', ')}`).join('\n')}
+## 2. İlişki Sorguları
+### 2.1 Bire-Bir İlişki
+${testimonials.data.map(t => `- ${t.name} -> ${t._relations?.['creative-work']?.title}`).join('\n')}
+
+### 2.2 Bire-Çok İlişki
+${tabItems.data.map(t => `- ${t.description} -> ${t._relations?.category?.category}`).join('\n')}
 
 ## 3. Gelişmiş Sorgular
-### Çoklu Filtreler ve Çeviriler
-${services.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
+### 3.1 Çoklu Filtreler
+${filteredServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
 
-### String Operasyonları
+### 3.2 Sayısal Karşılaştırmalar
+${orderedItems.data.map(item => `- ${item.title} (Oluşturulma: ${item.created_at})`).join('\n')}
+
+### 3.3 String Operasyonları
 ${searchResults.data.map(s => `- ${s.title}`).join('\n')}
 
 ## 4. Çoklu Dil Senaryoları
-### TR Servisler
-${trServices.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
+### 4.1 TR Servisler
+${trServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
 
-### EN Servisler
-${enServices.data.map(s => `- ${s.title} -> ${s._relations?.reference?.logo}`).join('\n')}
+### 4.2 EN Servisler
+${enServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
+
+### 4.3 Çoklu Dil Karşılaştırma
+TR: ${trWorkItem?.title}
+EN: ${enWorkItem?.title}
+
+## 5. Gelişmiş İlişki Sorguları
+### 5.1 İç İçe İlişkiler
+${nestedRelations.data.map(item => `- ${item.title} (Kategori: ${item._relations?.category?.category})`).join('\n')}
+
+### 5.2 İlişki Filtreleme
+${filteredByRelation?.data.map(item => `- ${item.title} (Kategori: ${item._relations?.category?.category})`).join('\n') || 'İlişki bulunamadı'}
 `;
 
-    // Markdown çıktısı için doğru path
+    // Markdown dosyasını kaydet
     await writeFile(
       join(markdownsDir, 'sql-output.md'),
       markdownContent,
       'utf8',
     );
-
-    console.log('\nSonuçlar sql-output.md dosyasına yazıldı.');
   }
   catch (error) {
     console.error('SQL Query Error:', error);
     throw error;
   }
   finally {
-    // SQLite bağlantısını kapat
     if (loader) {
       await loader.close();
     }

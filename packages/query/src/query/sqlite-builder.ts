@@ -1,6 +1,7 @@
 import type { BaseSQLiteLoader } from '../loader/base-sqlite';
 import type { DBRecord } from '../types/database';
 import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
+import { normalizeTableName } from 'src/utils/normalizer';
 import { RelationLoader } from '../loader/relation-loader';
 import { logger } from '../utils/logger';
 
@@ -96,11 +97,12 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
   private buildQuery(): { sql: string, params: any[] } {
     this.validateLocaleForTranslatedFields();
 
-    const tableName = `tbl_${this.model}`;
+    const tableName = normalizeTableName(this.model);
     const params: any[] = [];
     let sql = 'SELECT m.*, t.*';
     sql += ` FROM ${tableName} m`;
     sql += ` LEFT JOIN ${tableName}_translations t ON m.id = t.id`;
+
     if (this.options.locale) {
       sql += ' AND t.locale = ?';
       params.push(this.options.locale);
@@ -182,27 +184,35 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
   async get(): Promise<QueryResult<T>> {
     try {
       const { sql, params } = this.buildQuery();
+      logger.debug('Executing query:', { sql, params, model: this.model });
       const data = await this.connection.query<T>(sql, params);
-      const countSql = `SELECT COUNT(*) as total FROM tbl_${this.model}`;
+      logger.debug('Query results:', { count: data.length });
+
+      const countSql = `SELECT COUNT(*) as total FROM ${normalizeTableName(this.model)}`;
       const [{ total }] = await this.connection.query<{ total: number }>(countSql);
+      logger.debug('Total count:', { total });
 
       if (Object.keys(this.includes).length) {
+        logger.debug('Loading relations:', { includes: this.includes, model: this.model });
         for (const relation of Object.keys(this.includes)) {
+          logger.debug('Loading relation:', { relation, model: this.model });
           const relations = await this.relationLoader.loadRelations(
             this.model,
             data.map(d => d.id),
             relation,
           );
+          logger.debug('Loaded relations:', { count: relations.length, relations });
 
           if (!relations.length) {
             logger.debug('No relations found:', { model: this.model, relation });
-            throw new Error(`Invalid relation: ${relation}`);
+            continue;
           }
 
           const relatedData = await this.relationLoader.loadRelatedContent<DBRecord>(
             relations,
             this.options.locale,
           );
+          logger.debug('Loaded related data:', { count: relatedData.length });
 
           // İlişkileri data'ya ekle
           data.forEach((item) => {
@@ -211,16 +221,23 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
             }
 
             const itemRelations = relations.filter(r => r.source_id === item.id);
+            logger.debug('Item relations:', { itemId: item.id, relations: itemRelations });
+
             if (itemRelations[0]?.type === 'one-to-one') {
               const related = relatedData.find(rd => rd.id === itemRelations[0].target_id);
               if (related) {
                 item._relations[relation] = related;
+                logger.debug('Added one-to-one relation:', { itemId: item.id, relationId: related.id });
               }
             }
             else {
               item._relations[relation] = relatedData.filter(rd =>
                 itemRelations.some(ir => ir.target_id === rd.id),
               );
+              logger.debug('Added one-to-many relations:', {
+                itemId: item.id,
+                count: item._relations[relation].length,
+              });
             }
           });
         }

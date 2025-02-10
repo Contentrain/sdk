@@ -21,14 +21,25 @@ interface WorkItem extends DBRecord {
   }
 }
 
+interface TestimonialItem extends DBRecord {
+  title: string
+  description: string
+  creative_work_id: string
+  _relations?: {
+    'creative-work'?: WorkItem
+  }
+}
+
 describe('sQLiteQueryBuilder', () => {
   let loader: BaseSQLiteLoader;
   let builder: SQLiteQueryBuilder<WorkItem>;
+  let testimonialBuilder: SQLiteQueryBuilder<TestimonialItem>;
   const dbPath = join(__dirname, '../../../../../../playground/node/src/outputs/db/contentrain.db');
 
   beforeEach(() => {
     loader = new BaseSQLiteLoader(dbPath);
     builder = new SQLiteQueryBuilder<WorkItem>('workitems', loader);
+    testimonialBuilder = new SQLiteQueryBuilder<TestimonialItem>('testimonial-items', loader);
   });
 
   afterEach(async () => {
@@ -200,6 +211,20 @@ describe('sQLiteQueryBuilder', () => {
           expect(item._relations?.category?.id).toBe(item.category_id);
         }
       });
+    });
+
+    it('should handle relations with dashes in name', async () => {
+      const result = await testimonialBuilder
+        .locale('en')
+        .include('creative-work')
+        .where('creative_work_id', 'ne', '')
+        .first();
+
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result._relations?.['creative-work']).toBeDefined();
+        expect(result._relations?.['creative-work']?.id).toBe(result.creative_work_id);
+      }
     });
   });
 

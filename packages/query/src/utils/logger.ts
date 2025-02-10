@@ -1,16 +1,13 @@
-import { env } from 'node:process';
+import debug from 'debug';
 
-const isDevelopment = env.NODE_ENV === 'development';
-
-export const logger = {
-  debug: (...args: unknown[]) => {
-    if (isDevelopment) {
-      console.log(...args);
-    }
-  },
-  error: (...args: unknown[]) => {
-    if (isDevelopment) {
-      console.error(...args);
-    }
-  },
+const logger = {
+  debug: debug('contentrain:query:debug'),
+  info: debug('contentrain:query:info'),
+  warn: debug('contentrain:query:warn'),
+  error: debug('contentrain:query:error'),
 };
+
+// Debug modunu aktif et
+debug.enable('contentrain:query:*');
+
+export { logger };

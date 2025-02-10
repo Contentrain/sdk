@@ -47,7 +47,9 @@
     },
     "dependencies": {
         "@types/better-sqlite3": "^7.6.12",
+        "@types/debug": "^4.1.12",
         "better-sqlite3": "^11.8.1",
+        "debug": "^4.4.0",
         "tiny-lru": "^11.2.11"
     }
 }
