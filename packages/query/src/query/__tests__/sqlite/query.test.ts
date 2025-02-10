@@ -130,28 +130,26 @@ describe('sQLiteQueryBuilder', () => {
       const limit = 2;
       const result = await builder
         .locale('en')
+        .orderBy('field_order', 'asc')
         .limit(limit)
         .get();
 
       expect(result.data).toHaveLength(limit);
       expect(result.pagination).toBeDefined();
       expect(result.pagination?.limit).toBe(limit);
+      expect(result.data[0].field_order).toBe(1);
+      expect(result.data[1].field_order).toBe(2);
     });
 
     it('should offset results', async () => {
-      const offset = 1;
-      const allResults = await builder
+      const offset = 2;
+      const result = await builder
         .locale('en')
-        .orderBy('created_at', 'asc')
-        .get();
-
-      const offsetResults = await builder
-        .locale('en')
-        .orderBy('created_at', 'asc')
+        .orderBy('field_order', 'asc')
         .offset(offset)
         .get();
 
-      expect(offsetResults.data[0]).toEqual(allResults.data[offset]);
+      expect(result.data[0].field_order).toBe(3);
     });
 
     it('should handle limit and offset together', async () => {
@@ -159,6 +157,7 @@ describe('sQLiteQueryBuilder', () => {
       const offset = 1;
       const result = await builder
         .locale('en')
+        .orderBy('field_order', 'asc')
         .limit(limit)
         .offset(offset)
         .get();
@@ -167,6 +166,8 @@ describe('sQLiteQueryBuilder', () => {
       expect(result.pagination).toBeDefined();
       expect(result.pagination?.limit).toBe(limit);
       expect(result.pagination?.offset).toBe(offset);
+      expect(result.data[0].field_order).toBe(2);
+      expect(result.data[1].field_order).toBe(3);
     });
   });
 

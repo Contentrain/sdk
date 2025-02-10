@@ -98,23 +98,16 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
 
     const tableName = `tbl_${this.model}`;
     const params: any[] = [];
-
-    // Ana sorgu
     let sql = 'SELECT m.*, t.*';
     sql += ` FROM ${tableName} m`;
-
-    // Translation tablosu join
     sql += ` LEFT JOIN ${tableName}_translations t ON m.id = t.id`;
     if (this.options.locale) {
       sql += ' AND t.locale = ?';
       params.push(this.options.locale);
     }
-
-    // Koşullar
     const conditions: string[] = [];
     this.filters.forEach(({ field, operator, value }) => {
       const fieldPrefix = this.requiresTranslation(field) ? 't.' : 'm.';
-
       switch (operator) {
         case 'contains':
           conditions.push(`${fieldPrefix}${field} LIKE ?`);
@@ -167,7 +160,6 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
       sql += ` WHERE ${conditions.join(' AND ')}`;
     }
 
-    // Sıralama
     if (this.sorting.length) {
       sql += ` ORDER BY ${this.sorting.map((s) => {
         const prefix = this.requiresTranslation(s.field) ? 't.' : 'm.';
@@ -175,33 +167,27 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
       }).join(', ')}`;
     }
 
-    // Sayfalama
-    if (this.pagination.limit) {
+    if (this.pagination.offset || this.pagination.limit) {
       sql += ' LIMIT ?';
-      params.push(this.pagination.limit);
+      params.push(this.pagination.limit || -1);
 
       if (this.pagination.offset) {
         sql += ' OFFSET ?';
         params.push(this.pagination.offset);
       }
     }
-
     return { sql, params };
   }
 
   async get(): Promise<QueryResult<T>> {
     try {
       const { sql, params } = this.buildQuery();
-      logger.debug('Executing query:', { sql, params });
-
       const data = await this.connection.query<T>(sql, params);
       const countSql = `SELECT COUNT(*) as total FROM tbl_${this.model}`;
       const [{ total }] = await this.connection.query<{ total: number }>(countSql);
 
-      // İlişkileri yükle
       if (Object.keys(this.includes).length) {
         for (const relation of Object.keys(this.includes)) {
-          // İlişkileri yükle
           const relations = await this.relationLoader.loadRelations(
             this.model,
             data.map(d => d.id),
@@ -210,11 +196,9 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
 
           if (!relations.length) {
             logger.debug('No relations found:', { model: this.model, relation });
-            // Geçersiz ilişki durumunda hata fırlat
             throw new Error(`Invalid relation: ${relation}`);
           }
 
-          // İlişkili içeriği yükle
           const relatedData = await this.relationLoader.loadRelatedContent<DBRecord>(
             relations,
             this.options.locale,

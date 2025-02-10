@@ -84,34 +84,11 @@ export async function sqlQueryExample() {
     const workItemsBuilder = new SQLiteQueryBuilder<IWorkItem>('workitems', loader);
     console.log('🔍 SQL Query Builder oluşturuldu. Tablo:', 'workitems');
 
-    // Tablo yapısını kontrol et
-    try {
-      console.log('\n📊 Tüm Tabloları Listele:');
-      const tables = await loader.query('SELECT name FROM sqlite_master WHERE type=\'table\'');
-      console.log('Mevcut Tablolar:', tables);
-
-      if (tables.length > 0) {
-        for (const table of tables) {
-          console.log(`\n📋 ${table.name} Tablosu Yapısı:`);
-          const tableInfo = await loader.query(`PRAGMA table_info(${table.name})`);
-          console.log(tableInfo);
-        }
-      }
-
-      console.log('\n🔍 workitems Tablosu Detayları:');
-      const workitemsInfo = await loader.query('PRAGMA table_info(workitems)');
-      console.log('Sütunlar:', workitemsInfo);
-    }
-    catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('❌ Tablo yapısı alınamadı:', error.message);
-      }
-    }
-
     let workItems;
     try {
       console.log('🔄 Sorgu oluşturuluyor...');
       workItems = await workItemsBuilder
+        .locale('en')
         .where('status', 'eq', 'publish')
         .where('field_order', 'lt', 5)
         .orderBy('field_order', 'asc')
@@ -133,9 +110,11 @@ export async function sqlQueryExample() {
     // 1.2 Sayfalama
     console.log('\n--- Sayfalama ---');
     const pagedItems = await workItemsBuilder
+      .locale('en')
       .limit(3)
       .offset(1)
       .get();
+
     console.log('Sayfalanmış Öğeler:', pagedItems.data.length);
     console.log('Sayfalama Bilgisi:', pagedItems.pagination);
 
@@ -145,8 +124,10 @@ export async function sqlQueryExample() {
     console.log('\n--- Bire-Bir İlişki ---');
     const testimonialBuilder = new SQLiteQueryBuilder<ITestimonialItem>('testimonial_items', loader);
     const testimonials = await testimonialBuilder
+      .locale('en')
       .include('creative_work')
       .get();
+
     console.log('Referanslar ve İlişkili İşler:', testimonials.data.map(t => ({
       title: t.title,
       work: t._relations?.creative_work?.title,
@@ -156,9 +137,11 @@ export async function sqlQueryExample() {
     console.log('\n--- Bire-Çok İlişki ---');
     const tabItemBuilder = new SQLiteQueryBuilder<ITabItem>('tabitems', loader);
     const tabItems = await tabItemBuilder
+      .locale('en')
       .where('status', 'eq', 'publish')
       .include('category')
       .get();
+
     console.log('Tab Öğeleri ve Kategorileri:', tabItems.data.map(t => ({
       description: t.description,
       categories: t._relations?.category?.map(c => c.category),
@@ -170,8 +153,8 @@ export async function sqlQueryExample() {
     console.log('\n--- Çoklu Filtreler ve Çeviriler ---');
     const serviceBuilder = new SQLiteQueryBuilder<IService>('services', loader);
     const services = await serviceBuilder
-      .where('status', 'eq', 'publish')
       .locale('tr')
+      .where('status', 'eq', 'publish')
       .include('reference')
       .get();
     console.log('Filtrelenmiş Servisler:', services.data.length);
@@ -179,8 +162,8 @@ export async function sqlQueryExample() {
     // 3.2 String Operasyonları
     console.log('\n--- String Operasyonları ---');
     const searchResults = await serviceBuilder
-      .where('title', 'contains', 'API')
       .locale('en')
+      .where('title', 'contains', 'API')
       .get();
     console.log('Arama Sonuçları:', searchResults.data.length);
 
