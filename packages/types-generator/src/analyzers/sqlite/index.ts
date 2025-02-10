@@ -1,7 +1,7 @@
 import type { Database } from 'better-sqlite3';
 import type { Analyzer, GeneratedTypes } from '../../types/analyzer';
 import type { SQLiteSourceConfig } from '../../types/config';
-import type { ColumnInfo, RelationInfo, TableInfo } from './types';
+import type { ColumnInfo, RelationInfo, TableInfo } from '../../types/sqlite';
 import BetterSQLite from 'better-sqlite3';
 
 export class SQLiteAnalyzer implements Analyzer {
@@ -15,7 +15,6 @@ export class SQLiteAnalyzer implements Analyzer {
   }
 
   private setupDatabase() {
-    // Performans optimizasyonları
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('synchronous = NORMAL');
     this.db.pragma('foreign_keys = ON');
@@ -34,12 +33,8 @@ export class SQLiteAnalyzer implements Analyzer {
         console.log(`Processing table: ${tableName}`);
         const { interfaceName, typeDefinition, relations } = this.generateTypeForTable(tableInfo);
 
-        // Base Type Generation
         baseTypes += `export interface ${interfaceName} extends DBRecord ${typeDefinition}\n\n`;
-
-        // Query Type Generation
-        const queryInterfaceName = `${interfaceName}Query`;
-        queryTypes += this.generateQueryType(interfaceName, queryInterfaceName, relations);
+        queryTypes += this.generateQueryType(interfaceName, relations);
       }
 
       return { baseTypes, queryTypes };
@@ -56,15 +51,30 @@ export class SQLiteAnalyzer implements Analyzer {
 
     for (const table of tables) {
       if (table.startsWith('tbl_') && !table.endsWith('_translations')) {
-        // Tablo adını normalize et
         const modelName = table.replace('tbl_', '')
-          .replace(/([a-z])([A-Z])/g, '$1_$2') // camelCase to snake_case
+          .replace(/([a-z])([A-Z])/g, '$1_$2')
           .toLowerCase();
+
+        // Ana tablo kolonlarını al
+        const mainColumns = this.getColumns(table);
+
+        // Çeviri tablosunu kontrol et
+        const translationTable = `${table}_translations`;
+        const hasTranslations = tables.includes(translationTable);
+
+        let allColumns = [...mainColumns];
+
+        if (hasTranslations) {
+          const translationColumns = this.getColumns(translationTable)
+            .filter((col: ColumnInfo) => !['id', 'locale'].includes(col.name));
+          allColumns = [...mainColumns, ...translationColumns];
+        }
 
         result[modelName] = {
           name: modelName,
-          columns: this.getColumns(table),
+          columns: allColumns,
           relations: this.getRelations(modelName),
+          hasTranslations,
         };
       }
     }
@@ -81,21 +91,25 @@ export class SQLiteAnalyzer implements Analyzer {
   }
 
   private getColumns(table: string): ColumnInfo[] {
-    const rows = this.db.prepare(`PRAGMA table_info(${table})`).all() as {
-      name: string
-      type: string
-      notnull: number
-    }[];
+    try {
+      const rows = this.db.prepare(`PRAGMA table_info(${table})`).all() as {
+        name: string
+        type: string
+        notnull: number
+      }[];
 
-    return rows.map(col => ({
-      name: col.name,
-      type: this.mapSQLiteTypeToTS(col.type),
-      notNull: col.notnull === 1,
-    }));
+      return rows.map(col => ({
+        name: col.name,
+        type: this.mapSQLiteTypeToTS(col.type),
+        notNull: col.notnull === 1,
+      }));
+    }
+    catch {
+      return [];
+    }
   }
 
   private getRelations(modelName: string): RelationInfo[] {
-    // Model adını snake_case'den camelCase'e çevir
     const sourceModel = modelName.replace(/_[a-z]/g, match => match[1].toUpperCase());
 
     const rows = this.db.prepare(`
@@ -109,7 +123,6 @@ export class SQLiteAnalyzer implements Analyzer {
     }[];
 
     return rows.map((rel) => {
-      // Hedef model adını snake_case'e çevir
       const targetTable = rel.target_model
         .replace(/([a-z])([A-Z])/g, '$1_$2')
         .toLowerCase();
@@ -129,12 +142,14 @@ export class SQLiteAnalyzer implements Analyzer {
     let typeDefinition = '{\n';
     const relations: Record<string, { model: string, type: string }> = {};
 
+    // Sistem alanlarını hariç tut
+    const systemFields = ['id', 'created_at', 'updated_at'];
+    const nonSystemColumns = tableInfo.columns.filter((col: ColumnInfo) => !systemFields.includes(col.name));
+
     // Kolonları ekle
-    for (const column of tableInfo.columns) {
-      if (!['id', 'created_at', 'updated_at', 'status'].includes(column.name)) {
-        const optional = !column.notNull ? '?' : '';
-        typeDefinition += `  "${column.name}"${optional}: ${column.type};\n`;
-      }
+    for (const column of nonSystemColumns) {
+      const optional = !column.notNull ? '?' : '';
+      typeDefinition += `  "${column.name}"${optional}: ${column.type};\n`;
     }
 
     // İlişkileri ekle
@@ -159,17 +174,16 @@ export class SQLiteAnalyzer implements Analyzer {
 
   private generateQueryType(
     interfaceName: string,
-    queryInterfaceName: string,
     relations: Record<string, { model: string, type: string }>,
   ): string {
     const hasRelations = Object.keys(relations).length > 0;
     const relationsType = hasRelations
       ? `{\n    ${Object.entries(relations)
-        .map(([key]) => `"${key}": ${relations[key].model}`)
+        .map(([key, value]) => `"${key}": ${value.model}${value.type === 'one-to-many' ? '[]' : ''}`)
         .join(';\n    ')}\n  }`
       : 'Record<string, never>';
 
-    return `export type ${queryInterfaceName} = QueryConfig<
+    return `export type ${interfaceName}Query = QueryConfig<
   ${interfaceName},
   never,
   ${relationsType}
@@ -196,15 +210,11 @@ import type { BaseContentrainType, QueryConfig, DBRecord } from '@contentrain/qu
   }
 
   private formatInterfaceName(name: string): string {
-    // Önce tbl_ prefix'ini kaldır
     name = name.replace(/^tbl_/, '');
-
-    // Alt çizgi ve tire ile ayrılmış kelimeleri ayır ve PascalCase'e dönüştür
     const pascalCase = name
       .split(/[-_]/)
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join('');
-
     return `I${pascalCase}`;
   }
 

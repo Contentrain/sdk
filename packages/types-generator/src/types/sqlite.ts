@@ -2,6 +2,7 @@ export interface TableInfo {
   name: string
   columns: ColumnInfo[]
   relations: RelationInfo[]
+  hasTranslations: boolean
 }
 
 export interface ColumnInfo {

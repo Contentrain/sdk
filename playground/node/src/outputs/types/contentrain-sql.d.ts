@@ -8,17 +8,30 @@ import type {
 } from '@contentrain/query';
 
 export interface IServices extends DBRecord {
+  status: string
   reference_id?: string
+  title?: string
+  description?: string
+  image?: string
 
   _relations?: {
     reference: IReferences
   }
 }
 
-export interface IProcesses extends DBRecord {}
+export interface IProcesses extends DBRecord {
+  status: string
+  title?: string
+  description?: string
+  icon?: string
+}
 
 export interface ITabitems extends DBRecord {
+  status: string
   category_id?: string
+  link?: string
+  description?: string
+  image?: string
 
   _relations?: {
     category: IWorkcategories[]
@@ -26,20 +39,43 @@ export interface ITabitems extends DBRecord {
 }
 
 export interface IWorkitems extends DBRecord {
+  status: string
   category_id?: string
-
+  title?: string
+  image?: string
+  description?: string
+  link?: string
+  field_order?: number
   _relations?: {
     category: IWorkcategories
   }
 }
 
-export interface IWorkcategories extends DBRecord {}
+export interface IWorkcategories extends DBRecord {
+  status: string
+  category?: string
+  field_order?: number
+}
 
-export interface IFaqitems extends DBRecord {}
+export interface IFaqitems extends DBRecord {
+  status: string
+  question?: string
+  answer?: string
+  field_order?: number
+}
 
-export interface ISections extends DBRecord {}
+export interface ISections extends DBRecord {
+  status: string
+  title?: string
+  description?: string
+  buttontext?: string
+  buttonlink?: string
+  name?: string
+  subtitle?: string
+}
 
 export interface ISociallinks extends DBRecord {
+  status: string
   link: string
   icon: string
   service_id?: string
@@ -50,21 +86,36 @@ export interface ISociallinks extends DBRecord {
 }
 
 export interface IReferences extends DBRecord {
+  status: string
   logo: string
 }
 
-export interface IMetaTags extends DBRecord {}
+export interface IMetaTags extends DBRecord {
+  status: string
+  name?: string
+  content?: string
+  description?: string
+}
 
 export interface ITestimonialItems extends DBRecord {
+  status: string
   creative_work_id?: string
+  name?: string
+  description?: string
+  title?: string
+  image?: string
 }
 
 export interface IProjectDetails extends DBRecord {
+  status: string
   work_id?: string
   testimonial_id?: string
+  title?: string
+  description?: string
 }
 
 export interface IProjectStats extends DBRecord {
+  status: string
   view_count: number
   work_id?: string
   reference_id?: string
@@ -97,7 +148,7 @@ export type ITabitemsQuery = QueryConfig<
   ITabitems,
   never,
   {
-    category: IWorkcategories
+    category: IWorkcategories[]
   }
 >;
 
