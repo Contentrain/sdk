@@ -30,16 +30,41 @@ interface TestimonialItem extends DBRecord {
   }
 }
 
+interface WorkCategory extends DBRecord {
+  category: string
+  status: ContentrainStatus
+  field_order: number
+}
+
+interface TabItem extends DBRecord {
+  category_id: string
+  status: ContentrainStatus
+  _relations?: {
+    category: WorkCategory[]
+  }
+}
+
+interface DBRelation extends DBRecord {
+  type: string
+  source_model: string
+  source_id: string
+  field_id: string
+  target_model: string
+  target_id: string
+}
+
 describe('sQLiteQueryBuilder', () => {
   let loader: BaseSQLiteLoader;
   let builder: SQLiteQueryBuilder<WorkItem>;
   let testimonialBuilder: SQLiteQueryBuilder<TestimonialItem>;
+  let tabItemBuilder: SQLiteQueryBuilder<TabItem>;
   const dbPath = join(__dirname, '../../../../../../playground/node/src/outputs/db/contentrain.db');
 
   beforeEach(() => {
     loader = new BaseSQLiteLoader(dbPath);
     builder = new SQLiteQueryBuilder<WorkItem>('workitems', loader);
     testimonialBuilder = new SQLiteQueryBuilder<TestimonialItem>('testimonial-items', loader);
+    tabItemBuilder = new SQLiteQueryBuilder<TabItem>('tabitems', loader);
   });
 
   afterEach(async () => {
@@ -224,6 +249,140 @@ describe('sQLiteQueryBuilder', () => {
       if (result) {
         expect(result._relations?.['creative-work']).toBeDefined();
         expect(result._relations?.['creative-work']?.id).toBe(result.creative_work_id);
+      }
+    });
+
+    it('should handle one-to-many relations for tabitems', async () => {
+      console.log('\n=== TEST: one-to-many relations for tabitems ===');
+
+      // İlk olarak ilişki tiplerini kontrol edelim
+      const relationTypes = await loader.query<{ type: string }>(`
+        SELECT DISTINCT type
+        FROM tbl_contentrain_relations
+        WHERE source_model = 'tabitems'
+        AND field_id = 'category'
+      `);
+      console.log('Relation Type:', relationTypes[0]?.type);
+
+      const result = await tabItemBuilder
+        .locale('en')
+        .where('status', 'eq', 'publish')
+        .where('category_id', 'ne', '')
+        .include('category')
+        .first();
+
+      console.log('TabItem Result:', {
+        id: result?.id,
+        status: result?.status,
+        category_id: result?.category_id,
+      });
+
+      expect(result).toBeDefined();
+      if (result) {
+        console.log('Relations:', {
+          hasRelations: !!result._relations,
+          hasCategory: !!result._relations?.category,
+          isArray: Array.isArray(result._relations?.category),
+          categoryCount: result._relations?.category?.length,
+        });
+
+        expect(result._relations?.category).toBeDefined();
+        expect(Array.isArray(result._relations?.category)).toBe(true);
+        expect(result._relations?.category?.length).toBeGreaterThan(0);
+
+        // Her kategorinin gerekli alanları var mı kontrol et
+        console.log('Categories:', result._relations?.category?.map(cat => ({
+          id: cat.id,
+          category: cat.category,
+          status: cat.status,
+        })));
+
+        result._relations?.category?.forEach((category) => {
+          expect(category.id).toBeDefined();
+          expect(category.category).toBeDefined();
+          expect(category.status).toBe('publish');
+        });
+
+        // İlişki tablosundaki kayıtlarla eşleşiyor mu kontrol et
+        const relations = await loader.query<DBRelation>(`
+          SELECT * FROM tbl_contentrain_relations
+          WHERE source_model = 'tabitems'
+          AND source_id = ?
+          AND field_id = 'category'
+        `, [result.id]);
+
+        console.log('Database Relations:', relations);
+
+        expect(relations.length).toBe(result._relations?.category?.length);
+        expect(relations[0].type).toBe('one-to-many');
+      }
+    });
+
+    it('should handle multiple categories for a single tabitem', async () => {
+      console.log('\n=== TEST: multiple categories for a single tabitem ===');
+
+      // Bilinen bir test verisi kullanalım
+      const testItemId = '9ab7dcca9d1d'; // Vue.js item
+      console.log('Testing with ID:', testItemId);
+
+      // İlk olarak ilişki tiplerini kontrol edelim
+      const relationTypes = await loader.query<{ type: string }>(`
+        SELECT DISTINCT type
+        FROM tbl_contentrain_relations
+        WHERE source_model = 'tabitems'
+        AND field_id = 'category'
+      `);
+      console.log('Relation Type:', relationTypes[0]?.type);
+
+      const result = await tabItemBuilder
+        .locale('en')
+        .where('id', 'eq', testItemId)
+        .include('category')
+        .first();
+
+      console.log('TabItem Result:', {
+        id: result?.id,
+        status: result?.status,
+        category_id: result?.category_id,
+      });
+
+      expect(result).toBeDefined();
+      if (result) {
+        console.log('Relations:', {
+          hasRelations: !!result._relations,
+          hasCategory: !!result._relations?.category,
+          isArray: Array.isArray(result._relations?.category),
+          categoryCount: result._relations?.category?.length,
+        });
+
+        expect(result._relations?.category).toBeDefined();
+        expect(Array.isArray(result._relations?.category)).toBe(true);
+        expect(result._relations?.category?.length).toBe(2); // Frontend ve UI/UX kategorilerine sahip
+
+        // Kategorileri kontrol et
+        const categories = result._relations?.category || [];
+        console.log('Categories:', categories.map(cat => ({
+          id: cat.id,
+          category: cat.category,
+          status: cat.status,
+        })));
+
+        const categoryNames = categories.map(c => c.category);
+        console.log('Category Names:', categoryNames);
+
+        expect(categoryNames).toContain('Frontend Development');
+        expect(categoryNames).toContain('UI/UX Design');
+
+        // İlişki tablosunu da kontrol edelim
+        const relations = await loader.query<DBRelation>(`
+          SELECT * FROM tbl_contentrain_relations
+          WHERE source_model = 'tabitems'
+          AND source_id = ?
+          AND field_id = 'category'
+        `, [result.id]);
+
+        console.log('Database Relations:', relations);
+        expect(relations[0].type).toBe('one-to-many');
       }
     });
   });

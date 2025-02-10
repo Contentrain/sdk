@@ -1,14 +1,17 @@
 import type { BaseSQLiteLoader } from '../loader/base-sqlite';
 import type { DBRecord } from '../types/database';
 import type { Filter, Include, Operator, Pagination, QueryOptions, QueryResult, Sort } from '../types/query';
-import { normalizeTableName } from 'src/utils/normalizer';
 import { RelationLoader } from '../loader/relation-loader';
 import { logger } from '../utils/logger';
+import { normalizeTableName } from '../utils/normalizer';
 
 const SYSTEM_FIELDS = ['id', 'created_at', 'updated_at', 'status'] as const;
 type SystemField = typeof SYSTEM_FIELDS[number];
 
-export class SQLiteQueryBuilder<T extends DBRecord> {
+export class SQLiteQueryBuilder<
+  T extends DBRecord,
+  TRelation extends DBRecord = DBRecord,
+> {
   private filters: Filter[] = [];
   private includes: Include = {};
   private sorting: Sort[] = [];
@@ -183,6 +186,18 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
 
   async get(): Promise<QueryResult<T>> {
     try {
+      // İlişki kontrolü
+      if (Object.keys(this.includes).length) {
+        const relationTypes = await this.relationLoader.getRelationTypes(this.model);
+        for (const relation of Object.keys(this.includes)) {
+          if (!relationTypes[relation]) {
+            const error = new Error(`Invalid relation field: ${relation} for model ${this.model}`);
+            logger.error('Invalid relation:', { model: this.model, relation, error });
+            throw error;
+          }
+        }
+      }
+
       const { sql, params } = this.buildQuery();
       logger.debug('Executing query:', { sql, params, model: this.model });
       const data = await this.connection.query<T>(sql, params);
@@ -208,7 +223,7 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
             continue;
           }
 
-          const relatedData = await this.relationLoader.loadRelatedContent<DBRecord>(
+          const relatedData = await this.relationLoader.loadRelatedContent<TRelation>(
             relations,
             this.options.locale,
           );
@@ -223,21 +238,39 @@ export class SQLiteQueryBuilder<T extends DBRecord> {
             const itemRelations = relations.filter(r => r.source_id === item.id);
             logger.debug('Item relations:', { itemId: item.id, relations: itemRelations });
 
-            if (itemRelations[0]?.type === 'one-to-one') {
-              const related = relatedData.find(rd => rd.id === itemRelations[0].target_id);
+            if (!itemRelations.length) {
+              return;
+            }
+
+            const isOneToOne = itemRelations.every(r => r.type === 'one-to-one');
+
+            if (isOneToOne) {
+              // Bire-bir ilişki
+              const related = relatedData.find(rd => rd.id === itemRelations[0]?.target_id);
               if (related) {
                 item._relations[relation] = related;
-                logger.debug('Added one-to-one relation:', { itemId: item.id, relationId: related.id });
+                logger.debug('Added one-to-one relation:', {
+                  itemId: item.id,
+                  relationId: related.id,
+                  relationType: 'one-to-one',
+                });
               }
             }
             else {
-              item._relations[relation] = relatedData.filter(rd =>
+              // Bire-çok ilişki
+              const relatedItems = relatedData.filter(rd =>
                 itemRelations.some(ir => ir.target_id === rd.id),
               );
-              logger.debug('Added one-to-many relations:', {
-                itemId: item.id,
-                count: item._relations[relation].length,
-              });
+
+              if (relatedItems.length) {
+                item._relations[relation] = relatedItems;
+                logger.debug('Added one-to-many relations:', {
+                  itemId: item.id,
+                  count: relatedItems.length,
+                  relationType: 'one-to-many',
+                  relationIds: relatedItems.map(r => r.id),
+                });
+              }
             }
           });
         }

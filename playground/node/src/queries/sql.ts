@@ -17,6 +17,7 @@ interface WorkItem extends DBRecord {
   status: string
   created_at: string
   updated_at: string
+  field_order: number
   _relations?: {
     category: WorkCategory
   }
@@ -27,9 +28,11 @@ interface WorkCategory extends DBRecord {
   status: string
   created_at: string
   updated_at: string
+  field_order: number
 }
 
 interface TabItem extends DBRecord {
+  title: string
   link: string
   description: string
   image: string
@@ -38,7 +41,7 @@ interface TabItem extends DBRecord {
   created_at: string
   updated_at: string
   _relations?: {
-    category: WorkCategory
+    category: WorkCategory[]
   }
 }
 
@@ -64,12 +67,35 @@ interface Reference extends DBRecord {
 }
 
 interface Service extends DBRecord {
+  title: string
+  description: string
   reference_id: string
   status: string
   created_at: string
   updated_at: string
   _relations?: {
     reference: Reference
+  }
+}
+
+interface FaqItem extends DBRecord {
+  question: string
+  answer: string
+  status: string
+  created_at: string
+  updated_at: string
+  field_order: number
+}
+
+interface SocialLink extends DBRecord {
+  link: string
+  icon: string
+  service_id: string
+  status: string
+  created_at: string
+  updated_at: string
+  _relations?: {
+    service: Service
   }
 }
 
@@ -94,167 +120,250 @@ export async function sqlQueryExample() {
     const testimonialBuilder = new SQLiteQueryBuilder<TestimonialItem>('testimonial-items', loader);
     const tabItemBuilder = new SQLiteQueryBuilder<TabItem>('tabitems', loader);
     const serviceBuilder = new SQLiteQueryBuilder<Service>('services', loader);
+    const faqBuilder = new SQLiteQueryBuilder<FaqItem>('faqitems', loader);
+    const categoryBuilder = new SQLiteQueryBuilder<WorkCategory>('workcategories', loader);
+    const socialLinksBuilder = new SQLiteQueryBuilder<SocialLink>('sociallinks', loader);
+    const referencesBuilder = new SQLiteQueryBuilder<Reference>('references', loader);
 
-    // 1. Temel Sorgular
-    // 1.1 Filtreleme ve Sıralama
-    const workItems = await workItemsBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .orderBy('created_at', 'desc')
-      .get();
+    console.log('\n=== 1. Dil Sorguları Örnekleri ===');
 
-    // 1.2 Sayfalama
-    const pagedItems = await workItemsBuilder
-      .locale('en')
-      .orderBy('created_at', 'desc')
-      .limit(3)
-      .offset(1)
-      .get();
-
-    // 1.3 İlk Öğeyi Getirme
-    const firstItem = await workItemsBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .orderBy('created_at', 'desc')
-      .first();
-
-    // 2. İlişki Sorguları
-    // 2.1 Bire-Bir İlişki
-    const testimonials = await testimonialBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .include('creative-work')
-      .get();
-
-    // 2.2 Bire-Çok İlişki
-    const tabItems = await tabItemBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .include('workcategories')
-      .orderBy('created_at', 'desc')
-      .get();
-
-    // 3. Gelişmiş Sorgular
-    // 3.1 Çoklu Filtreler
-    const filteredServices = await serviceBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .include('reference')
-      .get();
-
-    // 3.2 Sayısal Karşılaştırmalar
-    const orderedItems = await workItemsBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .orderBy('created_at', 'desc')
-      .get();
-
-    // 3.3 String Operasyonları
-    const searchResults = await workItemsBuilder
-      .locale('en')
-      .where('title', 'startsWith', 'Con')
-      .get();
-
-    // 4. Çoklu Dil Senaryoları
-    // 4.1 TR İçerik
+    // 1.1 Aynı içeriğin farklı dillerdeki versiyonları
     const trServices = await serviceBuilder
       .locale('tr')
       .where('status', 'eq', 'publish')
       .include('reference')
-      .orderBy('created_at', 'desc')
       .get();
 
-    // 4.2 EN İçerik
     const enServices = await serviceBuilder
       .locale('en')
       .where('status', 'eq', 'publish')
       .include('reference')
-      .orderBy('created_at', 'desc')
       .get();
 
-    // 4.3 Çoklu Dil Karşılaştırma
-    const trWorkItem = await workItemsBuilder
+    console.log('TR/EN Servis Karşılaştırması:', trServices.data.map((trItem, index) => ({
+      tr_title: trItem.title,
+      en_title: enServices.data[index]?.title,
+    })));
+
+    console.log('\n=== 2. Bire-Bir İlişki Örnekleri ===');
+
+    // 2.1 Work Items -> Categories (Bire-bir)
+    const workItems = await workItemsBuilder
       .locale('tr')
       .where('status', 'eq', 'publish')
-      .first();
-
-    const enWorkItem = await workItemsBuilder
-      .locale('en')
-      .where('id', 'eq', trWorkItem?.id || '')
-      .first();
-
-    // 5. Gelişmiş İlişki Sorguları
-    // 5.1 İç İçe İlişkiler
-    const nestedRelations = await workItemsBuilder
-      .locale('en')
-      .where('status', 'eq', 'publish')
-      .where('category_id', 'ne', '')
-      .include('workcategories')
+      .include('category')
       .get();
 
-    // 5.2 İlişki Filtreleme
-    const categoryId = (await workItemsBuilder
-      .locale('en')
-      .where('category_id', 'ne', '')
-      .first())?.category_id;
-    console.log(categoryId, 'Found category id');
-    const filteredByRelation = categoryId
-      ? await workItemsBuilder
-        .locale('en')
-        .where('category_id', 'eq', categoryId)
-        .include('workcategories')
-        .get()
-      : null;
+    console.log('İş Öğeleri ve Kategorileri:', workItems.data.map(item => ({
+      title: item.title,
+      category: item._relations?.category?.category,
+    })));
 
-    // Sonuçları markdown dosyasına yaz
+    // 2.2 Services -> References (Bire-bir)
+    const servicesWithRefs = await serviceBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .where('reference_id', 'ne', '')
+      .include('reference')
+      .get();
+
+    console.log('Servisler ve Referansları:', servicesWithRefs.data.map(item => ({
+      title: item.title,
+      reference_logo: item._relations?.reference?.logo,
+    })));
+
+    console.log('\n=== 3. Bire-Çok İlişki Örnekleri ===');
+
+    // 3.1 TabItems -> Categories (Bire-çok)
+    const tabItemsMultiCategory = await tabItemBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .include('category')
+      .get();
+
+    console.log('Tab Items ve Çoklu Kategorileri:', tabItemsMultiCategory.data.map(item => ({
+      description: item.description,
+      categories: item._relations?.category?.map(c => c.category),
+    })));
+
+    console.log('\n=== 4. Gelişmiş Filtreleme Örnekleri ===');
+
+    // 4.1 Belirli bir kategorideki ve "platform" içeren işler
+    const platformProjects = await workItemsBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .where('description', 'contains', 'platform')
+      .include('category')
+      .get();
+
+    console.log('Platform İçeren Projeler:', platformProjects.data.map(item => ({
+      title: item.title,
+      category: item._relations?.category?.category,
+    })));
+
+    // 4.2 Frontend ve Backend kategorilerindeki tab items
+    const devTools = await tabItemBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .where('category_id', 'in', ['cab37361e7e6', 'cab37361e7e7']) // Frontend ve Backend kategorileri
+      .include('category')
+      .get();
+
+    console.log('Geliştirme Araçları:', devTools.data.map(item => ({
+      title: item.title,
+      categories: item._relations?.category?.map(c => c.category),
+    })));
+
+    // 4.3 Son eklenen testimonial'lar
+    const recentTestimonials = await testimonialBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .orderBy('created_at', 'desc')
+      .limit(3)
+      .include('creative-work')
+      .get();
+
+    console.log('Son Eklenen Referanslar:', recentTestimonials.data.map(item => ({
+      name: item.name,
+      project: item._relations?.['creative-work']?.title,
+      created_at: item.created_at,
+    })));
+
+    // 4.4 Sıralı SSS öğeleri (Çevirisiz örnek)
+    const faqItems = await faqBuilder
+      .where('status', 'eq', 'publish')
+      .orderBy('field_order', 'asc')
+      .locale('tr')
+      .get();
+
+    console.log('SSS (Çevirisiz):', faqItems.data.map(item => ({
+      question: item.question,
+      answer: item.answer,
+      order: item.field_order,
+    })));
+
+    // 4.5 Kategorilerin sıralı listesi
+    const categories = await categoryBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .orderBy('field_order', 'asc')
+      .get();
+
+    console.log('Kategoriler:', categories.data.map(item => ({
+      category: item.category,
+      order: item.field_order,
+    })));
+
+    console.log('\n=== 5. Sosyal Medya ve Referans Örnekleri ===');
+
+    // 5.1 Sosyal medya linkleri ve ilişkili servisler
+    const socialLinks = await socialLinksBuilder
+      .where('status', 'eq', 'publish')
+      .include('service')
+      .get();
+
+    console.log('Sosyal Medya Linkleri:', socialLinks.data.map(item => ({
+      link: item.link,
+      icon: item.icon,
+      service: item._relations?.service?.title,
+    })));
+
+    // 5.2 Referanslar ve ilişkili servisler
+    const references = await referencesBuilder
+      .where('status', 'eq', 'publish')
+      .get();
+
+    const servicesWithReferences = await serviceBuilder
+      .locale('tr')
+      .where('status', 'eq', 'publish')
+      .where('reference_id', 'in', references.data.map(ref => ref.id))
+      .include('reference')
+      .get();
+
+    console.log('Referanslar ve Servisler:', servicesWithReferences.data.map(item => ({
+      service: item.title,
+      reference_logo: item._relations?.reference?.logo,
+    })));
+
+    // Markdown içeriğini oluştur
     const markdownContent = `
-# Contentrain SQLite Query Builder Örnekleri
+# SQLite Sorgu Test Sonuçları
 
-## 1. Temel Sorgular
-### 1.1 Filtreleme ve Sıralama
-${workItems.data.map(item => `- ${item.title} (Oluşturulma: ${item.created_at})`).join('\n')}
+## 1. Dil Sorguları Örnekleri
 
-### 1.2 Sayfalama
-${pagedItems.data.map(item => `- ${item.title}`).join('\n')}
-Sayfalama: Limit ${pagedItems.pagination?.limit}, Offset ${pagedItems.pagination?.offset}
+### TR/EN Servis Karşılaştırması
+${trServices.data.map((trItem, index) => `- **${trItem.title}** / **${enServices.data[index]?.title}**
+  - TR: ${trItem.description}
+  - EN: ${enServices.data[index]?.description}
+`).join('\n')}
 
-### 1.3 İlk Öğe
-- ${firstItem?.title} (ID: ${firstItem?.id})
+## 2. Bire-Bir İlişki Örnekleri
 
-## 2. İlişki Sorguları
-### 2.1 Bire-Bir İlişki
-${testimonials.data.map(t => `- ${t.name} -> ${t._relations?.['creative-work']?.title}`).join('\n')}
+### Work Items ve Kategorileri
+${workItems.data.map(item => `- **${item.title}**
+  - Kategori: ${item._relations?.category?.category}
+  - Açıklama: ${item.description}
+`).join('\n')}
 
-### 2.2 Bire-Çok İlişki
-${tabItems.data.map(t => `- ${t.description} -> ${t._relations?.category?.category}`).join('\n')}
+### Servisler ve Referansları
+${servicesWithRefs.data.map(item => `- **${item.title}**
+  - Referans: ${item._relations?.reference?.logo}
+  - Açıklama: ${item.description}
+`).join('\n')}
 
-## 3. Gelişmiş Sorgular
-### 3.1 Çoklu Filtreler
-${filteredServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
+## 3. Bire-Çok İlişki Örnekleri
 
-### 3.2 Sayısal Karşılaştırmalar
-${orderedItems.data.map(item => `- ${item.title} (Oluşturulma: ${item.created_at})`).join('\n')}
+### Tab Items ve Çoklu Kategorileri
+${tabItemsMultiCategory.data.map(item => `- **${item.title}**
+  - Kategoriler: ${item._relations?.category?.map(c => c.category).join(', ')}
+  - Açıklama: ${item.description}
+  - Link: ${item.link}
+`).join('\n')}
 
-### 3.3 String Operasyonları
-${searchResults.data.map(s => `- ${s.title}`).join('\n')}
+## 4. Gelişmiş Filtreleme Örnekleri
 
-## 4. Çoklu Dil Senaryoları
-### 4.1 TR Servisler
-${trServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
+### Platform İçeren Projeler
+${platformProjects.data.map(item => `- **${item.title}**
+  - Kategori: ${item._relations?.category?.category}
+  - Açıklama: ${item.description}
+`).join('\n')}
 
-### 4.2 EN Servisler
-${enServices.data.map(s => `- ${s.reference_id} -> ${s._relations?.reference?.logo}`).join('\n')}
+### Geliştirme Araçları (Frontend ve Backend)
+${devTools.data.map(item => `- **${item.title}**
+  - Kategoriler: ${item._relations?.category?.map(c => c.category).join(', ')}
+  - Açıklama: ${item.description}
+`).join('\n')}
 
-### 4.3 Çoklu Dil Karşılaştırma
-TR: ${trWorkItem?.title}
-EN: ${enWorkItem?.title}
+### Son Eklenen Referanslar
+${recentTestimonials.data.map(item => `- **${item.name}**
+  - İlişkili Proje: ${item._relations?.['creative-work']?.title}
+  - Eklenme Tarihi: ${item.created_at}
+  - Yorum: ${item.description}
+`).join('\n')}
 
-## 5. Gelişmiş İlişki Sorguları
-### 5.1 İç İçe İlişkiler
-${nestedRelations.data.map(item => `- ${item.title} (Kategori: ${item._relations?.category?.category})`).join('\n')}
+### SSS Öğeleri (Çevirisiz Örnek)
+${faqItems.data.map(item => `- **${item.field_order}. ${item.question}**
+  - Cevap: ${item.answer}
+`).join('\n')}
 
-### 5.2 İlişki Filtreleme
-${filteredByRelation?.data.map(item => `- ${item.title} (Kategori: ${item._relations?.category?.category})`).join('\n') || 'İlişki bulunamadı'}
+### Kategoriler
+${categories.data.map(item => `- **${item.category}**
+  - Sıra: ${item.field_order}
+`).join('\n')}
+
+## 5. Sosyal Medya ve Referans Örnekleri
+
+### Sosyal Medya Linkleri ve Servisler
+${socialLinks.data.map(item => `- **${item._relations?.service?.title}**
+  - Link: ${item.link}
+  - İkon: ${item.icon}
+`).join('\n')}
+
+### Referanslar ve İlişkili Servisler
+${servicesWithReferences.data.map(item => `- **${item.title}**
+  - Logo: ${item._relations?.reference?.logo}
+  - Açıklama: ${item.description}
+`).join('\n')}
 `;
 
     // Markdown dosyasını kaydet
@@ -263,6 +372,8 @@ ${filteredByRelation?.data.map(item => `- ${item.title} (Kategori: ${item._relat
       markdownContent,
       'utf8',
     );
+
+    console.log('\nSonuçlar sql-output.md dosyasına yazıldı.');
   }
   catch (error) {
     console.error('SQL Query Error:', error);
