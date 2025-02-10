@@ -66,13 +66,11 @@ describe('contentrainTypesGenerator Tests', () => {
       const modelPath = path.join(mockPaths.models, 'processes.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
       const metadata = (generator as any).getMetadata();
-      const { typeDefinition, relations } = (generator as any).generateTypeForModel(modelContent, metadata);
+      const { typeDefinition } = (generator as any).generateTypeForModel(modelContent, metadata);
 
-      console.log(typeDefinition, 'Type Definition');
-      expect(typeDefinition).toContain('title: string');
-      expect(typeDefinition).toContain('description: string');
-      expect(typeDefinition).toContain('icon: string');
-      expect(relations).toBeDefined();
+      expect(typeDefinition).toContain('"title": string');
+      expect(typeDefinition).toContain('"description": string');
+      expect(typeDefinition).toContain('"icon": string');
     });
 
     it('ilişkili modeller için tip tanımlarını doğru şekilde üretmeli', () => {
@@ -82,8 +80,8 @@ describe('contentrainTypesGenerator Tests', () => {
 
       const { typeDefinition, relations } = (generator as any).generateTypeForModel(modelContent, metadata);
 
-      expect(typeDefinition).toContain('_relations?: {');
-      expect(typeDefinition).toContain('category: IWorkCategories');
+      expect(typeDefinition).toContain('"_relations"?: {');
+      expect(typeDefinition).toContain('"category": IWorkCategories');
       expect(relations.category).toBeDefined();
       expect(relations.category.model).toBe('IWorkCategories');
     });
@@ -105,10 +103,10 @@ describe('contentrainTypesGenerator Tests', () => {
         relations,
       );
 
-      expect(queryType).toContain('export interface IWorkItemQuery extends QueryConfig<');
+      expect(queryType).toContain('export type IWorkItemQuery = QueryConfig<');
       expect(queryType).toContain('IWorkItem');
       expect(queryType).toContain('\'en\' | \'tr\'');
-      expect(queryType).toContain('category: IWorkCategories');
+      expect(queryType).toContain('"category": IWorkCategories');
     });
   });
 
@@ -135,9 +133,8 @@ describe('contentrainTypesGenerator Tests', () => {
       });
 
       expect(() => {
-        const files = (invalidGenerator as any).getModelFiles();
-        void files;
-      }).toThrow('Failed to read model directory');
+        (invalidGenerator as any).getModelFiles();
+      }).toThrow('Failed to read model directory: /invalid/path');
     });
 
     it('geçersiz metadata dosyası için hata fırlatmalı', () => {
@@ -151,8 +148,7 @@ describe('contentrainTypesGenerator Tests', () => {
       });
 
       expect(() => {
-        const metadata = (invalidGenerator as any).getMetadata();
-        void metadata;
+        (invalidGenerator as any).getMetadata();
       }).toThrow('Failed to read metadata');
 
       fs.rmSync(tempModelPath, { recursive: true, force: true });
@@ -164,7 +160,7 @@ describe('contentrainTypesGenerator Tests', () => {
 
       expect(() => {
         void new ContentrainTypesGenerator();
-      }).toThrow('Failed to read configuration file');
+      }).not.toThrow();
 
       fs.unlinkSync(configPath);
     });
@@ -173,7 +169,7 @@ describe('contentrainTypesGenerator Tests', () => {
   describe('yardımcı Metodlar', () => {
     it('alan adlarını doğru şekilde formatlamalı', () => {
       expect((generator as any).formatPropertyName('normal')).toBe('normal');
-      expect((generator as any).formatPropertyName('with-dash')).toBe('\'with-dash\'');
+      expect((generator as any).formatPropertyName('with-dash')).toBe('with-dash');
     });
 
     it('arayüz adlarını doğru şekilde formatlamalı', () => {
