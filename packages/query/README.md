@@ -1,17 +1,24 @@
 # @contentrain/query
 
-Core package of the Contentrain SDK. This package provides the fundamental functionality and types for interacting with Contentrain CMS.
+Core package of the Contentrain SDK. Originally designed for JSON-based content management, now extended with SQLite integration for enhanced performance and scalability.
 
 ## Features
 
-- 🚀 High-performance content loading
+### Core Features (JSON-based)
+- 📦 JSON file-based content management
+- 🌍 Multi-language support with JSON files
 - 💾 LRU caching with size-based eviction
-- 🔍 Advanced query capabilities with type-safe operators
-- 📦 Full TypeScript support with generic types
-- 🛡️ Comprehensive error handling
-- ⚡ Memory-optimized performance
-- 🌍 Multi-language support
-- 🔄 Relation resolution
+- 🔍 Type-safe query operations
+- 📝 Full TypeScript support
+
+### SQLite Extension Features
+- 🚀 High-performance SQLite database integration
+- 🔄 Advanced relation management (One-to-One & One-to-Many)
+- 🗃️ Efficient data indexing and querying
+- 🔒 Thread-safe database operations
+- 📊 Advanced filtering and sorting
+- 🎯 Efficient pagination
+- 🌐 Enhanced translation support
 
 ## Installation
 
@@ -28,119 +35,119 @@ pnpm add @contentrain/query
 
 ## Usage
 
-### Content Loading
-
-```typescript
-import { ContentLoader } from '@contentrain/query';
-
-const loader = new ContentLoader({
-  contentDir: './content',
-  defaultLocale: 'en',
-  cache: true,
-  ttl: 60 * 1000, // 1 minute
-  maxCacheSize: 100 // 100 MB
-});
-
-// Load all blog posts
-const posts = await loader.load('posts');
-
-// Load with locale
-const trPosts = await loader.load('posts').locale('tr');
-
-// Error handling
-try {
-  const post = await loader.load('posts', 'non-existent-post');
-} catch (error) {
-  if (error instanceof ContentNotFoundError) {
-    console.error('Post not found');
-  } else if (error instanceof ContentValidationError) {
-    console.error('Content validation failed');
-  }
-}
-```
-
-### Query Operations
+### JSON-based Usage (Original)
 
 ```typescript
 import { ContentrainSDK } from '@contentrain/query';
 
+// Initialize SDK with JSON files
 const sdk = new ContentrainSDK({
-  contentDir: './content'
+  contentDir: './content',  // Directory containing JSON files
+  defaultLocale: 'en'
 });
 
-// Type-safe querying
-interface Post {
-  ID: string;
-  title: string;
-  status: 'draft' | 'published';
-  tags: string[];
-  createdAt: string;
-}
-
-const query = sdk.query<{
-  fields: Post;
-  locales: 'en' | 'tr';
-  relations: {
-    author: Author;
-    categories: Category[];
-  }
-}>('posts');
-
-// Available operators
-const posts = await query
-  .where('status', 'eq', 'published')
-  .where('tags', 'contains', ['javascript'])
-  .where('createdAt', 'gt', '2024-01-01')
-  .where('category', 'in', ['tech', 'programming'])
-  .orderBy('createdAt', 'desc')
-  .limit(5)
+// Query JSON content
+const posts = await sdk.query('posts')
+  .where('status', 'eq', 'publish')
   .get();
 
-// Relation handling
-const postsWithRelations = await query
-  .include(['author', 'categories'])
-  .where('status', 'eq', 'published')
-  .get();
-
-// Locale support
-const trPosts = await query
+// Load with translations
+const trPosts = await sdk.query('posts')
   .locale('tr')
-  .where('status', 'eq', 'published')
   .get();
 ```
 
-### Caching
+### SQLite Usage (Extended Feature)
 
 ```typescript
-import { MemoryCache } from '@contentrain/query';
+import { SQLiteQueryBuilder, BaseSQLiteLoader } from '@contentrain/query';
 
-const cache = new MemoryCache({
-  maxSize: 100, // Maximum cache size in MB
-  defaultTTL: 60 * 1000, // Default TTL in ms
-});
+// Initialize SQLite loader
+const loader = new BaseSQLiteLoader('path/to/database.db');
 
-// Set with custom TTL
-await cache.set('key', data, 5 * 60 * 1000); // 5 minutes TTL
+// Create SQLite query builder
+const builder = new SQLiteQueryBuilder('posts', loader);
 
-// Get with type safety
-const data = await cache.get<Post[]>('key');
+// Execute SQLite query
+const result = await builder
+  .where('status', 'eq', 'publish')
+  .get();
+```
 
-// Cache stats
-const stats = cache.getStats();
-console.log(`
-  Hits: ${stats.hits}
-  Misses: ${stats.misses}
-  Size: ${stats.size} bytes
-  Last Cleanup: ${stats.lastCleanup}
-`);
+## Data Management
+
+### JSON-based Storage
+- Content stored in JSON files
+- Directory-based organization
+- File-based translations
+- Simple version control with Git
+
+### SQLite Storage
+- Relational database storage
+- Optimized for querying and relations
+- Efficient data indexing
+- Better performance for large datasets
+
+## Relations
+
+### JSON Relations
+```typescript
+// JSON-based relation loading
+const posts = await sdk.query('posts')
+  .include('author')
+  .get();
+```
+
+### SQLite Relations
+```typescript
+interface Post {
+  id: string;
+  title: string;
+  author_id: string;
+  _relations?: {
+    author: Author;
+    categories: Category[];
+  }
+}
+
+// One-to-One in SQLite
+const post = await builder
+  .include('author')
+  .where('id', 'eq', '123')
+  .first();
+
+// One-to-Many in SQLite
+const postWithCategories = await builder
+  .include('categories')
+  .where('id', 'eq', '123')
+  .first();
+```
+
+## Translations
+
+### JSON Translations
+- Separate JSON files for each locale
+- File-based translation management
+- Git-friendly structure
+
+### SQLite Translations
+```typescript
+// Dedicated translation tables
+const trPost = await builder
+  .locale('tr')
+  .where('id', 'eq', '123')
+  .first();
+
+// Fallback support
+const result = await builder
+  .locale('tr')
+  .include(['author', 'categories'])
+  .get();
 ```
 
 ## API Reference
 
-### ContentrainSDK
-
-Main entry point for the SDK.
-
+### ContentrainSDK (JSON-based)
 ```typescript
 class ContentrainSDK {
   constructor(options: ContentLoaderOptions)
@@ -149,119 +156,104 @@ class ContentrainSDK {
 }
 ```
 
-### Query Builder
-
+### SQLiteQueryBuilder (SQLite Extension)
 ```typescript
-interface QueryBuilder<T> {
-  // Filter operations
+class SQLiteQueryBuilder<T extends DBRecord> {
+  constructor(model: string, connection: BaseSQLiteLoader)
+
+  // Query Methods
   where<K extends keyof T>(
     field: K,
-    operator: QueryOperator,
+    operator: Operator,
     value: T[K] | T[K][]
   ): this
 
-  // Available operators:
-  // 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' |
-  // 'in' | 'nin' | 'contains' | 'startsWith' | 'endsWith'
-
-  // Relation operations
   include(relations: string | string[]): this
-
-  // Sorting
   orderBy(field: keyof T, direction?: 'asc' | 'desc'): this
-
-  // Pagination
   limit(count: number): this
   offset(count: number): this
-
-  // Locale
   locale(code: string): this
 
-  // Cache control
-  cache(ttl?: number): this
-  noCache(): this
-  bypassCache(): this
-
-  // Execution
+  // Execution Methods
   get(): Promise<QueryResult<T>>
   first(): Promise<T | null>
   count(): Promise<number>
 }
-
-interface QueryResult<T> {
-  data: T[]
-  total: number
-  pagination?: {
-    limit: number
-    offset: number
-    hasMore: boolean
-  }
-}
 ```
 
-### Cache Manager
+## Best Practices
+
+### JSON vs SQLite Usage
 
 ```typescript
-interface CacheManager {
-  set<T>(key: string, value: T, ttl?: number): Promise<void>
-  get<T>(key: string): Promise<T | null>
-  delete(key: string): Promise<void>
-  clear(): Promise<void>
-  getStats(): CacheStats
-}
+// ✅ Use JSON when:
+// - Small to medium dataset
+// - Git-based version control is priority
+// - Simple content structure
+const posts = await sdk.query('posts').get();
 
-interface CacheStats {
-  hits: number
-  misses: number
-  size: number
-  lastCleanup: number
-}
+// ✅ Use SQLite when:
+// - Large dataset
+// - Complex relations
+// - Performance is critical
+// - Advanced querying needed
+const posts = await builder
+  .where('status', 'eq', 'publish')
+  .include(['author', 'categories'])
+  .orderBy('created_at', 'desc')
+  .limit(10)
+  .get();
 ```
 
-### Content Loader
+### Performance Considerations
 
-```typescript
-interface ContentLoader {
-  load<T>(model: string): Promise<LoaderResult<T>>
-  resolveRelation<T, R>(
-    model: string,
-    relationField: keyof T,
-    data: T[],
-    locale?: string
-  ): Promise<R[]>
-  clearCache(): Promise<void>
-  refreshCache(model: string): Promise<void>
-  getCacheStats(): CacheStats
-}
-```
+#### JSON Storage
+- Keep files organized in directories
+- Use appropriate file naming
+- Consider file size for large datasets
+
+#### SQLite Storage
+- Use appropriate indexes
+- Optimize relation queries
+- Implement pagination
+- Use eager loading for relations
 
 ## Error Handling
 
-The package provides specific error types for different scenarios:
-
 ```typescript
-import {
-  ContentrainError, // Base error class
-  ContentNotFoundError,
-  ContentValidationError,
-  CacheError,
-  RelationError
-} from '@contentrain/query';
-
 try {
-  const posts = await loader.load('posts');
+  const result = await builder
+    .where('status', 'eq', 'publish')
+    .get();
 } catch (error) {
-  if (error instanceof ContentNotFoundError) {
-    // Handle not found
-  } else if (error instanceof ContentValidationError) {
+  if (error instanceof SQLiteError) {
+    // Handle SQLite specific errors
+  } else if (error instanceof ValidationError) {
     // Handle validation errors
-  } else if (error instanceof CacheError) {
-    // Handle cache errors
   } else if (error instanceof RelationError) {
     // Handle relation errors
+  } else if (error instanceof FileSystemError) {
+    // Handle JSON file system errors
   }
 }
 ```
+
+## Migration Guide
+
+### From JSON to SQLite
+1. Initialize SQLite database
+2. Import JSON content
+3. Set up relations
+4. Update queries to use SQLiteQueryBuilder
+5. Test and verify data integrity
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
