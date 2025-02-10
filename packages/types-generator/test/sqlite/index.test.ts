@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 describe('sQLite Source Tests', () => {
   const paths = {
     database: path.join(__dirname, '../../../../playground/contentrain-db/contentrain.db'),
-    output: path.join(__dirname, '../temp/types'),
+    output: path.join(__dirname, '../temp/sqlite-types'),
   };
 
   let generator: ContentrainTypesGenerator;
@@ -20,6 +20,8 @@ describe('sQLite Source Tests', () => {
     if (fs.existsSync(paths.output)) {
       fs.rmSync(paths.output, { recursive: true, force: true });
     }
+
+    fs.mkdirSync(paths.output, { recursive: true });
 
     const config: SQLiteSourceConfig = {
       source: {
