@@ -8,28 +8,30 @@ import { ContentrainTypesGenerator } from '../../src';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('jSON Source Tests', () => {
-  const mockPaths = {
+  const paths = {
     models: path.join(__dirname, '../../../../playground/contentrain/models'),
     content: path.join(__dirname, '../../../../playground/contentrain'),
-    output: path.join(__dirname, '../temp/types'),
+    output: path.join(__dirname, '../temp/json-types'),
   };
 
   let generator: ContentrainTypesGenerator;
 
   beforeEach(() => {
     // Test öncesi çıktı dizinini temizle
-    if (fs.existsSync(mockPaths.output)) {
-      fs.rmSync(mockPaths.output, { recursive: true, force: true });
+    if (fs.existsSync(paths.output)) {
+      fs.rmSync(paths.output, { recursive: true, force: true });
     }
+
+    fs.mkdirSync(paths.output, { recursive: true });
 
     const config: JSONSourceConfig = {
       source: {
         type: 'json',
-        modelsDir: mockPaths.models,
-        contentDir: mockPaths.content,
+        modelsDir: paths.models,
+        contentDir: paths.content,
       },
       output: {
-        dir: mockPaths.output,
+        dir: paths.output,
       },
     };
 
@@ -38,8 +40,8 @@ describe('jSON Source Tests', () => {
 
   afterEach(() => {
     // Test sonrası çıktı dizinini temizle
-    if (fs.existsSync(mockPaths.output)) {
-      fs.rmSync(mockPaths.output, { recursive: true, force: true });
+    if (fs.existsSync(paths.output)) {
+      fs.rmSync(paths.output, { recursive: true, force: true });
     }
   });
 
@@ -75,7 +77,7 @@ describe('jSON Source Tests', () => {
   describe('tip Üretimi', () => {
     it('model için tip tanımlarını doğru şekilde üretmeli', () => {
       const analyzer = (generator as any).analyzer;
-      const modelPath = path.join(mockPaths.models, 'processes.json');
+      const modelPath = path.join(paths.models, 'processes.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
       const metadata = analyzer.getMetadata();
       const { typeDefinition } = analyzer.generateTypeForModel(modelContent, metadata);
@@ -87,7 +89,7 @@ describe('jSON Source Tests', () => {
 
     it('ilişkili modeller için tip tanımlarını doğru şekilde üretmeli', () => {
       const analyzer = (generator as any).analyzer;
-      const modelPath = path.join(mockPaths.models, 'workitems.json');
+      const modelPath = path.join(paths.models, 'workitems.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
       const metadata = analyzer.getMetadata();
 
@@ -128,7 +130,7 @@ describe('jSON Source Tests', () => {
     it('tip tanımlarını doğru şekilde yazmalı', async () => {
       await generator.generate();
 
-      const outputPath = path.join(mockPaths.output, 'contentrain.d.ts');
+      const outputPath = path.join(paths.output, 'contentrain.d.ts');
       expect(fs.existsSync(outputPath)).toBe(true);
 
       const content = fs.readFileSync(outputPath, 'utf-8');
@@ -144,10 +146,10 @@ describe('jSON Source Tests', () => {
         source: {
           type: 'json',
           modelsDir: '/invalid/path',
-          contentDir: mockPaths.content,
+          contentDir: paths.content,
         },
         output: {
-          dir: mockPaths.output,
+          dir: paths.output,
         },
       };
 
@@ -167,10 +169,10 @@ describe('jSON Source Tests', () => {
         source: {
           type: 'json',
           modelsDir: tempModelPath,
-          contentDir: mockPaths.content,
+          contentDir: paths.content,
         },
         output: {
-          dir: mockPaths.output,
+          dir: paths.output,
         },
       };
 
