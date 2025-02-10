@@ -47,14 +47,11 @@
     "@types/better-sqlite3": "^7.6.12",
     "better-sqlite3": "^11.8.1",
     "commander": "^11.1.0",
-    "fast-glob": "^3.3.2"
+    "fast-glob": "^3.3.2",
+    "prettier": "^3.4.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
-    "eslint": "^9.17.0",
-    "prettier": "^3.4.2",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
     "vitest": "^1.1.3"

@@ -1,15 +1,16 @@
+import type { JSONSourceConfig } from '../../src/types/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ContentrainTypesGenerator } from '../src';
+import { ContentrainTypesGenerator } from '../../src';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-describe('contentrainTypesGenerator Tests', () => {
+describe('jSON Source Tests', () => {
   const mockPaths = {
-    models: path.join(__dirname, '../../../playground/contentrain/models'),
-    content: path.join(__dirname, '../../../playground/contentrain'),
+    models: path.join(__dirname, '../../../../playground/contentrain/models'),
+    content: path.join(__dirname, '../../../../playground/contentrain'),
     output: path.join(__dirname, '../temp/types'),
   };
 
@@ -21,11 +22,18 @@ describe('contentrainTypesGenerator Tests', () => {
       fs.rmSync(mockPaths.output, { recursive: true, force: true });
     }
 
-    generator = new ContentrainTypesGenerator({
-      modelsDir: mockPaths.models,
-      contentDir: mockPaths.content,
-      outputDir: mockPaths.output,
-    });
+    const config: JSONSourceConfig = {
+      source: {
+        type: 'json',
+        modelsDir: mockPaths.models,
+        contentDir: mockPaths.content,
+      },
+      output: {
+        dir: mockPaths.output,
+      },
+    };
+
+    generator = new ContentrainTypesGenerator(config);
   });
 
   afterEach(() => {
@@ -37,7 +45,8 @@ describe('contentrainTypesGenerator Tests', () => {
 
   describe('temel İşlevler', () => {
     it('model dosyalarını doğru şekilde okumalı', () => {
-      const modelFiles = (generator as any).getModelFiles();
+      const analyzer = (generator as any).analyzer;
+      const modelFiles = analyzer.getModelFiles();
       expect(modelFiles).toContain('processes.json');
       expect(modelFiles).toContain('workitems.json');
       expect(modelFiles).toContain('faqitems.json');
@@ -45,7 +54,8 @@ describe('contentrainTypesGenerator Tests', () => {
     });
 
     it('metadata dosyasını doğru şekilde okumalı', () => {
-      const metadata = (generator as any).getMetadata();
+      const analyzer = (generator as any).analyzer;
+      const metadata = analyzer.getMetadata();
       expect(metadata).toBeDefined();
       expect(Array.isArray(metadata)).toBe(true);
       expect(metadata.length).toBeGreaterThan(0);
@@ -55,18 +65,20 @@ describe('contentrainTypesGenerator Tests', () => {
     });
 
     it('tip tanımlarını doğru şekilde başlatmalı', () => {
-      const typeDefinitions = (generator as any).initializeTypeDefinitions();
-      expect(typeDefinitions).toContain('@contentrain/types-generator');
+      const analyzer = (generator as any).analyzer;
+      const typeDefinitions = analyzer.initializeTypeDefinitions();
+      expect(typeDefinitions).toContain('@contentrain/query');
       expect(typeDefinitions).toContain('import type { BaseContentrainType, QueryConfig }');
     });
   });
 
   describe('tip Üretimi', () => {
     it('model için tip tanımlarını doğru şekilde üretmeli', () => {
+      const analyzer = (generator as any).analyzer;
       const modelPath = path.join(mockPaths.models, 'processes.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
-      const metadata = (generator as any).getMetadata();
-      const { typeDefinition } = (generator as any).generateTypeForModel(modelContent, metadata);
+      const metadata = analyzer.getMetadata();
+      const { typeDefinition } = analyzer.generateTypeForModel(modelContent, metadata);
 
       expect(typeDefinition).toContain('"title": string');
       expect(typeDefinition).toContain('"description": string');
@@ -74,11 +86,12 @@ describe('contentrainTypesGenerator Tests', () => {
     });
 
     it('ilişkili modeller için tip tanımlarını doğru şekilde üretmeli', () => {
+      const analyzer = (generator as any).analyzer;
       const modelPath = path.join(mockPaths.models, 'workitems.json');
       const modelContent = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
-      const metadata = (generator as any).getMetadata();
+      const metadata = analyzer.getMetadata();
 
-      const { typeDefinition, relations } = (generator as any).generateTypeForModel(modelContent, metadata);
+      const { typeDefinition, relations } = analyzer.generateTypeForModel(modelContent, metadata);
 
       expect(typeDefinition).toContain('"_relations"?: {');
       expect(typeDefinition).toContain('"category": IWorkCategories');
@@ -87,7 +100,8 @@ describe('contentrainTypesGenerator Tests', () => {
     });
 
     it('query tipleri için doğru tanımları üretmeli', () => {
-      const metadata = (generator as any).getMetadata();
+      const analyzer = (generator as any).analyzer;
+      const metadata = analyzer.getMetadata();
       const modelMetadata = metadata.find((m: any) => m.modelId === 'workitems');
       const relations = {
         category: {
@@ -96,7 +110,7 @@ describe('contentrainTypesGenerator Tests', () => {
         },
       };
 
-      const queryType = (generator as any).generateQueryType(
+      const queryType = analyzer.generateQueryType(
         'IWorkItem',
         'IWorkItemQuery',
         modelMetadata,
@@ -126,14 +140,22 @@ describe('contentrainTypesGenerator Tests', () => {
 
   describe('hata Yönetimi', () => {
     it('geçersiz model dizini için hata fırlatmalı', () => {
-      const invalidGenerator = new ContentrainTypesGenerator({
-        modelsDir: '/invalid/path',
-        contentDir: mockPaths.content,
-        outputDir: mockPaths.output,
-      });
+      const invalidConfig: JSONSourceConfig = {
+        source: {
+          type: 'json',
+          modelsDir: '/invalid/path',
+          contentDir: mockPaths.content,
+        },
+        output: {
+          dir: mockPaths.output,
+        },
+      };
+
+      const invalidGenerator = new ContentrainTypesGenerator(invalidConfig);
+      const analyzer = (invalidGenerator as any).analyzer;
 
       expect(() => {
-        (invalidGenerator as any).getModelFiles();
+        analyzer.getModelFiles();
       }).toThrow('Failed to read model directory: /invalid/path');
     });
 
@@ -141,43 +163,43 @@ describe('contentrainTypesGenerator Tests', () => {
       const tempModelPath = path.join(__dirname, '../temp/models');
       fs.mkdirSync(tempModelPath, { recursive: true });
 
-      const invalidGenerator = new ContentrainTypesGenerator({
-        modelsDir: tempModelPath,
-        contentDir: mockPaths.content,
-        outputDir: mockPaths.output,
-      });
+      const invalidConfig: JSONSourceConfig = {
+        source: {
+          type: 'json',
+          modelsDir: tempModelPath,
+          contentDir: mockPaths.content,
+        },
+        output: {
+          dir: mockPaths.output,
+        },
+      };
+
+      const invalidGenerator = new ContentrainTypesGenerator(invalidConfig);
+      const analyzer = (invalidGenerator as any).analyzer;
 
       expect(() => {
-        (invalidGenerator as any).getMetadata();
+        analyzer.getMetadata();
       }).toThrow('Failed to read metadata');
 
       fs.rmSync(tempModelPath, { recursive: true, force: true });
-    });
-
-    it('geçersiz yapılandırma dosyası için hata fırlatmalı', () => {
-      const configPath = path.join(process.cwd(), 'contentrain-config.json');
-      fs.writeFileSync(configPath, 'invalid json');
-
-      expect(() => {
-        void new ContentrainTypesGenerator();
-      }).not.toThrow();
-
-      fs.unlinkSync(configPath);
     });
   });
 
   describe('yardımcı Metodlar', () => {
     it('alan adlarını doğru şekilde formatlamalı', () => {
-      expect((generator as any).formatPropertyName('normal')).toBe('normal');
-      expect((generator as any).formatPropertyName('with-dash')).toBe('with-dash');
+      const analyzer = (generator as any).analyzer;
+      expect(analyzer.formatPropertyName('normal')).toBe('normal');
+      expect(analyzer.formatPropertyName('with-dash')).toBe('with-dash');
     });
 
     it('arayüz adlarını doğru şekilde formatlamalı', () => {
+      const analyzer = (generator as any).analyzer;
       const metadata = { name: 'Test Model', modelId: 'test-model' };
-      expect((generator as any).formatInterfaceName(metadata)).toBe('ITestModel');
+      expect(analyzer.formatInterfaceName(metadata)).toBe('ITestModel');
     });
 
     it('alanın zorunlu olup olmadığını doğru şekilde kontrol etmeli', () => {
+      const analyzer = (generator as any).analyzer;
       const requiredField = {
         validations: {
           'required-field': { value: true },
@@ -190,12 +212,13 @@ describe('contentrainTypesGenerator Tests', () => {
       };
       const noValidationField = {};
 
-      expect((generator as any).isFieldRequired(requiredField)).toBe(true);
-      expect((generator as any).isFieldRequired(optionalField)).toBe(false);
-      expect((generator as any).isFieldRequired(noValidationField)).toBe(false);
+      expect(analyzer.isFieldRequired(requiredField)).toBe(true);
+      expect(analyzer.isFieldRequired(optionalField)).toBe(false);
+      expect(analyzer.isFieldRequired(noValidationField)).toBe(false);
     });
 
     it('typeScript tiplerini doğru şekilde belirlenmeli', () => {
+      const analyzer = (generator as any).analyzer;
       const fields = [
         { fieldType: 'string', componentId: 'single-line-text' },
         { fieldType: 'number', componentId: 'integer' },
@@ -206,13 +229,13 @@ describe('contentrainTypesGenerator Tests', () => {
         { fieldType: 'relation', componentId: 'one-to-many' },
       ];
 
-      expect((generator as any).determineTypeScriptType(fields[0])).toBe('string');
-      expect((generator as any).determineTypeScriptType(fields[1])).toBe('number');
-      expect((generator as any).determineTypeScriptType(fields[2])).toBe('boolean');
-      expect((generator as any).determineTypeScriptType(fields[3])).toBe('string');
-      expect((generator as any).determineTypeScriptType(fields[4])).toBe('string');
-      expect((generator as any).determineTypeScriptType(fields[5])).toBe('string');
-      expect((generator as any).determineTypeScriptType(fields[6])).toBe('string[]');
+      expect(analyzer.determineTypeScriptType(fields[0])).toBe('string');
+      expect(analyzer.determineTypeScriptType(fields[1])).toBe('number');
+      expect(analyzer.determineTypeScriptType(fields[2])).toBe('boolean');
+      expect(analyzer.determineTypeScriptType(fields[3])).toBe('string');
+      expect(analyzer.determineTypeScriptType(fields[4])).toBe('string');
+      expect(analyzer.determineTypeScriptType(fields[5])).toBe('string');
+      expect(analyzer.determineTypeScriptType(fields[6])).toBe('string[]');
     });
   });
 });
