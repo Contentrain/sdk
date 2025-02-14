@@ -1,4 +1,4 @@
-import type { CacheEntry, CacheStats, MemoryCacheOptions } from '../types/loader';
+import type { IBaseCacheStats, ICacheEntry, IMemoryCacheOptions } from './types';
 import { lru } from 'tiny-lru';
 import { loggers } from '../utils/logger';
 
@@ -6,22 +6,23 @@ const logger = loggers.cache;
 
 export class MemoryCache {
   private cache;
-  private options: Required<MemoryCacheOptions>;
-  private stats: CacheStats = {
+  private options: Required<IMemoryCacheOptions>;
+  private stats: IBaseCacheStats = {
     hits: 0,
     misses: 0,
     size: 0,
     lastCleanup: Date.now(),
   };
 
-  constructor(options: MemoryCacheOptions = {}) {
+  constructor(options: IMemoryCacheOptions = {}) {
     this.options = {
       maxSize: 100, // 100 MB
       defaultTTL: 60 * 1000, // 1 dakika
       ...options,
     };
 
-    const maxItems = Math.floor(this.options.maxSize * 1024 * 1024 / 1000); // Yaklaşık item sayısı
+    // maxSize en az 1 MB olmalı ve maxItems en az 1 olmalı
+    const maxItems = Math.max(1, Math.floor((Math.max(1, this.options.maxSize) * 1024 * 1024) / 1000));
     this.cache = lru(maxItems);
   }
 
@@ -51,7 +52,7 @@ export class MemoryCache {
       await this.delete(oldestKey);
     }
 
-    const entry: CacheEntry<T> = {
+    const entry: ICacheEntry<T> = {
       data,
       expireAt,
       size,
@@ -59,7 +60,7 @@ export class MemoryCache {
     };
 
     // Delete old entry first
-    const oldEntry = this.cache.get(key) as CacheEntry<unknown> | undefined;
+    const oldEntry = this.cache.get(key) as ICacheEntry<unknown> | undefined;
     if (oldEntry) {
       this.stats.size -= oldEntry.size;
     }
@@ -79,7 +80,7 @@ export class MemoryCache {
     let oldestTime = Infinity;
 
     for (const key of this.cache.keys()) {
-      const entry = this.cache.get(key) as CacheEntry<unknown>;
+      const entry = this.cache.get(key) as ICacheEntry<unknown>;
       if (entry.createdAt < oldestTime) {
         oldestTime = entry.createdAt;
         oldestKey = key;
@@ -91,7 +92,7 @@ export class MemoryCache {
 
   async get<T>(key: string): Promise<T | null> {
     logger.debug('Getting data from cache:', { key });
-    const entry = this.cache.get(key) as CacheEntry<T> | undefined;
+    const entry = this.cache.get(key) as ICacheEntry<T> | undefined;
 
     if (!entry) {
       logger.debug('Data not found in cache:', { key });
@@ -116,7 +117,7 @@ export class MemoryCache {
 
   async delete(key: string): Promise<void> {
     logger.debug('Deleting data from cache:', { key });
-    const entry = this.cache.get(key) as CacheEntry<unknown> | undefined;
+    const entry = this.cache.get(key) as ICacheEntry<unknown> | undefined;
     if (entry) {
       this.stats.size -= entry.size;
       this.cache.delete(key);
@@ -143,7 +144,7 @@ export class MemoryCache {
 
     // Find expired entries
     for (const key of this.cache.keys()) {
-      const entry = this.cache.get(key) as CacheEntry<unknown>;
+      const entry = this.cache.get(key) as ICacheEntry<unknown>;
       if (entry.expireAt <= now) {
         expiredKeys.push(key);
       }
@@ -162,7 +163,7 @@ export class MemoryCache {
       const oldestKey = this.findOldestKey();
       if (!oldestKey)
         break;
-      const entry = this.cache.get(oldestKey) as CacheEntry<unknown>;
+      const entry = this.cache.get(oldestKey) as ICacheEntry<unknown>;
       await this.delete(oldestKey);
       totalSize -= entry.size;
     }
@@ -170,7 +171,7 @@ export class MemoryCache {
     this.stats.lastCleanup = now;
   }
 
-  getStats(): CacheStats {
+  getStats(): IBaseCacheStats {
     return { ...this.stats };
   }
 }

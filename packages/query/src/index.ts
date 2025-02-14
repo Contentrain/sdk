@@ -1,65 +1,110 @@
-import type { ContentLoaderOptions } from './types/loader';
-import type { BaseContentrainType } from './types/model';
-import type { QueryConfig } from './types/query';
+// Core Types
+import type { ILogger, LoaderType } from './loader/types/common';
+import type { IBaseJSONRecord } from './loader/types/json';
+import type { IDBRecord } from './loader/types/sqlite';
+import type { IJSONQuery, ISQLiteQuery } from './query/types';
 
-// SQLite sınıfları
-import { BaseSQLiteLoader } from './loader/base-sqlite';
-// Tip exportları
-// Core sınıflar
-import { ContentLoader } from './loader/content';
-import { RelationLoader } from './loader/relation-loader';
-import { SQLiteConnection } from './loader/sqlite';
-import { TranslationLoader } from './loader/translation-loader';
-import { ContentrainQueryBuilder } from './query/builder';
-import { QueryExecutor } from './query/executor';
-import { SQLiteQueryBuilder } from './query/sqlite-builder';
+// Loaders
+import { JSONLoader } from './loader/json/json.loader';
+import { SQLiteLoader } from './loader/sqlite/sqlite.loader';
 
-// Core exportlar
+// Query Factory
+
+import { QueryFactory } from './query/factory';
+// Utils
+import { loggers } from './utils/logger';
+
 export * from './cache';
-export * from './loader/content';
-export * from './query/builder';
-export * from './query/executor';
+// Type Exports
+export * from './loader/types/common';
+export * from './loader/types/json';
+export * from './loader/types/sqlite';
+export * from './query/types';
 
-// Genel tip exportları
-export * from './types';
-export type { DBRecord, DBRelation, DBTranslationRecord } from './types/database';
-export type { ContentLoaderOptions } from './types/loader';
-export type { BaseContentrainType } from './types/model';
-export type { QueryConfig } from './types/query';
+// Loader Exports
+export { JSONLoader, SQLiteLoader };
 
-// SQLite exportları
-export {
-  BaseSQLiteLoader,
-  RelationLoader,
-  SQLiteConnection,
-  SQLiteQueryBuilder,
-  TranslationLoader,
-};
+// Query Factory Export
+export { QueryFactory };
 
-export * from './utils/logger';
+// Logger Export
+export { loggers };
 
-// SDK sınıfı
+// SDK Options Type
+export interface ContentrainSDKOptions {
+  contentDir?: string
+  databasePath?: string
+  cache?: boolean
+  ttl?: number
+  maxCacheSize?: number
+  defaultLocale?: string
+  modelTTL?: Record<string, number>
+  logger?: ILogger
+}
+
+// SDK Class
 export class ContentrainSDK {
-  private loader: ContentLoader;
-  private executor: QueryExecutor;
+  private readonly loader: JSONLoader<IBaseJSONRecord> | SQLiteLoader<IDBRecord>;
+  private readonly logger: ILogger;
+  private readonly options: ContentrainSDKOptions;
+  private readonly type: LoaderType;
 
-  constructor(options: ContentLoaderOptions) {
-    this.loader = new ContentLoader(options);
-    this.executor = new QueryExecutor(this.loader);
+  constructor(type: LoaderType, options: ContentrainSDKOptions) {
+    this.logger = options.logger || loggers.default;
+    this.options = options;
+    this.type = type;
+
+    if (type === 'json') {
+      if (!options.contentDir)
+        throw new Error('contentDir is required for JSON loader');
+
+      this.loader = new JSONLoader({
+        contentDir: options.contentDir,
+        cache: options.cache,
+        ttl: options.ttl,
+        maxCacheSize: options.maxCacheSize,
+        defaultLocale: options.defaultLocale,
+        modelTTL: options.modelTTL,
+      }, this.logger);
+    }
+    else {
+      if (!options.databasePath)
+        throw new Error('databasePath is required for SQLite loader');
+
+      this.loader = new SQLiteLoader({
+        databasePath: options.databasePath,
+        cache: options.cache,
+        maxCacheSize: options.maxCacheSize,
+        defaultLocale: options.defaultLocale,
+        modelTTL: options.modelTTL,
+      }, this.logger);
+    }
   }
 
-  query<T extends QueryConfig<BaseContentrainType, string, Record<string, BaseContentrainType>>>(
-    model: string,
-  ): ContentrainQueryBuilder<T['fields'], T['locales'], T['relations']> {
-    return new ContentrainQueryBuilder<T['fields'], T['locales'], T['relations']>(
-      model,
-      this.executor,
-      this.loader,
-    );
+  query<TData extends IDBRecord | IBaseJSONRecord>(model: string): TData extends IDBRecord
+    ? ISQLiteQuery<TData & IDBRecord>
+    : IJSONQuery<TData & IBaseJSONRecord> {
+    if (this.type === 'sqlite') {
+      return QueryFactory.createBuilder(model, this.loader as SQLiteLoader<TData & IDBRecord>) as any;
+    }
+    return QueryFactory.createBuilder(model, this.loader as JSONLoader<TData & IBaseJSONRecord>) as any;
   }
 
-  async load<T extends BaseContentrainType>(model: string) {
-    return this.loader.load<T>(model);
+  async load<TData extends IDBRecord | IBaseJSONRecord>(model: string) {
+    const result = await this.loader.load(model);
+    const defaultLocale = this.type === 'json' ? 'default' : 'en';
+    const locale = this.options.defaultLocale || defaultLocale;
+
+    if (this.type === 'json') {
+      const content = result.content as Record<string, TData[]>;
+      return content[locale][0];
+    }
+
+    const content = result.content as { default: TData[], translations?: Record<string, TData[]> };
+    if (content.translations && locale !== defaultLocale) {
+      return content.translations[locale][0];
+    }
+    return content.default[0];
   }
 
   async clearCache(): Promise<void> {
@@ -70,7 +115,7 @@ export class ContentrainSDK {
     return this.loader.refreshCache(model);
   }
 
-  getCacheStats() {
+  async getCacheStats() {
     return this.loader.getCacheStats();
   }
 }

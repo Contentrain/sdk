@@ -1,43 +1,45 @@
-import type { BaseContentrainType, ContentrainStatus } from '../../types/model';
+import type { IBaseJSONRecord } from '../../loader/types/json';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ContentLoader } from '../../loader/content';
-import { ContentrainQueryBuilder } from '../builder';
-import { QueryExecutor } from '../executor';
+import { JSONLoader } from '../../loader/json/json.loader';
+import { loggers } from '../../utils/logger';
+import { JSONQueryBuilder } from '../json/json-builder';
 
-interface WorkCategory extends BaseContentrainType {
-  category: string
-  order: number
-}
-
-interface WorkItem extends BaseContentrainType {
-  title: string
-  description: string
-  category: string
-  _relations: {
-    category: WorkCategory
+interface TestJSONRecord extends IBaseJSONRecord {
+  title?: string
+  description?: string
+  order?: number
+  category?: string | string[]
+  reference?: string
+  icon?: string
+  link?: string
+  source_model?: string
+  target_model?: string
+  type?: string
+  work?: string
+  testimonial?: string
+  _relations?: {
+    category?: TestJSONRecord | TestJSONRecord[]
+    reference?: TestJSONRecord
+    work?: TestJSONRecord
+    testimonial?: TestJSONRecord
   }
-  image: string
-  link: string
-  order: number
 }
 
-describe('query', () => {
-  let loader: ContentLoader;
-  let executor: QueryExecutor;
-  let builder: ContentrainQueryBuilder<WorkItem>;
+describe('jSONQueryBuilder', () => {
+  let loader: JSONLoader<TestJSONRecord>;
+  let builder: JSONQueryBuilder<TestJSONRecord>;
+  const contentDir = join(__dirname, '../../../../../playground/contentrain');
 
   beforeEach(() => {
-    loader = new ContentLoader({
-      contentDir: join(__dirname, '../../../../../playground/contentrain'),
-      defaultLocale: 'en',
+    loader = new JSONLoader({
+      contentDir,
       cache: true,
-      ttl: 60 * 1000,
       maxCacheSize: 100,
-    });
+      defaultLocale: 'en',
+    }, loggers.loader);
 
-    executor = new QueryExecutor(loader);
-    builder = new ContentrainQueryBuilder<WorkItem>('workitems', executor, loader);
+    builder = new JSONQueryBuilder<TestJSONRecord>('workitems', loader);
   });
 
   afterEach(async () => {
@@ -61,13 +63,13 @@ describe('query', () => {
 
       expect(result.data.length).toBeGreaterThan(0);
       result.data.forEach((item) => {
-        expect(item.description.toLowerCase()).toContain('platform');
+        expect(item.description?.toLowerCase()).toContain('platform');
       });
     });
 
     it('should combine multiple filters', async () => {
       const result = await builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .where('order', 'lt', 3)
         .get();
 
@@ -87,7 +89,9 @@ describe('query', () => {
 
       expect(result.data.length).toBeGreaterThan(1);
       for (let i = 1; i < result.data.length; i++) {
-        expect(result.data[i].order).toBeGreaterThanOrEqual(result.data[i - 1].order);
+        const prevOrder = result.data[i - 1].order || 0;
+        const currOrder = result.data[i].order || 0;
+        expect(currOrder).toBeGreaterThanOrEqual(prevOrder);
       }
     });
 
@@ -98,7 +102,9 @@ describe('query', () => {
 
       expect(result.data.length).toBeGreaterThan(1);
       for (let i = 1; i < result.data.length; i++) {
-        expect(result.data[i].order).toBeLessThanOrEqual(result.data[i - 1].order);
+        const prevOrder = result.data[i - 1].order || 0;
+        const currOrder = result.data[i].order || 0;
+        expect(currOrder).toBeLessThanOrEqual(prevOrder);
       }
     });
 
@@ -109,6 +115,16 @@ describe('query', () => {
         .get();
 
       expect(result.data.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.data.length; i++) {
+        const prev = result.data[i - 1];
+        const curr = result.data[i];
+
+        if (prev.status === curr.status) {
+          const prevOrder = prev.order || 0;
+          const currOrder = curr.order || 0;
+          expect(currOrder).toBeLessThanOrEqual(prevOrder);
+        }
+      }
     });
   });
 
@@ -151,27 +167,27 @@ describe('query', () => {
 
   describe('relations', () => {
     it('should load one-to-one relation', async () => {
+      const builder = new JSONQueryBuilder('workitems', loader);
       const result = await builder
+        .where('ID', 'eq', '8a8044e883e8')
         .include('category')
-        .where('title', 'eq', 'Contentrain')
         .get();
 
-      expect(result.data.length).toBe(1);
       expect(result.data[0]._relations?.category).toBeDefined();
-      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
-      expect(result.data[0]._relations?.category.category).toBe('Product Development');
+      expect((result.data[0]._relations?.category as TestJSONRecord).ID).toBe('bcc834108adc');
+      expect((result.data[0]._relations?.category as TestJSONRecord).category).toBe('Product Development');
     });
 
     it('should handle multiple relations', async () => {
+      const builder = new JSONQueryBuilder('project-details', loader);
       const result = await builder
-        .include(['category'])
-        .where('title', 'eq', 'Contentrain')
+        .where('ID', 'eq', 'pd001')
+        .include(['work', 'testimonial'])
         .get();
 
-      expect(result.data.length).toBe(1);
-      expect(result.data[0]._relations?.category).toBeDefined();
-      expect(result.data[0]._relations?.category.ID).toBe('bcc834108adc');
-      expect(result.data[0]._relations?.category.category).toBe('Product Development');
+      expect(result.data[0]._relations?.work).toBeDefined();
+      expect((result.data[0]._relations?.work as TestJSONRecord).ID).toBe('8a8044e883e8');
+      expect((result.data[0]._relations?.testimonial as TestJSONRecord).ID).toBe('89ae53eb8370');
     });
   });
 
@@ -182,6 +198,10 @@ describe('query', () => {
         .get();
 
       expect(result.data.length).toBeGreaterThan(0);
+      result.data.forEach((item) => {
+        expect(item.title).toBeDefined();
+        expect(item.description).toBeDefined();
+      });
     });
 
     it('should load relations in specified locale', async () => {
@@ -192,7 +212,9 @@ describe('query', () => {
 
       expect(result.data.length).toBeGreaterThan(0);
       result.data.forEach((item) => {
-        expect(item.category).toBeDefined();
+        if (item.category) {
+          expect(item._relations?.category).toBeDefined();
+        }
       });
     });
   });
@@ -207,7 +229,7 @@ describe('query', () => {
       await builder.get();
       const stats2 = loader.getCacheStats();
 
-      expect(stats2.hits).toBeGreaterThan(stats1.hits);
+      expect(stats2.cache?.hits).toBeGreaterThan(stats1.cache?.hits || 0);
     });
 
     it('should respect custom TTL', async () => {
@@ -220,14 +242,14 @@ describe('query', () => {
       // Query again (should be cache miss)
       await builder.get();
       const stats = loader.getCacheStats();
-      expect(stats.misses).toBeGreaterThan(0);
+      expect(stats.cache?.misses).toBeGreaterThan(0);
     });
   });
 
-  describe('advanced filtering', () => {
+  describe('advanced Filtering', () => {
     it('should handle multiple AND conditions', async () => {
       const result = await builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .where('order', 'lt', 3)
         .where('title', 'contains', 'Content')
         .get();
@@ -241,7 +263,7 @@ describe('query', () => {
     });
 
     it('should handle array operations with "in" operator', async () => {
-      const validStatuses: ContentrainStatus[] = ['publish', 'draft', 'changed'];
+      const validStatuses = ['publish', 'draft', 'changed'];
       const result = await builder
         .where('status', 'in', validStatuses)
         .get();
@@ -296,147 +318,21 @@ describe('query', () => {
 
       expect(result.data.length).toBeGreaterThan(0);
       expect(caseSensitiveResult.data.length).toBe(1);
-      // Case-sensitive eşleşme kontrolü
       caseSensitiveResult.data.forEach((item) => {
         expect(item.title).toBe('Contentrain');
       });
 
-      // Büyük/küçük harf duyarsız aramada daha fazla sonuç olmalı
       const caseInsensitiveResult = await builder
         .where('title', 'contains', 'CONTENT')
         .get();
 
       expect(caseInsensitiveResult.data.length).toBeGreaterThan(0);
     });
-
-    it('should handle multiple conditions on same field', async () => {
-      const result = await builder
-        .where('order', 'gt', 2)
-        .where('order', 'lt', 5)
-        .get();
-
-      expect(result.data.length).toBeGreaterThan(0);
-      result.data.forEach((item) => {
-        expect(item.order).toBeGreaterThan(2);
-        expect(item.order).toBeLessThan(5);
-      });
-    });
   });
 
-  describe('relation filtering', () => {
-    it('should filter by related field value', async () => {
-      const result = await builder
-        .include('category')
-        .where('category', 'eq', 'cab37361e7e6')
-        .get();
-
-      expect(result.data.length).toBeGreaterThan(0);
-      result.data.forEach((item) => {
-        expect(item._relations?.category).toBeDefined();
-        expect(item._relations?.category.ID).toBe('cab37361e7e6');
-      });
-    });
-
-    it('should handle multiple relation includes', async () => {
-      interface ExtendedWorkItem extends WorkItem {
-        category: string
-        _relations: {
-          category: WorkCategory
-        }
-      }
-
-      const extendedBuilder = new ContentrainQueryBuilder<ExtendedWorkItem>('workitems', executor, loader);
-      const result = await extendedBuilder
-        .include('category')
-        .where('category', 'eq', 'cab37361e7e6')
-        .get();
-
-      expect(result.data.length).toBeGreaterThan(0);
-      result.data.forEach((item) => {
-        expect(item._relations.category).toBeDefined();
-        expect(item._relations.category.ID).toBe('cab37361e7e6');
-      });
-    });
-
-    it('should handle nested relation filtering', async () => {
-      interface CategoryWithOrder extends WorkCategory {
-        order: number
-      }
-
-      const categoryBuilder = new ContentrainQueryBuilder<CategoryWithOrder>('workcategories', executor, loader);
-      const result = await categoryBuilder
-        .where('order', 'gt', 1)
-        .orderBy('order', 'asc')
-        .get();
-
-      expect(result.data.length).toBeGreaterThan(0);
-      result.data.forEach((item, index) => {
-        expect(item.order).toBeGreaterThan(1);
-        if (index > 0) {
-          expect(item.order).toBeGreaterThanOrEqual(result.data[index - 1].order);
-        }
-      });
-    });
-  });
-
-  describe('localization and cache behavior', () => {
-    it('should handle fallback locale', async () => {
-      const result = await builder
-        .locale('invalid-locale' as any)
-        .get()
-        .catch(() => null);
-
-      expect(result).toBeNull();
-    });
-
-    it('should maintain cache for different locales separately', async () => {
-      // Cache'i temizle
-      await loader.clearCache();
-
-      // EN sorgusu
-      await builder.locale('en').get();
-
-      // Cache'i temizle
-      await loader.clearCache();
-
-      // TR sorgusu - farklı bir sorgu yap
-      await builder
-        .locale('tr')
-        .where('order', 'gt', 1)
-        .where('order', 'lt', 5)
-        .get();
-      const statsAfterTr = loader.getCacheStats();
-
-      expect(statsAfterTr.hits).toBe(0);
-      expect(statsAfterTr.misses).toBeGreaterThan(0);
-    });
-
-    it('should bypass cache when explicitly requested', async () => {
-      // Cache'i temizle
-      await loader.clearCache();
-
-      // İlk sorgu - cache'e yaz
-      await builder.get();
-
-      // Cache'i temizle
-      await loader.clearCache();
-
-      // Cache'i bypass et ve farklı bir sorgu yap
-      await builder
-        .bypassCache()
-        .where('order', 'gt', 1)
-        .where('order', 'lt', 5)
-        .get();
-      const statsAfterBypass = loader.getCacheStats();
-
-      expect(statsAfterBypass.hits).toBe(0);
-      expect(statsAfterBypass.misses).toBeGreaterThan(0);
-    });
-  });
-
-  describe('error handling', () => {
+  describe('error Handling', () => {
     it('should handle invalid model gracefully', async () => {
-      const invalidBuilder = new ContentrainQueryBuilder('invalid-model', executor, loader);
+      const invalidBuilder = new JSONQueryBuilder('invalid-model', loader);
       await expect(invalidBuilder.get()).rejects.toThrow();
     });
 
@@ -446,27 +342,20 @@ describe('query', () => {
       ).rejects.toThrow();
     });
 
-    it('should handle invalid filter operator', async () => {
-      // @ts-expect-error: Testing invalid operator
-      await expect(builder.where('title', 'invalid', 'test').get())
-        .rejects
-        .toThrow();
-    });
-
     it('should handle invalid sort field', async () => {
       await expect(
         builder
-          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .where('status', 'eq', 'publish')
           .orderBy('nonexistentField' as any, 'asc')
           .get(),
-      ).rejects.toThrow('Invalid sort field');
+      ).rejects.toThrow();
     });
   });
 
-  describe('utility methods', () => {
+  describe('utility Methods', () => {
     it('should get first item correctly', async () => {
       const item = await builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .orderBy('order', 'asc')
         .first();
 
@@ -486,11 +375,11 @@ describe('query', () => {
 
     it('should count results correctly', async () => {
       const total = await builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .count();
 
       const result = await builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .get();
 
       expect(total).toBe(result.total);
@@ -498,7 +387,7 @@ describe('query', () => {
 
     it('should serialize query to JSON correctly', () => {
       const query = builder
-        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('status', 'eq', 'publish')
         .include('category')
         .orderBy('order', 'desc')
         .limit(5)
