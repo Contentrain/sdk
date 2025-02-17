@@ -10,7 +10,6 @@ const logger = loggers.query;
 export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryExecutor<TData, JSONInclude, JSONOptions> {
   constructor(private readonly loader: JSONLoader<TData>) {
     super();
-    logger.debug('Initializing JSONQueryExecutor', { operation: 'initialize' });
   }
 
   protected async resolveRelation(
@@ -20,25 +19,11 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
     _options: JSONOptions,
   ): Promise<TData[]> {
     try {
-      logger.debug('Resolving relation', {
-        model,
-        field,
-        dataCount: data.length,
-        operation: 'resolve',
-      });
-
       const relations = await this.loader.resolveRelations<TData>(
         model,
         field as keyof TData,
         data,
       );
-
-      logger.debug('Relations resolved', {
-        model,
-        field,
-        relationsCount: relations.length,
-      });
-
       return relations;
     }
     catch (error: any) {
@@ -66,27 +51,16 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
     options?: JSONOptions
   }): Promise<QueryResult<TData>> {
     try {
-      logger.debug('Executing query', {
-        model: params.model,
-        filters: params.filters,
-        includes: params.includes,
-        sorting: params.sorting,
-        pagination: params.pagination,
-        options: params.options,
-      });
-
       // Veri yükleme
       const loadResult = await this.loader.load(params.model);
       const locale = params.options?.locale || 'default';
 
       // İçerik seçimi
       let data = this.getContent(loadResult, locale);
-      logger.debug('Content loaded', { dataCount: data.length });
 
       // Filtreleme
       if (params.filters?.length) {
         data = this.applyFilters(data, params.filters);
-        logger.debug('Filters applied', { remainingCount: data.length });
       }
 
       // İlişki çözümleme
@@ -97,13 +71,11 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
           params.includes,
           params.options || {},
         );
-        logger.debug('Relations resolved', { dataCount: data.length });
       }
 
       // Sıralama
       if (params.sorting?.length) {
         data = this.applySorting(data, params.sorting);
-        logger.debug('Sorting applied', { dataCount: data.length });
       }
 
       // Toplam kayıt sayısı
@@ -116,11 +88,6 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
           params.pagination.limit,
           params.pagination.offset,
         );
-        logger.debug('Pagination applied', {
-          dataCount: data.length,
-          total,
-          pagination: params.pagination,
-        });
       }
 
       return {
@@ -175,11 +142,6 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
 
   protected applySorting(data: TData[], sorting: Sort[] = []): TData[] {
     try {
-      logger.debug('Applying sorting', {
-        sortCount: sorting.length,
-        operation: 'sort',
-      });
-
       const result = [...data].sort((a, b) => {
         for (const { field, direction } of sorting) {
           // Alan kontrolü
@@ -202,12 +164,6 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
         }
         return 0;
       });
-
-      logger.debug('Sorting applied', {
-        resultCount: result.length,
-        operation: 'sort',
-      });
-
       return result;
     }
     catch (error: any) {

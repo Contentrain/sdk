@@ -32,12 +32,6 @@ export class MemoryCache {
   }
 
   async set<T>(key: string, data: T, ttl?: number): Promise<void> {
-    logger.debug('Saving data to cache:', {
-      key,
-      ttl,
-    });
-
-    // Cleanup first
     await this.cleanupCache();
 
     const size = this.calculateSize(data);
@@ -68,11 +62,6 @@ export class MemoryCache {
     // Add new entry
     this.cache.set(key, entry);
     this.stats.size += size;
-
-    logger.debug('Data saved to cache:', {
-      key,
-      expiry: expireAt ? new Date(expireAt).toISOString() : 'no expiry',
-    });
   }
 
   private findOldestKey(): string | null {
@@ -91,11 +80,9 @@ export class MemoryCache {
   }
 
   async get<T>(key: string): Promise<T | null> {
-    logger.debug('Getting data from cache:', { key });
     const entry = this.cache.get(key) as ICacheEntry<T> | undefined;
 
     if (!entry) {
-      logger.debug('Data not found in cache:', { key });
       this.stats.misses++;
       return null;
     }
@@ -107,26 +94,19 @@ export class MemoryCache {
       return null;
     }
 
-    logger.debug('Data retrieved from cache:', {
-      key,
-      expiry: entry.expireAt ? new Date(entry.expireAt).toISOString() : 'no expiry',
-    });
     this.stats.hits++;
     return entry.data;
   }
 
   async delete(key: string): Promise<void> {
-    logger.debug('Deleting data from cache:', { key });
     const entry = this.cache.get(key) as ICacheEntry<unknown> | undefined;
     if (entry) {
       this.stats.size -= entry.size;
       this.cache.delete(key);
     }
-    logger.debug('Data deleted from cache:', { key });
   }
 
   async clear(): Promise<void> {
-    logger.debug('Clearing cache');
     this.cache.clear();
     this.stats = {
       hits: 0,
@@ -134,14 +114,13 @@ export class MemoryCache {
       size: 0,
       lastCleanup: Date.now(),
     };
-    logger.debug('Cache cleared');
   }
 
   private async cleanupCache(): Promise<void> {
     const now = Date.now();
     const expiredKeys: string[] = [];
     let totalSize = 0;
-
+    logger.debug('Cleaning up cache');
     // Find expired entries
     for (const key of this.cache.keys()) {
       const entry = this.cache.get(key) as ICacheEntry<unknown>;

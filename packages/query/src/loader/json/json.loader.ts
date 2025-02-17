@@ -40,10 +40,6 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
     if (this.options.cache && this.cache) {
       const cached = await this.cache.get<IJSONLoaderResult<TData>>(cacheKey);
       if (cached) {
-        this.logger.debug('Content loaded from cache:', {
-          modelId,
-          cacheKey,
-        });
         return cached;
       }
     }
@@ -57,15 +53,7 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       }
 
       const locales = await this.getModelLocales(modelId);
-
-      this.logger.debug('Loading content:', {
-        modelId,
-        locales,
-        hasLocalization: modelConfig.metadata.localization,
-      });
-
       const content: { [locale: string]: TData[] } = {};
-
       if (modelConfig.metadata.localization) {
         for (const locale of locales) {
           try {
@@ -101,11 +89,6 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       if (this.options.cache && this.cache) {
         const ttl = this.getModelTTL(modelId);
         await this.cache.set(cacheKey, result, ttl);
-        this.logger.debug('Content cached:', {
-          modelId,
-          cacheKey,
-          ttl,
-        });
       }
 
       return result;
@@ -157,7 +140,6 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       await this.cache.clear();
       this.modelConfigs.clear();
       await this.relationManager.clearCache();
-      this.logger.debug('All caches cleared');
     }
   }
 
@@ -167,7 +149,6 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       await this.cache.delete(cacheKey);
       this.modelConfigs.delete(modelId);
       await this.load(modelId);
-      this.logger.debug('Cache refreshed:', { modelId, cacheKey });
     }
   }
 

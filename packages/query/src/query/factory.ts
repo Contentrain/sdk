@@ -15,11 +15,6 @@ export class QueryFactory {
     model: string,
     loader: SQLiteLoader<TData>,
   ): ISQLiteQuery<TData> {
-    logger.debug('Creating SQLite query builder:', {
-      model,
-      loaderType: 'SQLite',
-    });
-
     const executor = new SQLiteQueryExecutor<TData>(loader);
     return new SQLiteQueryBuilder<TData>(model, executor);
   }
@@ -28,11 +23,6 @@ export class QueryFactory {
     model: string,
     loader: JSONLoader<TData>,
   ): IJSONQuery<TData> {
-    logger.debug('Creating JSON query builder:', {
-      model,
-      loaderType: 'JSON',
-    });
-
     return new JSONQueryBuilder<TData>(model, loader);
   }
 
@@ -49,7 +39,9 @@ export class QueryFactory {
     if (loader instanceof JSONLoader) {
       return this.createJSONBuilder(model, loader) as any;
     }
-
-    throw new Error('Desteklenmeyen loader tipi');
+    logger.error('Unsupported loader type', {
+      model,
+    });
+    throw new Error('Unsupported loader type');
   }
 }

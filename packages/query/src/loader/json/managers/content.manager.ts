@@ -21,10 +21,6 @@ export class JSONContentManager {
     // Cache kontrolü
     const cached = this.modelConfigCache.get(modelId);
     if (cached) {
-      this.logger.debug('Model config loaded from cache:', {
-        modelId,
-        metadata: cached.metadata,
-      });
       return cached;
     }
 
@@ -67,13 +63,6 @@ export class JSONContentManager {
         });
         throw new Error(`Invalid JSON format in model fields: ${modelPath}`);
       }
-
-      this.logger.debug('Model config loaded:', {
-        modelId,
-        metadata: modelMetadata,
-        fieldsCount: modelFields.length,
-      });
-
       const config = {
         metadata: modelMetadata,
         fields: modelFields,
@@ -106,11 +95,6 @@ export class JSONContentManager {
     const cached = this.contentCache.get(cacheKey) as IJSONContentFile<T> | undefined;
 
     if (cached) {
-      this.logger.debug('Content loaded from cache:', {
-        modelId,
-        locale,
-        cacheKey,
-      });
       return cached;
     }
 
@@ -140,14 +124,6 @@ export class JSONContentManager {
       else {
         contentPath = join(this.contentDir, modelId, `${modelId}.json`);
       }
-
-      this.logger.debug('Loading content file:', {
-        modelId,
-        locale: effectiveLocale,
-        contentPath,
-        isLocalized: modelConfig.metadata.localization,
-      });
-
       const content = await readFile(contentPath, 'utf-8');
       let data: T[];
 
@@ -157,13 +133,6 @@ export class JSONContentManager {
         if (!Array.isArray(data)) {
           throw new TypeError('Content must be an array');
         }
-
-        this.logger.debug('Content loaded successfully:', {
-          modelId,
-          locale: effectiveLocale,
-          recordCount: data.length,
-        });
-
         const result = {
           model: modelId,
           locale: modelConfig.metadata.localization ? effectiveLocale : undefined,
@@ -213,12 +182,6 @@ export class JSONContentManager {
       const assetsPath = join(this.contentDir, 'assets.json');
       const assetsContent = await readFile(assetsPath, 'utf-8');
       const assets = JSON.parse(assetsContent);
-
-      this.logger.debug('Assets loaded:', {
-        count: assets.length,
-        path: assetsPath,
-      });
-
       return assets;
     }
     catch (error: any) {
@@ -239,7 +202,6 @@ export class JSONContentManager {
       const modelConfig = await this.loadModelConfig(modelId);
 
       if (!modelConfig.metadata.localization) {
-        this.logger.debug('Non-localized model:', { modelId });
         return ['default'];
       }
 
@@ -259,13 +221,6 @@ export class JSONContentManager {
         });
         throw new Error(`No locale files found for localized model "${modelId}"`);
       }
-
-      this.logger.debug('Locales found:', {
-        modelId,
-        locales,
-        count: locales.length,
-      });
-
       return locales;
     }
     catch (error: any) {
@@ -285,7 +240,6 @@ export class JSONContentManager {
   async clearCache(): Promise<void> {
     this.modelConfigCache.clear();
     this.contentCache.clear();
-    this.logger.debug('All caches cleared');
   }
 
   getCacheStats(): { modelConfigs: number, contents: number } {

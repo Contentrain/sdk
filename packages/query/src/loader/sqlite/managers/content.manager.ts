@@ -13,14 +13,8 @@ export class SQLiteContentManager {
     logger: ILogger,
   ) {
     this.logger = logger;
-    this.logger.debug('Initializing SQLiteContentManager', {
-      databasePath,
-      operation: 'initialize',
-    });
-
     try {
       this.connection = new SQLiteConnection(databasePath);
-      this.logger.info('Content manager initialized successfully');
     }
     catch (error: any) {
       this.logger.error('Failed to initialize content manager', {
@@ -46,26 +40,11 @@ export class SQLiteContentManager {
     id: string,
   ): Promise<T | undefined> {
     const tableName = normalizeTableName(model);
-    this.logger.debug('Finding record by ID', {
-      model,
-      tableName,
-      id,
-      operation: 'read',
-    });
-
     try {
       const result = await this.connection.get<T>(
         `SELECT * FROM ${tableName} WHERE id = ?`,
         [id],
       );
-
-      this.logger.debug('Record lookup completed', {
-        model,
-        id,
-        found: !!result,
-        operation: 'read',
-      });
-
       return result;
     }
     catch (error: any) {
@@ -94,14 +73,6 @@ export class SQLiteContentManager {
     conditions: Partial<T> = {},
   ): Promise<T[]> {
     const tableName = normalizeTableName(model);
-    this.logger.debug('Finding all records', {
-      model,
-      tableName,
-      conditions,
-      hasConditions: Object.keys(conditions).length > 0,
-      operation: 'read',
-    });
-
     try {
       const where = Object.keys(conditions).length
         ? `WHERE ${Object.keys(conditions).map(k => `${k} = ?`).join(' AND ')}`
@@ -119,14 +90,6 @@ export class SQLiteContentManager {
           operation: 'read',
         });
       }
-
-      this.logger.debug('Records lookup completed', {
-        model,
-        count: result.length,
-        conditions,
-        operation: 'read',
-      });
-
       return result;
     }
     catch (error: any) {
@@ -151,13 +114,8 @@ export class SQLiteContentManager {
   }
 
   async close(): Promise<void> {
-    this.logger.debug('Closing content manager connection', {
-      operation: 'disconnect',
-    });
-
     try {
       await this.connection.close();
-      this.logger.info('Content manager closed successfully');
     }
     catch (error: any) {
       this.logger.error('Failed to close content manager', {

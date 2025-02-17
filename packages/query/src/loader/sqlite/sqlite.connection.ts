@@ -9,8 +9,7 @@ export class SQLiteConnection {
   private readonly db: Database;
 
   constructor(databasePath: string) {
-    logger.debug('Initializing SQLite connection', { databasePath });
-    logger.info('Starting database connection initialization');
+    logger.info('Initializing SQLite connection', { databasePath });
 
     try {
       this.db = new BetterSQLite(databasePath, {
@@ -18,8 +17,7 @@ export class SQLiteConnection {
         fileMustExist: true,
       });
 
-      logger.debug('SQLite connection established', { databasePath });
-      logger.info('Database connection established successfully');
+      logger.info('SQLite connection established', { databasePath });
 
       this.setupDatabase();
     }
@@ -43,15 +41,12 @@ export class SQLiteConnection {
   }
 
   private setupDatabase(): void {
-    logger.debug('Setting up database configuration');
-    logger.info('Starting database configuration setup');
+    logger.info('Setting up database configuration');
 
     try {
       this.db.pragma('journal_mode = WAL');
       this.db.pragma('synchronous = NORMAL');
       this.db.pragma('foreign_keys = ON');
-
-      logger.debug('Database configuration completed');
       logger.info('Database configuration completed successfully');
     }
     catch (error: any) {
@@ -72,15 +67,10 @@ export class SQLiteConnection {
   }
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    logger.debug('Executing query', { sql, params });
-    logger.info('Starting query execution');
-
     try {
       return await new Promise((resolve, reject) => {
         try {
           const result = this.db.prepare(sql).all(params) as T[];
-          logger.debug('Query executed successfully', { resultCount: result.length });
-          logger.info('Query completed successfully', { resultCount: result.length });
           resolve(result);
         }
         catch (error) {
@@ -110,15 +100,10 @@ export class SQLiteConnection {
   }
 
   async get<T>(sql: string, params: unknown[] = []): Promise<T | undefined> {
-    logger.debug('Executing single row query', { sql, params });
-    logger.info('Starting single row query execution');
-
     try {
       return await new Promise((resolve, reject) => {
         try {
           const result = this.db.prepare(sql).get(params) as T;
-          logger.debug('Single row query executed successfully', { hasResult: !!result });
-          logger.info('Single row query completed successfully', { hasResult: !!result });
           resolve(result);
         }
         catch (error) {
@@ -148,15 +133,10 @@ export class SQLiteConnection {
   }
 
   async close(): Promise<void> {
-    logger.debug('Closing database connection');
-    logger.info('Starting database connection closure');
-
     try {
       return await new Promise((resolve, reject) => {
         try {
           this.db.close();
-          logger.debug('Database connection closed successfully');
-          logger.info('Database connection closed successfully');
           resolve();
         }
         catch (error) {

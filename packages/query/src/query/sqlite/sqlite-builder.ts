@@ -16,7 +16,6 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> implements ISQLiteQuery
     private readonly model: string,
     private readonly executor: SQLiteQueryExecutor<TData>,
   ) {
-    this.logger.debug('Initializing SQLiteQueryBuilder', { model });
   }
 
   include(relations: string | string[]): this {
@@ -45,6 +44,12 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> implements ISQLiteQuery
       return this;
     }
     catch (error: any) {
+      this.logger.error('Failed to add condition', {
+        field: String(field),
+        operator,
+        value,
+        originalError: error?.message,
+      });
       throw new QueryBuilderError('Failed to add condition', 'filter', {
         field: String(field),
         operator,
@@ -63,6 +68,14 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> implements ISQLiteQuery
       return this;
     }
     catch (error: any) {
+      this.logger.error(
+        'Failed to add sort',
+        {
+          field: String(field),
+          direction,
+          originalError: error?.message,
+        },
+      );
       throw new QueryBuilderError('Failed to add sort', 'sort', {
         field: String(field),
         direction,

@@ -18,11 +18,6 @@ export interface IQueryExecutor<TData, TInclude extends Include = Include, TOpti
 export abstract class BaseQueryExecutor<TData, TInclude extends Include = Include, TOptions extends QueryOptions = QueryOptions> implements IQueryExecutor<TData, TInclude, TOptions> {
   protected applyStringOperation(value: string, operator: StringOperator, searchValue: string): boolean {
     try {
-      logger.debug('Applying string operation', {
-        operator,
-        operation: 'filter',
-      });
-
       switch (operator) {
         case 'eq':
           return value === searchValue;
@@ -66,22 +61,9 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
     options: TOptions,
   ): Promise<TData[]> {
     try {
-      logger.debug('Starting to resolve relations', {
-        model,
-        dataLength: data.length,
-        includes,
-        options,
-        operation: 'resolve',
-      });
-
       const result = [...data];
 
       for (const [field, config] of Object.entries(includes)) {
-        logger.debug('Resolving relation', {
-          field,
-          operation: 'resolve',
-        });
-
         // Resolve relation - Bu metod alt sınıflarda implement edilmeli
         const relations = await this.resolveRelation(
           model,
@@ -89,21 +71,8 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
           result,
           options,
         );
-
-        logger.debug('Relation resolved', {
-          field,
-          foundRelationsCount: relations.length,
-          operation: 'resolve',
-        });
-
         // Resolve nested relations
         if (config.include && relations.length) {
-          logger.debug('Resolving nested relations', {
-            field,
-            nestedIncludes: config.include,
-            operation: 'resolve',
-          });
-
           await this.resolveIncludes(
             field,
             relations,
@@ -126,11 +95,6 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
             (item as any)._relations = {};
           }
           (item as any)._relations[field] = Array.isArray(value) ? relatedItems : relatedItems[0];
-        });
-
-        logger.debug('Related data added', {
-          field,
-          operation: 'resolve',
         });
       }
 
@@ -173,23 +137,12 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
 
   protected applyFilters(data: TData[], filters: Filter[] = []): TData[] {
     try {
-      logger.debug('Applying filters', {
-        filterCount: filters.length,
-        operation: 'filter',
-      });
-
       const result = data.filter((item) => {
         return filters.every(({ field, operator, value }) => {
           const itemValue = item[field as keyof TData];
           return this.compareValues(itemValue, operator, value);
         });
       });
-
-      logger.debug('Filters applied', {
-        resultCount: result.length,
-        operation: 'filter',
-      });
-
       return result;
     }
     catch (error: any) {
@@ -211,11 +164,6 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
 
   protected applySorting(data: TData[], sorting: Sort[] = []): TData[] {
     try {
-      logger.debug('Applying sorting', {
-        sortCount: sorting.length,
-        operation: 'sort',
-      });
-
       const result = [...data].sort((a, b) => {
         for (const { field, direction } of sorting) {
           const aValue = a[field as keyof TData];
@@ -229,12 +177,6 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
         }
         return 0;
       });
-
-      logger.debug('Sorting applied', {
-        resultCount: result.length,
-        operation: 'sort',
-      });
-
       return result;
     }
     catch (error: any) {
@@ -256,19 +198,7 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
 
   protected applyPagination(data: TData[], limit?: number, offset: number = 0): TData[] {
     try {
-      logger.debug('Applying pagination', {
-        limit,
-        offset,
-        operation: 'paginate',
-      });
-
       const result = limit ? data.slice(offset, offset + limit) : data.slice(offset);
-
-      logger.debug('Pagination applied', {
-        resultCount: result.length,
-        operation: 'paginate',
-      });
-
       return result;
     }
     catch (error: any) {
@@ -294,11 +224,6 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
 
   private compareValues(itemValue: any, operator: string, value: any): boolean {
     try {
-      logger.debug('Comparing values', {
-        operator,
-        operation: 'filter',
-      });
-
       switch (operator) {
         case 'eq':
           return itemValue === value;

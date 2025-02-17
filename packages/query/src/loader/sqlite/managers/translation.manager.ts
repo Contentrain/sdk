@@ -10,21 +10,11 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
     logger: ILogger,
   ) {
     super(databasePath, logger);
-    this.logger.debug('Initializing SQLiteTranslationManager', {
-      databasePath,
-      operation: 'initialize',
-    });
   }
 
   async hasTranslations(model: string): Promise<boolean> {
     try {
       const tableName = normalizeTranslationTableName(model);
-      this.logger.debug('Checking translations table', {
-        model,
-        tableName,
-        operation: 'read',
-      });
-
       const result = await this.connection.get<{ name: string }>(
         `SELECT name FROM sqlite_master
          WHERE type='table'
@@ -33,13 +23,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       );
 
       const exists = !!result;
-      this.logger.debug('Translation table check completed', {
-        model,
-        tableName,
-        exists,
-        operation: 'read',
-      });
-
       return exists;
     }
     catch (error: any) {
@@ -67,16 +50,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
 
       const mainTable = normalizeTableName(model);
       const translationTable = normalizeTranslationTableName(model);
-
-      this.logger.debug('Loading translations', {
-        model,
-        mainTable,
-        translationTable,
-        idsCount: ids.length,
-        locale,
-        operation: 'read',
-      });
-
       const query = `
         SELECT t.*, m.created_at, m.updated_at, m.status
         FROM ${translationTable} t
@@ -99,15 +72,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
         },
         {},
       );
-
-      this.logger.debug('Translations loaded and grouped', {
-        originalCount: translations.length,
-        groupedCount: Object.keys(grouped).length,
-        model,
-        locale,
-        operation: 'read',
-      });
-
       return grouped;
     }
     catch (error: any) {
@@ -128,12 +92,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
   async getLocales(model: string): Promise<string[]> {
     try {
       const tableName = normalizeTranslationTableName(model);
-      this.logger.debug('Getting available locales', {
-        model,
-        tableName,
-        operation: 'read',
-      });
-
       const query = `
         SELECT DISTINCT locale
         FROM ${tableName}
@@ -142,14 +100,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
 
       const results = await this.connection.query<{ locale: string }>(query);
       const locales = results.map(row => row.locale);
-
-      this.logger.debug('Available locales retrieved', {
-        model,
-        localeCount: locales.length,
-        locales,
-        operation: 'read',
-      });
-
       return locales;
     }
     catch (error: any) {
@@ -171,14 +121,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       const result = await this.connection.query<{ name: string }>(
         `PRAGMA table_info(${mainTable})`,
       );
-
-      this.logger.debug('Main columns loaded', {
-        model,
-        mainTable,
-        columns: result.map(row => row.name),
-        operation: 'read',
-      });
-
       return result.map(row => row.name);
     }
     catch (error: any) {
@@ -210,15 +152,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       const columns = result
         .map(row => row.name)
         .filter(name => !['id', 'locale'].includes(name));
-
-      this.logger.debug('Translation columns loaded', {
-        model,
-        translationTable,
-        columns,
-        totalColumns: result.length,
-        operation: 'read',
-      });
-
       return columns;
     }
     catch (error: any) {

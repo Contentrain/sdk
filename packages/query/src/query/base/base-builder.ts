@@ -14,10 +14,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
   constructor(
     protected readonly model: string,
   ) {
-    logger.debug('Initializing BaseQueryBuilder', {
-      model,
-      operation: 'initialize',
-    });
   }
 
   abstract where(field: keyof TData, operator: Operator, value: any): this;
@@ -32,11 +28,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
 
   cache(ttl?: number): this {
     try {
-      logger.debug('Setting cache', {
-        ttl,
-        operation: 'cache',
-      });
-
       this.options.cache = true;
       if (ttl)
         this.options.ttl = ttl;
@@ -63,10 +54,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
 
   noCache(): this {
     try {
-      logger.debug('Disabling cache', {
-        operation: 'cache',
-      });
-
       this.options.cache = false;
       return this;
     }
@@ -89,10 +76,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
 
   bypassCache(): this {
     try {
-      logger.debug('Bypassing cache', {
-        operation: 'cache',
-      });
-
       this.options.cache = false;
       this.options.ttl = 0;
       return this;
@@ -116,11 +99,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
 
   toJSON() {
     try {
-      logger.debug('Converting query to JSON', {
-        model: this.model,
-        operation: 'serialize',
-      });
-
       const result = {
         model: this.model,
         filters: this.filters,
@@ -129,11 +107,6 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
         pagination: this.pagination,
         options: this.options,
       };
-
-      logger.debug('Query converted to JSON', {
-        operation: 'serialize',
-      });
-
       return result;
     }
     catch (error: any) {

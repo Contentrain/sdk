@@ -16,11 +16,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
     loader: JSONLoader<TData>,
   ) {
     super(model);
-    logger.debug('Initializing JSONQueryBuilder', {
-      model,
-      operation: 'initialize',
-    });
-
     try {
       this.executor = new JSONQueryExecutor<TData>(loader);
       logger.info('Query builder initialized successfully');
@@ -37,12 +32,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   where(field: keyof TData, operator: Operator, value: any): this {
     try {
-      logger.debug('Adding filter', {
-        field: String(field),
-        operator,
-        value,
-      });
-
       this.validateField(field);
       this.validateOperator(operator);
       this.filters.push({ field: String(field), operator, value });
@@ -62,11 +51,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   include(relations: string | string[]): this {
     try {
-      logger.debug('Adding relation', {
-        relation: typeof relations === 'string' ? { name: relations } : { names: relations },
-        operation: 'include',
-      });
-
       if (typeof relations === 'string') {
         this.includes[relations] = {};
       }
@@ -98,11 +82,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   orderBy(field: keyof TData, direction: 'asc' | 'desc' = 'asc'): this {
     try {
-      logger.debug('Adding sort', {
-        field: String(field),
-        direction,
-      });
-
       this.validateField(field);
       this.sorting.push({ field: String(field), direction });
 
@@ -120,8 +99,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   limit(count: number): this {
     try {
-      logger.debug('Setting limit', { count });
-
       if (count < 0) {
         throw new QueryBuilderError(
           'Limit cannot be negative',
@@ -144,8 +121,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   offset(count: number): this {
     try {
-      logger.debug('Setting offset', { count });
-
       if (count < 0) {
         throw new QueryBuilderError(
           'Offset cannot be negative',
@@ -168,8 +143,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   locale(code: string): this {
     try {
-      logger.debug('Setting locale', { code });
-
       if (!code) {
         throw new QueryBuilderError(
           'Locale code cannot be empty',
@@ -242,15 +215,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   async get(): Promise<QueryResult<TData>> {
     try {
-      logger.debug('Executing query', {
-        model: this.model,
-        filters: this.filters,
-        includes: this.includes,
-        sorting: this.sorting,
-        pagination: this.pagination,
-        options: this.options,
-      });
-
       const result = await this.executor.execute({
         model: this.model,
         filters: this.filters,
@@ -259,13 +223,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
         pagination: this.pagination,
         options: this.options,
       });
-
-      logger.debug('Query executed successfully', {
-        model: this.model,
-        resultCount: result.data.length,
-        total: result.total,
-      });
-
       return result;
     }
     catch (error: any) {
@@ -280,10 +237,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   async first(): Promise<TData | null> {
     try {
-      logger.debug('Getting first record', {
-        model: this.model,
-      });
-
       const result = await this.limit(1).get();
       return result.data[0] || null;
     }
@@ -298,10 +251,6 @@ export class JSONQueryBuilder<TData extends IBaseJSONRecord> extends BaseQueryBu
 
   async count(): Promise<number> {
     try {
-      logger.debug('Getting record count', {
-        model: this.model,
-      });
-
       const result = await this.get();
       return result.total;
     }

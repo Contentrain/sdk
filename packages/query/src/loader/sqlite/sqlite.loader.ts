@@ -80,7 +80,6 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
       const modelFields = await this.getModelFields(model);
 
       if (!hasTranslations) {
-        this.logger.debug('No translations found for model', { model });
         return {
           model: {
             metadata: {
@@ -241,10 +240,6 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     if (this.options.cache && this.cache) {
       const cached = await this.cache.get<ISQLiteLoaderResult<TData>>(cacheKey);
       if (cached) {
-        this.logger.debug('Content loaded from cache:', {
-          modelId: model,
-          cacheKey,
-        });
         return cached;
       }
     }
@@ -256,11 +251,6 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
       if (this.options.cache && this.cache) {
         const ttl = this.getModelTTL(model);
         await this.cache.set(cacheKey, result, ttl);
-        this.logger.debug('Content cached:', {
-          modelId: model,
-          cacheKey,
-          ttl,
-        });
       }
 
       return result;
@@ -281,7 +271,6 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
   async clearCache(): Promise<void> {
     if (this.cache) {
       await this.cache.clear();
-      this.logger.debug('Cache cleared');
     }
   }
 
@@ -290,7 +279,6 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     if (this.cache) {
       await this.cache.delete(cacheKey);
       await this.load(modelId);
-      this.logger.debug('Cache refreshed:', { modelId, cacheKey });
     }
   }
 

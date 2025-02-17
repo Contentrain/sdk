@@ -12,10 +12,6 @@ export class JSONRelationManager extends JSONContentManager {
     defaultLocale?: string,
   ) {
     super(contentDir, logger, defaultLocale);
-    this.logger.debug('Initializing JSONRelationManager', {
-      contentDir,
-      defaultLocale,
-    });
   }
 
   async loadRelations(modelId: string): Promise<IJSONRelationConfig[]> {
@@ -23,10 +19,6 @@ export class JSONRelationManager extends JSONContentManager {
       // Cache kontrolü
       const cached = this.relationCache.get(modelId);
       if (cached) {
-        this.logger.debug('Relations loaded from cache', {
-          modelId,
-          count: cached.length,
-        });
         return cached;
       }
 
@@ -35,12 +27,6 @@ export class JSONRelationManager extends JSONContentManager {
       const relationFields = modelConfig.fields.filter(field =>
         field.fieldType === 'relation',
       );
-
-      this.logger.debug('Loading relations', {
-        modelId,
-        relationFieldsCount: relationFields.length,
-      });
-
       // İlişki konfigürasyonlarını oluştur
       const relations = relationFields.map((field) => {
         const options = field.options;
@@ -69,13 +55,6 @@ export class JSONRelationManager extends JSONContentManager {
           type: field.componentId === 'one-to-one' ? 'one-to-one' : 'one-to-many',
           foreignKey: field.fieldId,
         };
-
-        this.logger.debug('Relation config created', {
-          modelId,
-          fieldName: field.name,
-          config,
-        });
-
         return config;
       });
 
@@ -109,21 +88,10 @@ export class JSONRelationManager extends JSONContentManager {
     locale?: string,
   ): Promise<R[]> {
     try {
-      this.logger.debug('Starting relation resolution', {
-        modelId,
-        relationField: String(relationField),
-        dataLength: data.length,
-        locale,
-      });
-
       // İlişkileri yükle
       const relations = await this.loadRelations(modelId);
-      this.logger.debug('Relations loaded', { relations });
-
       // İlgili ilişkiyi bul
       const relation = relations.find(r => r.foreignKey === relationField);
-      this.logger.debug('Found relation', { relation });
-
       if (!relation) {
         this.logger.error('Relation not found', {
           modelId,
@@ -142,32 +110,15 @@ export class JSONRelationManager extends JSONContentManager {
 
       // İlişkili içeriği yükle
       const effectiveLocale = locale || this.defaultLocale || 'default';
-      this.logger.debug('Loading related model', {
-        model: relation.model,
-        locale: effectiveLocale,
-      });
-
       const relatedContent = await this.loadModelContent<R>(
         relation.model,
         effectiveLocale,
       );
-
-      this.logger.debug('Related model loaded', {
-        model: relation.model,
-        contentLength: relatedContent.data.length,
-        locale: effectiveLocale,
-      });
-
       // İlişkileri çöz
       if (relation.type === 'one-to-one') {
-        this.logger.debug('Processing one-to-one relation');
         const itemsWithRelation = data.filter(item =>
           item[relationField] !== undefined && item[relationField] !== null,
         );
-        this.logger.debug('Items with relations', {
-          count: itemsWithRelation.length,
-        });
-
         const result = itemsWithRelation.map((item) => {
           const relatedItem = relatedContent.data.find(r =>
             r.ID === item[relationField],
@@ -196,7 +147,6 @@ export class JSONRelationManager extends JSONContentManager {
         return result;
       }
       else {
-        this.logger.debug('Processing one-to-many relation');
         const uniqueIds = new Set(
           data.flatMap(item =>
             item[relationField] !== undefined && item[relationField] !== null
@@ -206,21 +156,9 @@ export class JSONRelationManager extends JSONContentManager {
               : [],
           ),
         );
-
-        this.logger.debug('Total unique IDs', {
-          total: uniqueIds.size,
-          ids: Array.from(uniqueIds),
-        });
-
         const items = Array.from(uniqueIds)
           .map(id => relatedContent.data.find(r => r.ID === id))
           .filter((item): item is R => item !== undefined);
-
-        this.logger.debug('Matching items', {
-          count: items.length,
-          expectedCount: uniqueIds.size,
-        });
-
         if (items.length !== uniqueIds.size) {
           const foundIds = items.map(item => item.ID);
           const missingIds = Array.from(uniqueIds).filter(id =>
@@ -272,7 +210,6 @@ export class JSONRelationManager extends JSONContentManager {
     try {
       this.relationCache.clear();
       await super.clearCache();
-      this.logger.debug('Relation cache cleared');
     }
     catch (error: any) {
       this.logger.error('Failed to clear relation cache', {
