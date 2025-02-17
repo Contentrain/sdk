@@ -51,6 +51,65 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> extends BaseQueryBuilde
     }
   }
 
+  orderBy(field: keyof TData, direction: 'asc' | 'desc' = 'asc'): this {
+    try {
+      this.sorting.push({ field: field as string, direction });
+      return this;
+    }
+    catch (error: any) {
+      logger.error('Failed to add sorting', {
+        field,
+        direction,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to add sorting', 'sort', {
+        field,
+        direction,
+        originalError: error?.message,
+      });
+    }
+  }
+
+  limit(count: number): this {
+    try {
+      if (count < 0) {
+        throw new Error('Limit count must be positive');
+      }
+      this.pagination.limit = count;
+      return this;
+    }
+    catch (error: any) {
+      logger.error('Failed to set limit', {
+        count,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to set limit', 'paginate', {
+        count,
+        originalError: error?.message,
+      });
+    }
+  }
+
+  offset(count: number): this {
+    try {
+      if (count < 0) {
+        throw new Error('Offset count must be positive');
+      }
+      this.pagination.offset = count;
+      return this;
+    }
+    catch (error: any) {
+      logger.error('Failed to set offset', {
+        count,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to set offset', 'paginate', {
+        count,
+        originalError: error?.message,
+      });
+    }
+  }
+
   async get() {
     try {
       return await this.executor.execute({

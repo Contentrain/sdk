@@ -149,9 +149,23 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
         `PRAGMA table_info(${translationTable})`,
       );
 
+      // Debug log ekleyelim
+      this.logger.debug('Translation columns from PRAGMA', {
+        model,
+        table: translationTable,
+        columns: result.map(row => row.name),
+      });
+
       const columns = result
         .map(row => row.name)
         .filter(name => !['id', 'locale'].includes(name));
+
+      // Debug log ekleyelim
+      this.logger.debug('Filtered translation columns', {
+        model,
+        columns,
+      });
+
       return columns;
     }
     catch (error: any) {
@@ -163,6 +177,42 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
 
       throw new TranslationError(
         'Failed to get translation columns',
+        'read',
+        {
+          model,
+          originalError: error?.message,
+          errorCode: error?.code,
+        },
+      );
+    }
+  }
+
+  async getAllColumns(model: string): Promise<string[]> {
+    try {
+      // Çeviri olmayan modeller için tüm kolonları al
+      const mainTable = normalizeTableName(model);
+      const result = await this.connection.query<{ name: string, type: string }>(
+        `PRAGMA table_info(${mainTable})`,
+      );
+
+      // Debug log ekleyelim
+      this.logger.debug('Getting all columns for non-translatable model', {
+        model,
+        table: mainTable,
+        columns: result.map(row => ({ name: row.name, type: row.type })),
+      });
+
+      return result.map(row => row.name);
+    }
+    catch (error: any) {
+      this.logger.error('Failed to get all columns', {
+        model,
+        error: error?.message,
+        code: error?.code,
+      });
+
+      throw new TranslationError(
+        'Failed to get all columns',
         'read',
         {
           model,

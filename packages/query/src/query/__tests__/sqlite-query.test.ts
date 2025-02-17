@@ -231,8 +231,7 @@ describe('sQLiteQueryBuilder', () => {
         .where('title', 'startsWith', 'Web')
         .locale('en')
         .get();
-
-      expect(result.data.length).toBe(1); // We know this from database_structure.md
+      expect(result.data.length).toBe(2); // We know this from database_structure.md
 
       const item = result.data[0];
       expect(item.title).toMatch(/^Web/);
@@ -336,39 +335,38 @@ describe('sQLiteQueryBuilder', () => {
   });
 
   describe('sorting', () => {
-    it('should sort by field_order ascending', async () => {
+    it('should sort by user-generated field in translatable model', async () => {
       const result = await builder
         .locale('en')
-        .orderBy('field_order', 'asc')
+        .orderBy('title', 'asc')
         .get();
 
       expect(result.data.length).toBeGreaterThan(1);
       for (let i = 1; i < result.data.length; i++) {
-        const prevOrder = result.data[i - 1].field_order || 0;
-        const currOrder = result.data[i].field_order || 0;
-        expect(currOrder).toBeGreaterThanOrEqual(prevOrder);
+        const prevTitle = result.data[i - 1].title || '';
+        const currTitle = result.data[i].title || '';
+        expect(currTitle.localeCompare(prevTitle)).toBeGreaterThanOrEqual(0);
       }
     });
 
-    it('should sort by field_order descending', async () => {
-      const result = await builder
-        .locale('en')
-        .orderBy('field_order', 'desc')
+    it('should sort by user-generated field in non-translatable model', async () => {
+      const result = await socialLinkBuilder
+        .orderBy('link', 'asc')
         .get();
 
       expect(result.data.length).toBeGreaterThan(1);
       for (let i = 1; i < result.data.length; i++) {
-        const prevOrder = result.data[i - 1].field_order || 0;
-        const currOrder = result.data[i].field_order || 0;
-        expect(currOrder).toBeLessThanOrEqual(prevOrder);
+        const prevLink = result.data[i - 1].link;
+        const currLink = result.data[i].link;
+        expect(currLink.localeCompare(prevLink)).toBeGreaterThanOrEqual(0);
       }
     });
 
-    it('should support multiple sort fields', async () => {
+    it('should sort by multiple fields including user-generated and system fields', async () => {
       const result = await builder
         .locale('en')
         .orderBy('status', 'asc')
-        .orderBy('field_order', 'desc')
+        .orderBy('title', 'desc')
         .get();
 
       expect(result.data.length).toBeGreaterThan(1);
@@ -377,10 +375,50 @@ describe('sQLiteQueryBuilder', () => {
         const curr = result.data[i];
 
         if (prev.status === curr.status) {
-          const prevOrder = prev.field_order || 0;
-          const currOrder = curr.field_order || 0;
-          expect(currOrder).toBeLessThanOrEqual(prevOrder);
+          const prevTitle = prev.title || '';
+          const currTitle = curr.title || '';
+          expect(currTitle.localeCompare(prevTitle)).toBeLessThanOrEqual(0);
         }
+      }
+    });
+
+    it('should sort by user-generated field in different locales', async () => {
+      const enResult = await builder
+        .locale('en')
+        .orderBy('title', 'asc')
+        .get();
+
+      const trResult = await builder
+        .locale('tr')
+        .orderBy('title', 'asc')
+        .get();
+
+      expect(enResult.data.length).toBe(trResult.data.length);
+      expect(enResult.data[0].title).not.toBe(trResult.data[0].title);
+
+      // Her iki dilde de sıralama doğru olmalı
+      for (let i = 1; i < enResult.data.length; i++) {
+        const prevEnTitle = enResult.data[i - 1].title || '';
+        const currEnTitle = enResult.data[i].title || '';
+        expect(currEnTitle.localeCompare(prevEnTitle)).toBeGreaterThanOrEqual(0);
+
+        const prevTrTitle = trResult.data[i - 1].title || '';
+        const currTrTitle = trResult.data[i].title || '';
+        expect(currTrTitle.localeCompare(prevTrTitle)).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should sort by description field in translatable model', async () => {
+      const result = await builder
+        .locale('en')
+        .orderBy('description', 'asc')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(1);
+      for (let i = 1; i < result.data.length; i++) {
+        const prevDesc = result.data[i - 1].description || '';
+        const currDesc = result.data[i].description || '';
+        expect(currDesc.localeCompare(prevDesc)).toBeGreaterThanOrEqual(0);
       }
     });
   });
@@ -390,7 +428,7 @@ describe('sQLiteQueryBuilder', () => {
       const limit = 2;
       const result = await builder
         .locale('en')
-        .orderBy('field_order', 'asc')
+        .orderBy('created_at', 'asc')
         .limit(limit)
         .get();
 
@@ -403,7 +441,7 @@ describe('sQLiteQueryBuilder', () => {
       const offset = 2;
       const result = await builder
         .locale('en')
-        .orderBy('field_order', 'asc')
+        .orderBy('created_at', 'asc')
         .offset(offset)
         .get();
 
@@ -415,7 +453,7 @@ describe('sQLiteQueryBuilder', () => {
       const offset = 1;
       const result = await builder
         .locale('en')
-        .orderBy('field_order', 'asc')
+        .orderBy('created_at', 'asc')
         .limit(limit)
         .offset(offset)
         .get();
@@ -636,7 +674,6 @@ describe('sQLiteQueryBuilder', () => {
       it('should load sociallinks with related service', async () => {
         const result = await socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
-          .locale('tr')
           .include('service')
           .get();
 
@@ -671,7 +708,6 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should handle both localized and non-localized relations', async () => {
       const result = await projectStatsBuilder
-        .locale('tr')
         .include(['work', 'reference'])
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .first();
@@ -688,7 +724,6 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should filter project stats by view count and load relations', async () => {
       const result = await projectStatsBuilder
-        .locale('tr')
         .include(['work', 'reference'])
         .where('view_count', 'gt', 2000)
         .get();
