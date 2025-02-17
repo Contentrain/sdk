@@ -30,10 +30,13 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
         return [];
       }
 
-      return await this.loader.relationManager.loadRelatedContent<TData>(
+      // İlişkili içeriği yükle
+      const relatedData = await this.loader.relationManager.loadRelatedContent<TData>(
         relations,
-        options?.locale,
+        options?.locale || undefined,
       );
+
+      return relatedData;
     }
     catch (error: any) {
       logger.error('Failed to resolve relation', { error });
@@ -84,18 +87,46 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
         });
 
         for (const include of params.options.includes) {
-          const relatedData = await this.resolveRelation(
+          // İlişkileri yükle
+          const relations = await this.loader.relationManager.loadRelations(
             params.model,
+            data.map(item => item.id),
             include,
-            data,
-            params.options,
           );
 
+          if (!relations.length) {
+            continue;
+          }
+
+          // İlişki tipini kontrol et
+          const relationType = relations[0].type;
+          const isOneToMany = relationType === 'one-to-many';
+
+          // İlişkili içeriği yükle
+          const relatedData = await this.loader.relationManager.loadRelatedContent<TData>(
+            relations,
+            params.options?.locale || undefined,
+          );
+
+          // İlişkileri grupla
+          const groupedData: Record<string, TData[]> = {};
+          relations.forEach((relation) => {
+            if (!groupedData[relation.source_id]) {
+              groupedData[relation.source_id] = [];
+            }
+            const relatedItem = relatedData.find(item => item.id === relation.target_id);
+            if (relatedItem) {
+              groupedData[relation.source_id].push(relatedItem);
+            }
+          });
+
+          // İlişkileri ana veriye ekle
           data.forEach((item: any) => {
             if (!item._relations) {
               item._relations = {};
             }
-            item._relations[include] = relatedData.find(r => r.id === item[`${include}_id`]);
+            const relatedItems = groupedData[item.id] || [];
+            item._relations[include] = isOneToMany ? relatedItems : relatedItems[0];
           });
         }
       }
@@ -142,7 +173,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       select: [],
       from: tableName,
       joins: [],
-      where: params.filters || [],
+      where: [],
       orderBy: params.sorting || [],
       parameters: [],
       pagination: params.pagination,
@@ -191,8 +222,18 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       await this.addRelationJoins(query, params.model, params.options.includes);
     }
 
-    // WHERE koşulları için parametreleri ekle
-    if (query.where.length) {
+    // WHERE koşullarını düzelt
+    if (params.filters?.length) {
+      query.where = params.filters.map((filter) => {
+        // Alan adını düzelt
+        const field = filter.field.endsWith('_id') ? filter.field : `${filter.field}_id`;
+        return {
+          ...filter,
+          field: this.mainColumns.includes(field) ? field : filter.field,
+        };
+      });
+
+      // WHERE koşulları için parametreleri ekle
       query.where.forEach((condition) => {
         if (condition.value === null) {
           return;

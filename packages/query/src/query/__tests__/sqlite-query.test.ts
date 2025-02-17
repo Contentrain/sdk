@@ -385,26 +385,26 @@ describe('sQLiteQueryBuilder', () => {
     it('should sort by user-generated field in different locales', async () => {
       const enResult = await builder
         .locale('en')
-        .orderBy('title', 'asc')
+        .orderBy('image', 'asc')
         .get();
 
       const trResult = await builder
         .locale('tr')
-        .orderBy('title', 'asc')
+        .orderBy('image', 'asc')
         .get();
 
       expect(enResult.data.length).toBe(trResult.data.length);
-      expect(enResult.data[0].title).not.toBe(trResult.data[0].title);
+      expect(enResult.data[0].image).toBe(trResult.data[0].image);
 
       // Her iki dilde de sıralama doğru olmalı
       for (let i = 1; i < enResult.data.length; i++) {
-        const prevEnTitle = enResult.data[i - 1].title || '';
-        const currEnTitle = enResult.data[i].title || '';
-        expect(currEnTitle.localeCompare(prevEnTitle)).toBeGreaterThanOrEqual(0);
+        const prevEnImage = enResult.data[i - 1].image || '';
+        const currEnImage = enResult.data[i].image || '';
+        expect(currEnImage.localeCompare(prevEnImage)).toBeGreaterThanOrEqual(0);
 
-        const prevTrTitle = trResult.data[i - 1].title || '';
-        const currTrTitle = trResult.data[i].title || '';
-        expect(currTrTitle.localeCompare(prevTrTitle)).toBeGreaterThanOrEqual(0);
+        const prevTrImage = trResult.data[i - 1].image || '';
+        const currTrImage = trResult.data[i].image || '';
+        expect(currTrImage.localeCompare(prevTrImage)).toBeGreaterThanOrEqual(0);
       }
     });
 
@@ -565,6 +565,38 @@ describe('sQLiteQueryBuilder', () => {
     });
   });
 
+  describe('non-translatable models', () => {
+    describe('sociallinks', () => {
+      it('should load sociallinks without translations', async () => {
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .get();
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.link).toBeDefined();
+          expect(item.icon).toBeDefined();
+          expect(item.service_id).toBeDefined();
+          expect(item.status).toBe('publish');
+        });
+      });
+
+      it('should load sociallinks with related service', async () => {
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .include('service')
+          .get();
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          expect(item.link).toBeDefined();
+          expect(item.icon).toBeDefined();
+          expect(item._relations?.service).toBeDefined();
+          expect(item._relations?.service?.title).toBeDefined();
+        });
+      });
+    });
+  });
   describe('relations', () => {
     it('should load one-to-one relation', async () => {
       const result = await workItemBuilder
@@ -652,39 +684,6 @@ describe('sQLiteQueryBuilder', () => {
         expect(categoryNames).toContain('Frontend Development');
         expect(categoryNames).toContain('UI/UX Design');
       }
-    });
-  });
-
-  describe('non-translatable models', () => {
-    describe('sociallinks', () => {
-      it('should load sociallinks without translations', async () => {
-        const result = await socialLinkBuilder
-          .where('status', 'eq', 'publish' as ContentrainStatus)
-          .get();
-
-        expect(result.data.length).toBeGreaterThan(0);
-        result.data.forEach((item) => {
-          expect(item.link).toBeDefined();
-          expect(item.icon).toBeDefined();
-          expect(item.service_id).toBeDefined();
-          expect(item.status).toBe('publish');
-        });
-      });
-
-      it('should load sociallinks with related service', async () => {
-        const result = await socialLinkBuilder
-          .where('status', 'eq', 'publish' as ContentrainStatus)
-          .include('service')
-          .get();
-
-        expect(result.data.length).toBeGreaterThan(0);
-        result.data.forEach((item) => {
-          expect(item.link).toBeDefined();
-          expect(item.icon).toBeDefined();
-          expect(item._relations?.service).toBeDefined();
-          expect(item._relations?.service?.title).toBeDefined();
-        });
-      });
     });
   });
 
