@@ -1,32 +1,32 @@
 import type { IDBRecord } from '../../loader/types/sqlite';
-import type { ISQLiteQuery, QueryCondition, QueryResult, QuerySort, SQLiteInclude, SQLiteOptions } from '../types';
+import type { ISQLiteQuery, SQLiteOptions } from '../types';
 import type { SQLiteQueryExecutor } from './sqlite-executor';
 import { QueryBuilderError } from '../../errors';
 import { loggers } from '../../utils/logger';
+import { BaseQueryBuilder } from '../base/base-builder';
 
-export class SQLiteQueryBuilder<TData extends IDBRecord> implements ISQLiteQuery<TData> {
-  private readonly logger = loggers.query;
-  private conditions: QueryCondition[] = [];
-  private includes: SQLiteInclude = {};
-  private sorting: QuerySort[] = [];
-  private pagination: { limit?: number, offset?: number } = {};
-  private queryOptions: SQLiteOptions = {};
+const logger = loggers.query;
+
+export class SQLiteQueryBuilder<TData extends IDBRecord> extends BaseQueryBuilder<TData> implements ISQLiteQuery<TData> {
+  protected options: SQLiteOptions = {};
 
   constructor(
-    private readonly model: string,
+    model: string,
     private readonly executor: SQLiteQueryExecutor<TData>,
   ) {
+    super(model);
   }
 
   include(relations: string | string[]): this {
     try {
-      const relationList = Array.isArray(relations) ? relations : [relations];
-      relationList.forEach((relation) => {
-        this.includes[relation] = {};
-      });
+      this.options.includes = Array.isArray(relations) ? relations : [relations];
       return this;
     }
     catch (error: any) {
+      logger.error('Failed to add relation', {
+        relations,
+        error: error?.message,
+      });
       throw new QueryBuilderError('Failed to add relation', 'include', {
         relations,
         originalError: error?.message,
@@ -34,95 +34,76 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> implements ISQLiteQuery
     }
   }
 
-  where(field: keyof TData, operator: QueryCondition['operator'], value: unknown): this {
+  locale(code: string): this {
     try {
-      this.conditions.push({
-        field: String(field),
-        operator,
-        value,
-      });
+      this.options.locale = code;
       return this;
     }
     catch (error: any) {
-      this.logger.error('Failed to add condition', {
-        field: String(field),
-        operator,
-        value,
-        originalError: error?.message,
+      logger.error('Failed to set locale', {
+        code,
+        error: error?.message,
       });
-      throw new QueryBuilderError('Failed to add condition', 'filter', {
-        field: String(field),
-        operator,
-        value,
+      throw new QueryBuilderError('Failed to set locale', 'localize', {
+        code,
         originalError: error?.message,
       });
     }
   }
 
-  orderBy(field: keyof TData, direction: 'asc' | 'desc' = 'asc'): this {
+  async get() {
     try {
-      this.sorting.push({
-        field: String(field),
-        direction,
+      return await this.executor.execute({
+        model: this.model,
+        filters: this.filters,
+        sorting: this.sorting,
+        pagination: this.pagination,
+        options: this.options,
       });
-      return this;
     }
     catch (error: any) {
-      this.logger.error(
-        'Failed to add sort',
-        {
-          field: String(field),
-          direction,
-          originalError: error?.message,
-        },
-      );
-      throw new QueryBuilderError('Failed to add sort', 'sort', {
-        field: String(field),
-        direction,
+      logger.error('Failed to execute query', {
+        model: this.model,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to execute query', 'execute', {
+        model: this.model,
         originalError: error?.message,
       });
     }
   }
 
-  limit(count: number): this {
-    if (count < 0) {
-      throw new QueryBuilderError('Limit cannot be negative', 'validate', { count });
+  async first() {
+    try {
+      const result = await this.limit(1).get();
+      return result.data[0] || null;
     }
-    this.pagination.limit = count;
-    return this;
-  }
-
-  offset(count: number): this {
-    if (count < 0) {
-      throw new QueryBuilderError('Offset cannot be negative', 'validate', { count });
+    catch (error: any) {
+      logger.error('Failed to get first record', {
+        model: this.model,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to get first record', 'query', {
+        model: this.model,
+        originalError: error?.message,
+      });
     }
-    this.pagination.offset = count;
-    return this;
   }
 
-  locale(code: string, translations: boolean = true): this {
-    this.queryOptions.locale = code;
-    this.queryOptions.translations = translations;
-    return this;
-  }
-
-  async get(): Promise<QueryResult<TData>> {
-    return this.executor.execute({
-      model: this.model,
-      filters: this.conditions,
-      sorting: this.sorting,
-      pagination: this.pagination,
-      options: this.queryOptions,
-    });
-  }
-
-  async first(): Promise<TData | null> {
-    const result = await this.limit(1).get();
-    return result.data[0] || null;
-  }
-
-  async count(): Promise<number> {
-    const result = await this.get();
-    return result.total;
+  async count() {
+    try {
+      const result = await this.get();
+      return result.total;
+    }
+    catch (error: any) {
+      logger.error('Failed to get record count', {
+        model: this.model,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to get record count', 'query', {
+        model: this.model,
+        originalError: error?.message,
+      });
+    }
   }
 }

@@ -11,20 +11,70 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
   protected pagination: Pagination = {};
   protected options: QueryOptions = {};
 
-  constructor(
-    protected readonly model: string,
-  ) {
+  constructor(protected readonly model: string) {}
+
+  where(field: keyof TData, operator: Operator, value: any): this {
+    try {
+      this.filters.push({
+        field: String(field),
+        operator,
+        value,
+      });
+      return this;
+    }
+    catch (error: any) {
+      logger.error('Failed to add filter', {
+        field: String(field),
+        operator,
+        value,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to add filter', 'filter', {
+        field: String(field),
+        operator,
+        value,
+        originalError: error?.message,
+      });
+    }
   }
 
-  abstract where(field: keyof TData, operator: Operator, value: any): this;
-  abstract include(relations: string | string[]): this;
-  abstract orderBy(field: keyof TData, direction?: 'asc' | 'desc'): this;
-  abstract limit(count: number): this;
-  abstract offset(count: number): this;
-  abstract locale(code: string): this;
-  abstract get(): Promise<QueryResult<TData>>;
-  abstract first(): Promise<TData | null>;
-  abstract count(): Promise<number>;
+  orderBy(field: keyof TData, direction: 'asc' | 'desc' = 'asc'): this {
+    try {
+      this.sorting.push({
+        field: String(field),
+        direction,
+      });
+      return this;
+    }
+    catch (error: any) {
+      logger.error('Failed to add sort', {
+        field: String(field),
+        direction,
+        error: error?.message,
+      });
+      throw new QueryBuilderError('Failed to add sort', 'sort', {
+        field: String(field),
+        direction,
+        originalError: error?.message,
+      });
+    }
+  }
+
+  limit(count: number): this {
+    if (count < 0) {
+      throw new QueryBuilderError('Limit cannot be negative', 'validate', { count });
+    }
+    this.pagination.limit = count;
+    return this;
+  }
+
+  offset(count: number): this {
+    if (count < 0) {
+      throw new QueryBuilderError('Offset cannot be negative', 'validate', { count });
+    }
+    this.pagination.offset = count;
+    return this;
+  }
 
   cache(ttl?: number): this {
     try {
@@ -37,94 +87,37 @@ export abstract class BaseQueryBuilder<TData> implements IBaseQueryBuilder<TData
       logger.error('Failed to set cache', {
         ttl,
         error: error?.message,
-        errorCode: error?.code,
       });
-
-      throw new QueryBuilderError(
-        'Failed to set cache',
-        'cache',
-        {
-          ttl,
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
+      throw new QueryBuilderError('Failed to set cache', 'cache', {
+        ttl,
+        originalError: error?.message,
+      });
     }
   }
 
   noCache(): this {
-    try {
-      this.options.cache = false;
-      return this;
-    }
-    catch (error: any) {
-      logger.error('Failed to disable cache', {
-        error: error?.message,
-        errorCode: error?.code,
-      });
-
-      throw new QueryBuilderError(
-        'Failed to disable cache',
-        'cache',
-        {
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
-    }
+    this.options.cache = false;
+    return this;
   }
 
   bypassCache(): this {
-    try {
-      this.options.cache = false;
-      this.options.ttl = 0;
-      return this;
-    }
-    catch (error: any) {
-      logger.error('Failed to bypass cache', {
-        error: error?.message,
-        errorCode: error?.code,
-      });
-
-      throw new QueryBuilderError(
-        'Failed to bypass cache',
-        'cache',
-        {
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
-    }
+    this.options.cache = false;
+    this.options.ttl = 0;
+    return this;
   }
 
-  toJSON() {
-    try {
-      const result = {
-        model: this.model,
-        filters: this.filters,
-        includes: this.includes,
-        sorting: this.sorting,
-        pagination: this.pagination,
-        options: this.options,
-      };
-      return result;
-    }
-    catch (error: any) {
-      logger.error('Failed to convert query to JSON', {
-        model: this.model,
-        error: error?.message,
-        errorCode: error?.code,
-      });
+  abstract get(): Promise<QueryResult<TData>>;
+  abstract first(): Promise<TData | null>;
+  abstract count(): Promise<number>;
 
-      throw new QueryBuilderError(
-        'Failed to convert query to JSON',
-        'serialize',
-        {
-          model: this.model,
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
-    }
+  toJSON() {
+    return {
+      model: this.model,
+      filters: this.filters,
+      includes: this.includes,
+      sorting: this.sorting,
+      pagination: this.pagination,
+      options: this.options,
+    };
   }
 }

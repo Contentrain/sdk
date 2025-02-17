@@ -1,13 +1,13 @@
 import type { JSONLoader } from '../../loader/json/json.loader';
 import type { IBaseJSONRecord, IJSONLoaderResult } from '../../loader/types/json';
-import type { Filter, JSONInclude, JSONOptions, QueryResult, Sort } from '../types';
+import type { Filter, Include, JSONOptions, QueryResult, Sort } from '../types';
 import { QueryExecutorError } from '../../errors';
 import { loggers } from '../../utils/logger';
 import { BaseQueryExecutor } from '../base/base-executor';
 
 const logger = loggers.query;
 
-export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryExecutor<TData, JSONInclude, JSONOptions> {
+export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryExecutor<TData, Include, JSONOptions> {
   constructor(private readonly loader: JSONLoader<TData>) {
     super();
   }
@@ -45,7 +45,7 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
   async execute(params: {
     model: string
     filters?: Filter[]
-    includes?: JSONInclude
+    includes?: Include
     sorting?: Sort[]
     pagination?: { limit?: number, offset?: number }
     options?: JSONOptions
@@ -124,20 +124,6 @@ export class JSONQueryExecutor<TData extends IBaseJSONRecord> extends BaseQueryE
       return content;
     }
     return loadResult.content.en || [];
-  }
-
-  private getPaginationInfo(
-    pagination: { limit?: number, offset?: number } | undefined,
-    total: number,
-  ) {
-    if (!pagination?.limit)
-      return undefined;
-
-    return {
-      limit: pagination.limit,
-      offset: pagination.offset || 0,
-      hasMore: (pagination.offset || 0) + pagination.limit < total,
-    };
   }
 
   protected applySorting(data: TData[], sorting: Sort[] = []): TData[] {

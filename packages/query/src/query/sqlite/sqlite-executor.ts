@@ -1,29 +1,58 @@
 import type { SQLiteLoader } from '../../loader/sqlite/sqlite.loader';
 import type { IDBRecord } from '../../loader/types/sqlite';
-import type { QueryCondition, QueryResult, QuerySort, SQLiteInclude, SQLiteOptions, SQLQuery } from '../types';
+import type { Filter, Include, QueryResult, Sort, SQLiteOptions, SQLQuery } from '../types';
 import { QueryExecutorError } from '../../errors';
 import { loggers } from '../../utils/logger';
 import { normalizeTableName, normalizeTranslationTableName } from '../../utils/normalizer';
 import { BaseQueryExecutor } from '../base/base-executor';
 
-export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecutor<TData, SQLiteInclude, SQLiteOptions> {
-  private readonly logger = loggers.query;
+const logger = loggers.query;
 
+export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecutor<TData, Include, SQLiteOptions> {
   constructor(private readonly loader: SQLiteLoader<TData>) {
     super();
-    this.logger.debug('Initializing SQLiteQueryExecutor');
+  }
+
+  protected async resolveRelation(
+    model: string,
+    field: string,
+    data: TData[],
+    options: SQLiteOptions,
+  ): Promise<TData[]> {
+    try {
+      const relations = await this.loader.relationManager.loadRelations(
+        model,
+        data.map(item => item.id),
+        field,
+      );
+
+      if (!relations.length) {
+        return [];
+      }
+
+      return await this.loader.relationManager.loadRelatedContent<TData>(
+        relations,
+        options?.locale,
+      );
+    }
+    catch (error: any) {
+      logger.error('Failed to resolve relation', { error });
+      throw new QueryExecutorError('Failed to resolve relation', 'resolve', {
+        model,
+        field,
+        originalError: error?.message,
+      });
+    }
   }
 
   async execute(params: {
     model: string
-    filters?: QueryCondition[]
-    sorting?: QuerySort[]
+    filters?: Filter[]
+    sorting?: Sort[]
     pagination?: { limit?: number, offset?: number }
     options?: SQLiteOptions
   }): Promise<QueryResult<TData>> {
     try {
-      this.logger.debug('Executing query', { params });
-
       // SQL sorgusunu oluştur
       const sqlQuery = await this.buildSQLQuery(params);
 
@@ -34,7 +63,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       );
 
       // İlişkileri yükle
-      if (params.options?.includes) {
+      if (params.options?.includes?.length) {
         for (const include of params.options.includes) {
           const relatedData = await this.resolveRelation(
             params.model,
@@ -59,11 +88,11 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       return {
         data,
         total,
-        pagination: this.getPaginationInfo(params.pagination, data.length, total),
+        pagination: this.getPaginationInfo(params.pagination, total),
       };
     }
     catch (error: any) {
-      this.logger.error('Query execution failed', { error });
+      logger.error('Query execution failed', { error });
       throw new QueryExecutorError('Failed to execute query', 'execute', {
         model: params.model,
         originalError: error?.message,
@@ -71,142 +100,10 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     }
   }
 
-  private async addRelationJoins(query: SQLQuery, model: string, includes: string[]): Promise<void> {
-    for (const include of includes) {
-      const relations = await this.loader.relationManager.loadRelations(model, [], include);
-      if (relations.length > 0) {
-        const relation = relations[0];
-        const relationTable = normalizeTableName(relation.target_model);
-
-        // İlişki tablosunu ekle
-        query.joins.push({
-          type: 'LEFT',
-          table: relationTable,
-          alias: `r_${include}`,
-          conditions: [`m.${include}_id = r_${include}.id`],
-        });
-
-        // İlişkili tablonun alanlarını seç
-        const relationFields = await this.loader.translationManager.getMainColumns(relation.target_model);
-        query.select.push(
-          ...relationFields.map(field =>
-            `r_${include}.${field} as ${include}_${field}`,
-          ),
-        );
-
-        // İlişkili tablonun çevirilerini ekle
-        if (query.options?.locale && query.options?.translations !== false) {
-          const hasTranslations = await this.loader.translationManager.hasTranslations(relation.target_model);
-          if (hasTranslations) {
-            const translationTable = normalizeTranslationTableName(relation.target_model);
-            const translationFields = await this.loader.translationManager.getTranslationColumns(relation.target_model);
-
-            if (translationFields.length > 0) {
-              // Çeviri tablosunu ekle
-              query.joins.push({
-                type: 'LEFT',
-                table: translationTable,
-                alias: `t_${include}`,
-                conditions: [
-                  `r_${include}.id = t_${include}.id`,
-                  `t_${include}.locale = ?`,
-                ],
-              });
-
-              // Çeviri alanlarını ekle
-              query.select.push(
-                ...translationFields.map(field =>
-                  `t_${include}.${field} as ${include}_${field}`,
-                ),
-              );
-
-              query.parameters.push(query.options.locale);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private buildConditionWithoutParams(condition: QueryCondition): string {
-    const { field, operator, value } = condition;
-
-    // Null değerler için özel durum
-    if (value === null) {
-      return operator === 'eq' ? `${field} IS NULL` : `${field} IS NOT NULL`;
-    }
-
-    // Array değerler için özel durum
-    if (Array.isArray(value)) {
-      const placeholders = value.map(() => '?').join(',');
-      return operator === 'in' ? `${field} IN (${placeholders})` : `${field} NOT IN (${placeholders})`;
-    }
-
-    // String operatörleri için LIKE kullanımı
-    switch (operator) {
-      case 'eq':
-        return `${field} = ?`;
-      case 'ne':
-        return `${field} != ?`;
-      case 'gt':
-        return `${field} > ?`;
-      case 'gte':
-        return `${field} >= ?`;
-      case 'lt':
-        return `${field} < ?`;
-      case 'lte':
-        return `${field} <= ?`;
-      case 'contains':
-        return `${field} LIKE ? ESCAPE '\\'`;
-      case 'startsWith':
-        return `${field} LIKE ? ESCAPE '\\'`;
-      case 'endsWith':
-        return `${field} LIKE ? ESCAPE '\\'`;
-      case 'in':
-        return `${field} IN (?)`;
-      case 'nin':
-        return `${field} NOT IN (?)`;
-      default:
-        throw new QueryExecutorError(
-          'Unsupported operator',
-          'query',
-          { field, operator, value },
-        );
-    }
-  }
-
-  private async addTranslationJoin(query: SQLQuery, model: string, locale: string): Promise<void> {
-    const hasTranslations = await this.loader.translationManager.hasTranslations(model);
-
-    if (hasTranslations) {
-      const translationTable = normalizeTranslationTableName(model);
-      const translationFields = await this.loader.translationManager.getTranslationColumns(model);
-
-      if (translationFields.length > 0) {
-        // Çeviri alanlarını ekle - null değer dönecek şekilde
-        query.select.push(
-          ...translationFields.map(field =>
-            `t.${field} as ${field}`,
-          ),
-        );
-
-        // JOIN ekle
-        query.joins.push({
-          type: 'LEFT',
-          table: translationTable,
-          alias: 't',
-          conditions: ['m.id = t.id', 't.locale = ?'],
-        });
-
-        query.parameters.push(locale);
-      }
-    }
-  }
-
   private async buildSQLQuery(params: {
     model: string
-    filters?: QueryCondition[]
-    sorting?: QuerySort[]
+    filters?: Filter[]
+    sorting?: Sort[]
     pagination?: { limit?: number, offset?: number }
     options?: SQLiteOptions
   }): Promise<SQLQuery> {
@@ -232,7 +129,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     }
 
     // İlişkileri ekle
-    if (params.options?.includes) {
+    if (params.options?.includes?.length) {
       await this.addRelationJoins(query, params.model, params.options.includes);
     }
 
@@ -240,7 +137,6 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     if (query.where.length) {
       query.where.forEach((condition) => {
         if (condition.value === null) {
-          // Null değerler için parametre eklemeye gerek yok
           return;
         }
 
@@ -313,7 +209,139 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     return parts.join(' ');
   }
 
-  async getTotal(query: SQLQuery): Promise<number> {
+  private async addTranslationJoin(query: SQLQuery, model: string, locale: string): Promise<void> {
+    const hasTranslations = await this.loader.translationManager.hasTranslations(model);
+
+    if (hasTranslations) {
+      const translationTable = normalizeTranslationTableName(model);
+      const translationFields = await this.loader.translationManager.getTranslationColumns(model);
+
+      if (translationFields.length > 0) {
+        // Çeviri alanlarını ekle
+        query.select.push(
+          ...translationFields.map(field =>
+            `t.${field} as ${field}`,
+          ),
+        );
+
+        // JOIN ekle
+        query.joins.push({
+          type: 'LEFT',
+          table: translationTable,
+          alias: 't',
+          conditions: ['m.id = t.id', 't.locale = ?'],
+        });
+
+        query.parameters.push(locale);
+      }
+    }
+  }
+
+  private async addRelationJoins(query: SQLQuery, model: string, includes: string[]): Promise<void> {
+    for (const include of includes) {
+      const relations = await this.loader.relationManager.loadRelations(model, [], include);
+      if (relations.length > 0) {
+        const relation = relations[0];
+        const relationTable = normalizeTableName(relation.target_model);
+
+        // İlişki tablosunu ekle
+        query.joins.push({
+          type: 'LEFT',
+          table: relationTable,
+          alias: `r_${include}`,
+          conditions: [`m.${include}_id = r_${include}.id`],
+        });
+
+        // İlişkili tablonun alanlarını seç
+        const relationFields = await this.loader.translationManager.getMainColumns(relation.target_model);
+        query.select.push(
+          ...relationFields.map(field =>
+            `r_${include}.${field} as ${include}_${field}`,
+          ),
+        );
+
+        // İlişkili tablonun çevirilerini ekle
+        if (query.options?.locale && query.options?.translations !== false) {
+          const hasTranslations = await this.loader.translationManager.hasTranslations(relation.target_model);
+          if (hasTranslations) {
+            const translationTable = normalizeTranslationTableName(relation.target_model);
+            const translationFields = await this.loader.translationManager.getTranslationColumns(relation.target_model);
+
+            if (translationFields.length > 0) {
+              // Çeviri tablosunu ekle
+              query.joins.push({
+                type: 'LEFT',
+                table: translationTable,
+                alias: `t_${include}`,
+                conditions: [
+                  `r_${include}.id = t_${include}.id`,
+                  `t_${include}.locale = ?`,
+                ],
+              });
+
+              // Çeviri alanlarını ekle
+              query.select.push(
+                ...translationFields.map(field =>
+                  `t_${include}.${field} as ${include}_${field}`,
+                ),
+              );
+
+              query.parameters.push(query.options.locale);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private buildConditionWithoutParams(condition: Filter): string {
+    const { field, operator, value } = condition;
+
+    // Null değerler için özel durum
+    if (value === null) {
+      return operator === 'eq' ? `${field} IS NULL` : `${field} IS NOT NULL`;
+    }
+
+    // Array değerler için özel durum
+    if (Array.isArray(value)) {
+      const placeholders = value.map(() => '?').join(',');
+      return operator === 'in' ? `${field} IN (${placeholders})` : `${field} NOT IN (${placeholders})`;
+    }
+
+    // String operatörleri için LIKE kullanımı
+    switch (operator) {
+      case 'eq':
+        return `${field} = ?`;
+      case 'ne':
+        return `${field} != ?`;
+      case 'gt':
+        return `${field} > ?`;
+      case 'gte':
+        return `${field} >= ?`;
+      case 'lt':
+        return `${field} < ?`;
+      case 'lte':
+        return `${field} <= ?`;
+      case 'contains':
+        return `${field} LIKE ? ESCAPE '\\'`;
+      case 'startsWith':
+        return `${field} LIKE ? ESCAPE '\\'`;
+      case 'endsWith':
+        return `${field} LIKE ? ESCAPE '\\'`;
+      case 'in':
+        return `${field} IN (?)`;
+      case 'nin':
+        return `${field} NOT IN (?)`;
+      default:
+        throw new QueryExecutorError(
+          'Unsupported operator',
+          'query',
+          { field, operator, value },
+        );
+    }
+  }
+
+  private async getTotal(query: SQLQuery): Promise<number> {
     try {
       const countQuery: SQLQuery = {
         select: ['COUNT(*) as total'],
@@ -321,61 +349,17 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
         joins: query.joins,
         where: query.where,
         orderBy: [],
-        parameters: [],
+        parameters: query.parameters,
         pagination: undefined,
         options: undefined,
       };
-
-      // JOIN koşulları için parametreleri ekle
-      if (countQuery.joins.length) {
-        countQuery.joins.forEach((join) => {
-          join.conditions.forEach((condition) => {
-            if (condition.includes('?')) {
-              const originalJoinIndex = query.joins.findIndex(
-                originalJoin => originalJoin.alias === join.alias,
-              );
-              if (originalJoinIndex !== -1) {
-                const parameterIndex = query.parameters.findIndex(
-                  _ => query.joins[originalJoinIndex].conditions.includes(condition),
-                );
-                if (parameterIndex !== -1) {
-                  countQuery.parameters.push(query.parameters[parameterIndex]);
-                }
-              }
-            }
-          });
-        });
-      }
-
-      // WHERE koşulları için parametreleri ekle
-      if (countQuery.where.length) {
-        countQuery.where.forEach((condition) => {
-          if (Array.isArray(condition.value)) {
-            countQuery.parameters.push(...condition.value);
-          }
-          else {
-            if (condition.operator === 'startsWith') {
-              countQuery.parameters.push(`${String(condition.value)}%`);
-            }
-            else if (condition.operator === 'contains') {
-              countQuery.parameters.push(`%${String(condition.value)}%`);
-            }
-            else if (condition.operator === 'endsWith') {
-              countQuery.parameters.push(`%${String(condition.value)}`);
-            }
-            else {
-              countQuery.parameters.push(condition.value);
-            }
-          }
-        });
-      }
 
       const sql = this.buildSQL(countQuery);
       const result = await this.loader.query<{ total: number }>(sql, countQuery.parameters);
       return result[0].total;
     }
     catch (error: any) {
-      this.logger.error('Failed to get total count', { error });
+      logger.error('Failed to get total count', { error });
       throw new QueryExecutorError('Failed to get total count', 'execute', {
         model: query.from,
         originalError: error?.message,
@@ -383,41 +367,8 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     }
   }
 
-  protected async resolveRelation(
-    model: string,
-    include: string,
-    data: TData[],
-    options?: SQLiteOptions,
-  ): Promise<TData[]> {
-    try {
-      const relations = await this.loader.relationManager.loadRelations(
-        model,
-        data.map(item => item.id),
-        include,
-      );
-
-      if (!relations.length) {
-        return [];
-      }
-
-      return await this.loader.relationManager.loadRelatedContent<TData>(
-        relations,
-        options?.locale,
-      );
-    }
-    catch (error: any) {
-      this.logger.error('Failed to resolve relation', { error });
-      throw new QueryExecutorError('Failed to resolve relation', 'execute', {
-        model,
-        include,
-        originalError: error?.message,
-      });
-    }
-  }
-
-  private getPaginationInfo(
+  protected getPaginationInfo(
     pagination: { limit?: number, offset?: number } | undefined,
-    resultCount: number,
     total: number,
   ): { limit: number, offset: number, hasMore: boolean } | undefined {
     if (!pagination?.limit) {
@@ -427,7 +378,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     return {
       limit: pagination.limit,
       offset: pagination.offset || 0,
-      hasMore: (pagination.offset || 0) + resultCount < total,
+      hasMore: (pagination.offset || 0) + pagination.limit < total,
     };
   }
 }

@@ -36,21 +36,11 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
       }
     }
     catch (error: any) {
-      logger.error('Failed to apply string operation', {
+      logger.error('Failed to apply string operation', { operator, error: error?.message });
+      throw new QueryExecutorError('Failed to apply string operation', 'filter', {
         operator,
-        error: error?.message,
-        errorCode: error?.code,
+        originalError: error?.message,
       });
-
-      throw new QueryExecutorError(
-        'Failed to apply string operation',
-        'filter',
-        {
-          operator,
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
     }
   }
 
@@ -222,7 +212,7 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
     }
   }
 
-  private compareValues(itemValue: any, operator: string, value: any): boolean {
+  protected compareValues(itemValue: any, operator: string, value: any): boolean {
     try {
       switch (operator) {
         case 'eq':
@@ -243,36 +233,41 @@ export abstract class BaseQueryExecutor<TData, TInclude extends Include = Includ
           return Array.isArray(value) ? !value.includes(itemValue) : false;
         case 'contains':
           return typeof itemValue === 'string' && typeof value === 'string'
-            ? itemValue.toLowerCase().includes(value.toLowerCase())
+            ? this.applyStringOperation(itemValue, 'contains', value)
             : false;
         case 'startsWith':
           return typeof itemValue === 'string' && typeof value === 'string'
-            ? itemValue.toLowerCase().startsWith(value.toLowerCase())
+            ? this.applyStringOperation(itemValue, 'startsWith', value)
             : false;
         case 'endsWith':
           return typeof itemValue === 'string' && typeof value === 'string'
-            ? itemValue.toLowerCase().endsWith(value.toLowerCase())
+            ? this.applyStringOperation(itemValue, 'endsWith', value)
             : false;
         default:
           return false;
       }
     }
     catch (error: any) {
-      logger.error('Failed to compare values', {
+      logger.error('Failed to compare values', { operator, error: error?.message });
+      throw new QueryExecutorError('Failed to compare values', 'filter', {
         operator,
-        error: error?.message,
-        errorCode: error?.code,
+        originalError: error?.message,
       });
-
-      throw new QueryExecutorError(
-        'Failed to compare values',
-        'filter',
-        {
-          operator,
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
-      );
     }
+  }
+
+  protected getPaginationInfo(
+    pagination: Pagination | undefined,
+    total: number,
+  ): QueryResult<TData>['pagination'] {
+    if (!pagination?.limit) {
+      return undefined;
+    }
+
+    return {
+      limit: pagination.limit,
+      offset: pagination.offset || 0,
+      hasMore: (pagination.offset || 0) + pagination.limit < total,
+    };
   }
 }
