@@ -82,14 +82,6 @@ export class SQLiteContentManager {
         `SELECT * FROM ${tableName} ${where}`,
         Object.values(conditions),
       );
-
-      if (result.length > 1000) {
-        this.logger.info('Large dataset retrieved', {
-          model,
-          count: result.length,
-          operation: 'read',
-        });
-      }
       return result;
     }
     catch (error: any) {

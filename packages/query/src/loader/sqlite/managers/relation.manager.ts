@@ -13,14 +13,8 @@ export class SQLiteRelationManager extends SQLiteContentManager {
     logger: ILogger,
   ) {
     super(databasePath, logger);
-    this.logger.debug('Initializing SQLiteRelationManager', {
-      databasePath,
-      operation: 'initialize',
-    });
-
     try {
       this.translationManager = new SQLiteTranslationManager(databasePath, logger);
-      this.logger.info('Relation manager initialized successfully');
     }
     catch (error: any) {
       this.logger.error('Failed to initialize relation manager', {

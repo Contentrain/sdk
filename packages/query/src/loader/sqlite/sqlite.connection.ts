@@ -9,16 +9,11 @@ export class SQLiteConnection {
   private readonly db: Database;
 
   constructor(databasePath: string) {
-    logger.info('Initializing SQLite connection', { databasePath });
-
     try {
       this.db = new BetterSQLite(databasePath, {
         readonly: true,
         fileMustExist: true,
       });
-
-      logger.info('SQLite connection established', { databasePath });
-
       this.setupDatabase();
     }
     catch (error: any) {
@@ -41,13 +36,10 @@ export class SQLiteConnection {
   }
 
   private setupDatabase(): void {
-    logger.info('Setting up database configuration');
-
     try {
       this.db.pragma('journal_mode = WAL');
       this.db.pragma('synchronous = NORMAL');
       this.db.pragma('foreign_keys = ON');
-      logger.info('Database configuration completed successfully');
     }
     catch (error: any) {
       logger.error('Failed to setup database configuration', {
