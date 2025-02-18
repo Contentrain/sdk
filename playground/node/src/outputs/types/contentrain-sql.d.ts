@@ -3,138 +3,139 @@
 
 import type {
   BaseContentrainType,
-  DBRecord,
   QueryConfig,
-} from '@contentrain/query';
+  DBRecord,
+} from "@contentrain/query";
 
 export interface IServices extends DBRecord {
-  status: string
-  reference_id?: string
-  title?: string
-  description?: string
-  image?: string
+  status: string;
+  reference_id?: string;
+  title?: string;
+  description?: string;
+  image?: string;
 
   _relations?: {
-    reference: IReferences
-  }
+    reference: IReferences;
+  };
 }
 
 export interface IProcesses extends DBRecord {
-  status: string
-  title?: string
-  description?: string
-  icon?: string
+  status: string;
+  title?: string;
+  description?: string;
+  icon?: string;
 }
 
 export interface ITabitems extends DBRecord {
-  status: string
-  category_id?: string
-  link?: string
-  description?: string
-  image?: string
+  status: string;
+  category_id?: string;
+  link?: string;
+  description?: string;
+  image?: string;
 
   _relations?: {
-    category: IWorkcategories[]
-  }
+    category: IWorkcategories[];
+  };
 }
 
 export interface IWorkitems extends DBRecord {
-  status: string
-  category_id?: string
-  title?: string
-  image?: string
-  description?: string
-  link?: string
-  field_order?: number
+  status: string;
+  category_id?: string;
+  title?: string;
+  image?: string;
+  description?: string;
+  link?: string;
+  field_order?: number;
+
   _relations?: {
-    category: IWorkcategories
-  }
+    category: IWorkcategories;
+  };
 }
 
 export interface IWorkcategories extends DBRecord {
-  status: string
-  category?: string
-  field_order?: number
+  status: string;
+  category?: string;
+  field_order?: number;
 }
 
 export interface IFaqitems extends DBRecord {
-  status: string
-  question?: string
-  answer?: string
-  field_order?: number
+  status: string;
+  question?: string;
+  answer?: string;
+  field_order?: number;
 }
 
 export interface ISections extends DBRecord {
-  status: string
-  title?: string
-  description?: string
-  buttontext?: string
-  buttonlink?: string
-  name?: string
-  subtitle?: string
+  status: string;
+  title?: string;
+  description?: string;
+  buttontext?: string;
+  buttonlink?: string;
+  name?: string;
+  subtitle?: string;
 }
 
 export interface ISociallinks extends DBRecord {
-  status: string
-  link: string
-  icon: string
-  service_id?: string
+  status: string;
+  link: string;
+  icon: string;
+  service_id?: string;
 
   _relations?: {
-    service: IServices
-  }
+    service: IServices;
+  };
 }
 
 export interface IReferences extends DBRecord {
-  status: string
-  logo: string
+  status: string;
+  logo: string;
 }
 
 export interface IMetaTags extends DBRecord {
-  status: string
-  name?: string
-  content?: string
-  description?: string
+  status: string;
+  name?: string;
+  content?: string;
+  description?: string;
 }
 
 export interface ITestimonialItems extends DBRecord {
-  status: string
-  creative_work_id?: string
-  name?: string
-  description?: string
-  title?: string
-  image?: string
+  status: string;
+  creative_work_id?: string;
+  name?: string;
+  description?: string;
+  title?: string;
+  image?: string;
 }
 
 export interface IProjectDetails extends DBRecord {
-  status: string
-  work_id?: string
-  testimonial_id?: string
-  title?: string
-  description?: string
+  status: string;
+  work_id?: string;
+  testimonial_id?: string;
+  title?: string;
+  description?: string;
 }
 
 export interface IProjectStats extends DBRecord {
-  status: string
-  view_count: number
-  work_id?: string
-  reference_id?: string
+  status: string;
+  view_count: number;
+  work_id?: string;
+  reference_id?: string;
 }
 
 export interface IContentrainRelations extends DBRecord {
-  source_model: string
-  source_id: string
-  target_model: string
-  target_id: string
-  field_id: string
-  type: string
+  source_model: string;
+  source_id: string;
+  target_model: string;
+  target_id: string;
+  field_id: string;
+  type: string;
 }
 
 export type IServicesQuery = QueryConfig<
   IServices,
   never,
   {
-    reference: IReferences
+    reference: IReferences;
   }
 >;
 
@@ -148,7 +149,7 @@ export type ITabitemsQuery = QueryConfig<
   ITabitems,
   never,
   {
-    category: IWorkcategories[]
+    category: IWorkcategories[];
   }
 >;
 
@@ -156,7 +157,7 @@ export type IWorkitemsQuery = QueryConfig<
   IWorkitems,
   never,
   {
-    category: IWorkcategories
+    category: IWorkcategories;
   }
 >;
 
@@ -182,7 +183,7 @@ export type ISociallinksQuery = QueryConfig<
   ISociallinks,
   never,
   {
-    service: IServices
+    service: IServices;
   }
 >;
 

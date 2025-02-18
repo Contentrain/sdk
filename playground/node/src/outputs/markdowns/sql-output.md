@@ -197,47 +197,47 @@ Mobil uygulamayı React Native ile geliştirdik ve hem iOS hem de Android için 
 
 
 ### Geliştirme Araçları (Frontend ve Backend)
-- **undefined**
+- **Vue.js Javascript tabanlı bir frameworktür. Vue.js, kullanıcı arayüzleri ve UI bileşenleri oluşturmak için kullanılan bir JavaScript kütüphanesidir. Facebook ve büyük bir geliştirici topluluğu tarafından sürdürülmektedir. Vue, hızlı renderlama ve sanal DOM ile bilinir.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: Vue.js Javascript tabanlı bir frameworktür. Vue.js, kullanıcı arayüzleri ve UI bileşenleri oluşturmak için kullanılan bir JavaScript kütüphanesidir. Facebook ve büyük bir geliştirici topluluğu tarafından sürdürülmektedir. Vue, hızlı renderlama ve sanal DOM ile bilinir.
 
-- **undefined**
+- **React.js, kullanıcı arayüzleri veya UI bileşenleri oluşturmak için kullanılan bir JavaScript kütüphanesidir. Facebook ve büyük bir geliştirici topluluğu tarafından sürdürülmektedir. React, hızlı renderlama ve sanal DOM ile bilinir.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: React.js, kullanıcı arayüzleri veya UI bileşenleri oluşturmak için kullanılan bir JavaScript kütüphanesidir. Facebook ve büyük bir geliştirici topluluğu tarafından sürdürülmektedir. React, hızlı renderlama ve sanal DOM ile bilinir.
 
-- **undefined**
+- **Nuxt.js, Vue.js üzerine inşa edilmiş bir frameworktür. Sunucu tarafında render edilen uygulamaların ve statik web sitelerinin geliştirilmesini kolaylaştırır. SSR, statik site oluşturma ve geliştirilmiş SEO desteği gibi güçlü özellikler sunar.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: Nuxt.js, Vue.js üzerine inşa edilmiş bir frameworktür. Sunucu tarafında render edilen uygulamaların ve statik web sitelerinin geliştirilmesini kolaylaştırır. SSR, statik site oluşturma ve geliştirilmiş SEO desteği gibi güçlü özellikler sunar.
 
-- **undefined**
+- **Next.js, yüksek performanslı, SEO dostu uygulamalar oluşturmak için sunucu tarafında renderlama ve statik web sitesi oluşturma gibi işlevleri etkinleştiren bir React çerçevesidir.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: Next.js, yüksek performanslı, SEO dostu uygulamalar oluşturmak için sunucu tarafında renderlama ve statik web sitesi oluşturma gibi işlevleri etkinleştiren bir React çerçevesidir.
 
-- **undefined**
+- **Astro, hızlı, içerik odaklı web siteleri oluşturmak için yeni bir frontend çerçevesidir. Kısmi hidrasyon adı verilen sayfa renderlama yaklaşımını kullanır ve JavaScript'i tarayıcıya göndererek web sitelerini hızlandırır.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: Astro, hızlı, içerik odaklı web siteleri oluşturmak için yeni bir frontend çerçevesidir. Kısmi hidrasyon adı verilen sayfa renderlama yaklaşımını kullanır ve JavaScript'i tarayıcıya göndererek web sitelerini hızlandırır.
 
-- **undefined**
+- **Svelte, çalışma zamanı yerine derleme adımına çok işi kaydıran modern bir JavaScript çerçevesidir. Bu, daha küçük paket boyutları ve daha hızlı yükleme süreleri sağlar, bu da hızlı web uygulamaları oluşturmak için mükemmel bir seçim yapar.**
   - Kategoriler: Frontend Geliştirme, UI/UX Tasarımı
   - Açıklama: Svelte, çalışma zamanı yerine derleme adımına çok işi kaydıran modern bir JavaScript çerçevesidir. Bu, daha küçük paket boyutları ve daha hızlı yükleme süreleri sağlar, bu da hızlı web uygulamaları oluşturmak için mükemmel bir seçim yapar.
 
-- **undefined**
+- **Node.js, Chrome'un V8 JavaScript motoru üzerine inşa edilmiş bir JavaScript çalışma zamanıdır. Sunucuda JavaScript çalıştırmanıza olanak tanır, böylece ölçeklenebilir ve yüksek performanslı uygulamalar oluşturabilirsiniz.**
   - Kategoriler: Backend Geliştirme, UI/UX Tasarımı
   - Açıklama: Node.js, Chrome'un V8 JavaScript motoru üzerine inşa edilmiş bir JavaScript çalışma zamanıdır. Sunucuda JavaScript çalıştırmanıza olanak tanır, böylece ölçeklenebilir ve yüksek performanslı uygulamalar oluşturabilirsiniz.
 
-- **undefined**
+- **Express.js, web ve mobil uygulamalar oluşturmak için sağlam bir özellik seti sağlayan minimal ve esnek bir Node.js web uygulama çerçevesidir. API'ler ve web sunucuları hızlı ve kolay bir şekilde oluşturmak için tasarlanmıştır.**
   - Kategoriler: Backend Geliştirme, UI/UX Tasarımı
   - Açıklama: Express.js, web ve mobil uygulamalar oluşturmak için sağlam bir özellik seti sağlayan minimal ve esnek bir Node.js web uygulama çerçevesidir. API'ler ve web sunucuları hızlı ve kolay bir şekilde oluşturmak için tasarlanmıştır.
 
-- **undefined**
+- **Nest.js, verimli, güvenilir ve ölçeklenebilir sunucu taraflı uygulamalar oluşturmak için ilerici bir Node.js çerçevesidir. TypeScript kullanır ve uygulamalarınız için sağlam bir mimari tasarım sağlar, Angular'dan büyük ölçüde ilham almıştır.**
   - Kategoriler: Backend Geliştirme, UI/UX Tasarımı
   - Açıklama: Nest.js, verimli, güvenilir ve ölçeklenebilir sunucu taraflı uygulamalar oluşturmak için ilerici bir Node.js çerçevesidir. TypeScript kullanır ve uygulamalarınız için sağlam bir mimari tasarım sağlar, Angular'dan büyük ölçüde ilham almıştır.
 
-- **undefined**
+- **Koa.js, daha küçük, daha ifade edici ve daha sağlam olmayı hedefleyen modern bir Node.js web çerçevesidir. Geri aramaları ortadan kaldırmak ve hata işleme yeteneklerini artırmak için async fonksiyonlar kullanır.**
   - Kategoriler: Backend Geliştirme, UI/UX Tasarımı
   - Açıklama: Koa.js, daha küçük, daha ifade edici ve daha sağlam olmayı hedefleyen modern bir Node.js web çerçevesidir. Geri aramaları ortadan kaldırmak ve hata işleme yeteneklerini artırmak için async fonksiyonlar kullanır.
 
-- **undefined**
+- **GraphQL, API'ler için bir sorgu dili ve bu sorguları yürütmek için bir çalışma zamanıdır. REST'e yalnızca ihtiyaç duydukları verileri isteyerek daha verimli ve güçlü bir alternatif sunar.**
   - Kategoriler: Backend Geliştirme, UI/UX Tasarımı
   - Açıklama: GraphQL, API'ler için bir sorgu dili ve bu sorguları yürütmek için bir çalışma zamanıdır. REST'e yalnızca ihtiyaç duydukları verileri isteyerek daha verimli ve güçlü bir alternatif sunar.
 
@@ -326,15 +326,15 @@ Mobil uygulamayı React Native ile geliştirdik ve hem iOS hem de Android için 
 ## 5. Sosyal Medya ve Referans Örnekleri
 
 ### Sosyal Medya Linkleri ve Servisler
-- **undefined**
+- **Web Uygulama Geliştirme**
   - Link: https://www.linkedin.com/company/lanista-software
   - İkon: ri-linkedin-line
 
-- **undefined**
+- **Mobil Uygulama Geliştirme**
   - Link: https://x.com/lanistasoftware
   - İkon: ri-twitter-line
 
-- **undefined**
+- **MVP Geliştirme**
   - Link: https://www.instagram.com/lanistasoftware/
   - İkon: ri-instagram-line
 
