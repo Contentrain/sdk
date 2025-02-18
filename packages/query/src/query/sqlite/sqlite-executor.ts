@@ -9,8 +9,12 @@ import { BaseQueryExecutor } from '../base/base-executor';
 const logger = loggers.query;
 
 export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecutor<TData, Include, SQLiteOptions> {
-  constructor(private readonly loader: SQLiteLoader<TData>) {
+  constructor(private loader: SQLiteLoader<TData>) {
     super();
+  }
+
+  setLoader(loader: SQLiteLoader<TData>): void {
+    this.loader = loader;
   }
 
   protected async resolveRelation(
@@ -106,15 +110,6 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     options?: SQLiteOptions
   }): Promise<QueryResult<TData>> {
     try {
-      logger.debug('Starting query execution', {
-        operation: 'execute',
-        model: params.model,
-        hasFilters: Boolean(params.filters?.length),
-        hasSorting: Boolean(params.sorting?.length),
-        hasPagination: Boolean(params.pagination),
-        locale: params.options?.locale,
-      });
-
       const sqlQuery = await this.buildSQLQuery(params);
       const sql = this.buildSQL(sqlQuery);
 
@@ -122,20 +117,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
         sql,
         sqlQuery.parameters,
       );
-
-      logger.debug('Main query completed', {
-        operation: 'execute',
-        model: params.model,
-        resultCount: data.length,
-      });
-
       if (params.options?.includes?.length) {
-        logger.debug('Loading relations', {
-          operation: 'execute',
-          model: params.model,
-          relations: params.options.includes,
-        });
-
         for (const include of params.options.includes) {
           // İlişkileri yükle
           const relations = await this.loader.relationManager.loadRelations(
@@ -182,15 +164,6 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       }
 
       const total = await this.getTotal(sqlQuery);
-
-      logger.debug('Query execution completed', {
-        operation: 'execute',
-        model: params.model,
-        resultCount: data.length,
-        totalCount: total,
-        hasRelations: Boolean(params.options?.includes?.length),
-      });
-
       return {
         data,
         total,
@@ -258,15 +231,6 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       this.translationColumns = [];
       query.select.push(...this.mainColumns.map(field => `m.${field}`));
     }
-
-    // Debug log ekleyelim
-    logger.debug('Column distribution', {
-      model: params.model,
-      mainColumns: this.mainColumns,
-      translationColumns: this.translationColumns,
-      hasTranslations,
-    });
-
     // İlişkileri ekle
     if (params.options?.includes?.length) {
       // İlişki tiplerini al

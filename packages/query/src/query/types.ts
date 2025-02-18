@@ -1,5 +1,7 @@
+import type { SQLiteLoader } from '../loader/sqlite/sqlite.loader';
 import type { IBaseJSONRecord } from '../loader/types/json';
 import type { IDBRecord } from '../loader/types/sqlite';
+import type { SQLiteQueryExecutor } from './sqlite/sqlite-executor';
 
 // Common Types
 export type StringOperator = 'eq' | 'ne' | 'contains' | 'startsWith' | 'endsWith';
@@ -65,6 +67,7 @@ export interface IBaseQueryBuilder<TData> {
 export interface SQLiteOptions {
   includes?: IncludeOptions[]
   locale?: string
+  translations?: boolean
 }
 
 // Dil desteği için tip
@@ -101,7 +104,9 @@ export interface ISQLiteQuery<
     relations: K | K[] | { relation: K, locale?: TLocale } | Array<{ relation: K, locale?: TLocale }>
   ) => this
   locale: (code: TLocale) => this
+  setLoader: (loader: SQLiteLoader<TModel>) => this
 }
+
 export interface SQLQuery {
   select: string[]
   from: string
@@ -128,4 +133,18 @@ export interface JSONOptions extends QueryOptions {
 export interface IJSONQuery<TData extends IBaseJSONRecord> extends IBaseQueryBuilder<TData> {
   include: (relations: string | string[], reference?: string) => this
   locale: (code: string, defaultLocale?: string) => this
+}
+
+// SQLite sorgu yapılandırması için tip
+export interface SQLiteQueryConfig<TData extends IDBRecord> {
+  model: string
+  loader?: SQLiteLoader<TData>
+  options?: SQLiteOptions
+}
+
+// Query builder için yeni tip
+export interface ISQLiteQueryBuilder<TData extends IDBRecord> {
+  model: string
+  executor: SQLiteQueryExecutor<TData>
+  options: SQLiteOptions
 }

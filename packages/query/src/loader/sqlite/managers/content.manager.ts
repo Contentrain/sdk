@@ -35,7 +35,23 @@ export class SQLiteContentManager {
     }
   }
 
-  protected async findById<T extends IDBRecord>(
+  // Public API'lar
+  public async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
+    try {
+      return await this.connection.query<T>(sql, params);
+    }
+    catch (error: any) {
+      this.logger.error('Query error:', {
+        sql,
+        params,
+        error: error?.message,
+        code: error?.code,
+      });
+      throw error;
+    }
+  }
+
+  public async findById<T extends IDBRecord>(
     model: string,
     id: string,
   ): Promise<T | undefined> {
@@ -68,7 +84,7 @@ export class SQLiteContentManager {
     }
   }
 
-  protected async findAll<T extends IDBRecord>(
+  public async findAll<T extends IDBRecord>(
     model: string,
     conditions: Partial<T> = {},
   ): Promise<T[]> {
@@ -105,7 +121,23 @@ export class SQLiteContentManager {
     }
   }
 
-  async close(): Promise<void> {
+  public async getTableCount(): Promise<number> {
+    try {
+      const tables = await this.connection.query<{ name: string }>(
+        'SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'',
+      );
+      return tables.length;
+    }
+    catch (error: any) {
+      this.logger.error('Failed to get table count', {
+        error: error?.message,
+        code: error?.code,
+      });
+      return 0;
+    }
+  }
+
+  public async close(): Promise<void> {
     try {
       await this.connection.close();
     }

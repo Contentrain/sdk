@@ -42,16 +42,7 @@ export class SQLiteRelationManager extends SQLiteContentManager {
   ): Promise<IDBRelation[]> {
     if (!sourceIds.length)
       return [];
-
-    this.logger.debug('Loading relations', {
-      model,
-      fieldId,
-      sourceIdsCount: sourceIds.length,
-      operation: 'read',
-    });
-
     try {
-      const hasSourceTranslations = await this.translationManager.hasTranslations(model);
       const query = `
         SELECT * FROM tbl_contentrain_relations
         WHERE source_model = ?
@@ -75,26 +66,6 @@ export class SQLiteRelationManager extends SQLiteContentManager {
           },
         );
       }
-
-      if (relations.length > 0) {
-        const targetModel = relations[0]?.target_model;
-        const hasTargetTranslations = targetModel
-          ? await this.translationManager.hasTranslations(targetModel)
-          : false;
-
-        this.logger.debug('Relations loaded', {
-          count: relations.length,
-          firstRelation: relations[0],
-          model,
-          fieldId,
-          relationType: relations[0]?.type,
-          targetModel,
-          hasSourceTranslations,
-          hasTargetTranslations,
-          operation: 'read',
-        });
-      }
-
       return relations;
     }
     catch (error: any) {
@@ -130,13 +101,6 @@ export class SQLiteRelationManager extends SQLiteContentManager {
   ): Promise<T[]> {
     if (!relations.length)
       return [];
-
-    this.logger.debug('Loading related content', {
-      relationsCount: relations.length,
-      locale,
-      operation: 'read',
-    });
-
     try {
       const targetModel = relations[0].target_model;
       const targetIds = relations.map(r => r.target_id);
@@ -161,14 +125,6 @@ export class SQLiteRelationManager extends SQLiteContentManager {
           ...item,
           ...translations[item.id],
         }));
-
-        this.logger.debug('Content merged with translations', {
-          originalCount: data.length,
-          mergedCount: mergedData.length,
-          hasTranslations: Object.keys(translations).length > 0,
-          operation: 'read',
-        });
-
         return mergedData;
       }
 
@@ -204,14 +160,6 @@ export class SQLiteRelationManager extends SQLiteContentManager {
       `;
 
       const hasTranslations = await this.translationManager.hasTranslations(model);
-
-      this.logger.debug('Getting relation types', {
-        model,
-        query,
-        hasTranslations,
-        operation: 'read',
-      });
-
       const results = await this.connection.query<{
         field_id: string
         type: 'one-to-one' | 'one-to-many'
@@ -242,14 +190,6 @@ export class SQLiteRelationManager extends SQLiteContentManager {
           hasTargetTranslations,
         };
       }));
-
-      this.logger.debug('Relation types loaded', {
-        model,
-        hasTranslations,
-        relations: relationDetails,
-        operation: 'read',
-      });
-
       return results.reduce((acc: Record<string, 'one-to-one' | 'one-to-many'>, { field_id, type }) => {
         acc[field_id] = type;
         return acc;

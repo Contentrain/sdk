@@ -11,34 +11,54 @@ import { SQLiteQueryExecutor } from './sqlite/sqlite-executor';
 const logger = loggers.query;
 
 export class QueryFactory {
+  private static loader: SQLiteLoader<IDBRecord> | JSONLoader<IBaseJSONRecord>;
+
+  static setLoader(loader: SQLiteLoader<IDBRecord> | JSONLoader<IBaseJSONRecord>): void {
+    this.loader = loader;
+  }
+
   static createSQLiteBuilder<TData extends IDBRecord>(
     model: string,
-    loader: SQLiteLoader<TData>,
+    loader?: SQLiteLoader<TData>,
   ): ISQLiteQuery<TData> {
-    const executor = new SQLiteQueryExecutor<TData>(loader);
+    const actualLoader = loader || this.loader as SQLiteLoader<TData>;
+    if (!actualLoader) {
+      throw new Error('No loader instance available');
+    }
+    const executor = new SQLiteQueryExecutor<TData>(actualLoader);
     return new SQLiteQueryBuilder<TData>(model, executor);
   }
 
   static createJSONBuilder<TData extends IBaseJSONRecord>(
     model: string,
-    loader: JSONLoader<TData>,
+    loader?: JSONLoader<TData>,
   ): IJSONQuery<TData> {
-    return new JSONQueryBuilder<TData>(model, loader);
+    const actualLoader = loader || this.loader as JSONLoader<TData>;
+    if (!actualLoader) {
+      throw new Error('No loader instance available');
+    }
+    return new JSONQueryBuilder<TData>(model, actualLoader);
   }
 
   static createBuilder<TData extends IDBRecord | IBaseJSONRecord>(
     model: string,
-    loader: SQLiteLoader<TData & IDBRecord> | JSONLoader<TData & IBaseJSONRecord>,
+    loader?: SQLiteLoader<TData & IDBRecord> | JSONLoader<TData & IBaseJSONRecord>,
   ): TData extends IDBRecord
       ? ISQLiteQuery<TData & IDBRecord>
       : IJSONQuery<TData & IBaseJSONRecord> {
-    if (loader instanceof SQLiteLoader) {
-      return this.createSQLiteBuilder(model, loader) as any;
+    const actualLoader = loader || this.loader;
+    if (!actualLoader) {
+      throw new Error('No loader instance available');
     }
 
-    if (loader instanceof JSONLoader) {
-      return this.createJSONBuilder(model, loader) as any;
+    if (actualLoader instanceof SQLiteLoader) {
+      return this.createSQLiteBuilder(model, actualLoader) as any;
     }
+
+    if (actualLoader instanceof JSONLoader) {
+      return this.createJSONBuilder(model, actualLoader) as any;
+    }
+
     logger.error('Unsupported loader type', {
       model,
     });

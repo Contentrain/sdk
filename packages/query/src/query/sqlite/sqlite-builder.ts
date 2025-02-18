@@ -1,3 +1,4 @@
+import type { SQLiteLoader } from '../../loader/sqlite/sqlite.loader';
 import type { IDBRecord } from '../../loader/types/sqlite';
 import type { IncludeOptions, ISQLiteQuery, SQLiteOptions } from '../types';
 import type { SQLiteQueryExecutor } from './sqlite-executor';
@@ -11,10 +12,15 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> extends BaseQueryBuilde
   protected options: SQLiteOptions = {};
 
   constructor(
-    model: string,
-    private readonly executor: SQLiteQueryExecutor<TData>,
+    protected readonly model: string,
+    protected readonly executor: SQLiteQueryExecutor<TData>,
   ) {
     super(model);
+  }
+
+  setLoader(loader: SQLiteLoader<TData>): this {
+    this.executor.setLoader(loader);
+    return this;
   }
 
   include(relations: string | string[] | IncludeOptions | IncludeOptions[]): this {

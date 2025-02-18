@@ -7,7 +7,8 @@ import { SQLiteContentManager } from './managers/content.manager';
 import { SQLiteRelationManager } from './managers/relation.manager';
 import { SQLiteTranslationManager } from './managers/translation.manager';
 
-export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager {
+export class SQLiteLoader<TData extends IDBRecord = IDBRecord> {
+  public readonly contentManager: SQLiteContentManager;
   public readonly relationManager: SQLiteRelationManager;
   public readonly translationManager: SQLiteTranslationManager;
   private readonly cache?: MemoryCache;
@@ -31,8 +32,7 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     private readonly options: ISQLiteLoaderOptions,
     logger: ILogger,
   ) {
-    super(options.databasePath, logger);
-
+    this.contentManager = new SQLiteContentManager(options.databasePath, logger);
     this.relationManager = new SQLiteRelationManager(options.databasePath, logger);
     this.translationManager = new SQLiteTranslationManager(options.databasePath, logger);
 
@@ -49,18 +49,15 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
   }
 
   async query<T>(sql: string, params: unknown[] = []): Promise<T[]> {
-    try {
-      return await this.connection.query<T>(sql, params);
-    }
-    catch (error: any) {
-      this.logger.error('Query error:', {
-        sql,
-        params,
-        error: error?.message || 'Unknown error',
-        stack: error?.stack,
-      });
-      throw error;
-    }
+    return this.contentManager.query<T>(sql, params);
+  }
+
+  async findById<T extends IDBRecord>(model: string, id: string): Promise<T | undefined> {
+    return this.contentManager.findById<T>(model, id);
+  }
+
+  async findAll<T extends IDBRecord>(model: string, conditions: Partial<T> = {}): Promise<T[]> {
+    return this.contentManager.findAll<T>(model, conditions);
   }
 
   private getCacheKey(modelId: string): string {
@@ -75,70 +72,99 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     model: string,
     data: TData[],
   ): Promise<ISQLiteLoaderResult<TData>> {
-    try {
-      const hasTranslations = await this.translationManager.hasTranslations(model);
-      const modelFields = await this.getModelFields(model);
+    const hasTranslations = await this.translationManager.hasTranslations(model);
+    const modelFields = await this.getModelFields(model);
 
-      if (!hasTranslations) {
-        return {
-          model: {
-            metadata: {
-              modelId: model,
-              name: model,
-              type: 'SQLite',
-              localization: false,
-              isServerless: false,
-            },
-            fields: modelFields,
-          },
-          content: {
-            default: data,
-            translations: {},
-          },
-        };
-      }
-
-      const locales = await this.translationManager.getLocales(model);
-      const translations: Record<string, IDBTranslationRecord[]> = {};
-
-      for (const locale of locales) {
-        const translatedData = await this.translationManager.loadTranslations(
-          model,
-          data.map(item => item.id),
-          locale,
-        );
-        translations[locale] = Object.values(translatedData);
-      }
-
+    if (!hasTranslations) {
       return {
         model: {
           metadata: {
             modelId: model,
             name: model,
             type: 'SQLite',
-            localization: true,
+            localization: false,
             isServerless: false,
           },
           fields: modelFields,
         },
         content: {
           default: data,
-          translations,
+          translations: {},
         },
       };
     }
-    catch (error: any) {
-      throw new LoaderError(
-        'Failed to load translations',
-        'translate',
-        {
-          model,
-          dataCount: data.length,
-          originalError: error?.message,
-          errorCode: error?.code,
-        },
+
+    const locales = await this.translationManager.getLocales(model);
+    const translations: Record<string, IDBTranslationRecord[]> = {};
+
+    for (const locale of locales) {
+      const translatedData = await this.translationManager.loadTranslations(
+        model,
+        data.map(item => item.id),
+        locale,
       );
+      translations[locale] = Object.values(translatedData);
     }
+
+    return {
+      model: {
+        metadata: {
+          modelId: model,
+          name: model,
+          type: 'SQLite',
+          localization: true,
+          isServerless: false,
+        },
+        fields: modelFields,
+      },
+      content: {
+        default: data,
+        translations,
+      },
+    };
+  }
+
+  private async getModelFields(model: string): Promise<Array<{
+    name: string
+    fieldId: string
+    type: string
+  }>> {
+    const systemFields = await this.translationManager.getMainColumns(model);
+    const relationFields = await this.relationManager.getRelationFields(model);
+    const hasTranslations = await this.translationManager.hasTranslations(model);
+    const translationFields = hasTranslations
+      ? await this.translationManager.getTranslationColumns(model)
+      : [];
+
+    return [
+      ...this.mapSystemFields(systemFields),
+      ...this.mapRelationFields(relationFields),
+      ...this.mapTranslationFields(translationFields),
+    ];
+  }
+
+  private mapSystemFields(fields: string[]): Array<{ name: string, fieldId: string, type: string }> {
+    return fields.map(field => ({
+      name: field,
+      fieldId: field,
+      type: this.getFieldType(field),
+    }));
+  }
+
+  private mapRelationFields(fields: string[]): Array<{ name: string, fieldId: string, type: string }> {
+    return fields.map(field => ({
+      name: field,
+      fieldId: field,
+      type: 'relation',
+    }));
+  }
+
+  private mapTranslationFields(fields: string[]): Array<{ name: string, fieldId: string, type: string }> {
+    return fields.map(field => ({
+      name: field,
+      fieldId: field,
+      type: this.getFieldType(field),
+    }));
   }
 
   private getFieldType(fieldName: string): string {
@@ -153,85 +179,21 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     return 'string';
   }
 
-  private async getModelFields(modelId: string): Promise<Array<{
-    name: string
-    fieldId: string
-    type: string
-  }>> {
-    try {
-      const systemFields = await this.translationManager.getMainColumns(modelId);
-      const systemFieldTypes = systemFields.map(field => ({
-        name: field,
-        fieldId: field,
-        type: this.getFieldType(field),
-      }));
-
-      const relationFields = await this.relationManager.getRelationFields(modelId);
-      const relationFieldTypes = relationFields.map(field => ({
-        name: field,
-        fieldId: field,
-        type: 'relation',
-      }));
-
-      const hasTranslations = await this.translationManager.hasTranslations(modelId);
-      const translationFields = hasTranslations
-        ? await this.translationManager.getTranslationColumns(modelId)
-        : [];
-      const translationFieldTypes = translationFields.map(field => ({
-        name: field,
-        fieldId: field,
-        type: this.getFieldType(field),
-      }));
-
-      return [...systemFieldTypes, ...relationFieldTypes, ...translationFieldTypes];
-    }
-    catch (error: any) {
-      this.logger.error('Get model fields error:', {
-        modelId,
-        error: error?.message || 'Unknown error',
-        stack: error?.stack,
-        context: {
-          operation: 'getModelFields',
-        },
-      });
-      throw error;
-    }
-  }
-
   async resolveRelations<TRelation extends IDBRecord>(
     modelId: string,
     fieldId: string,
     data: TData[],
   ): Promise<TRelation[]> {
-    try {
-      const relations = await this.relationManager.loadRelations(
-        modelId,
-        data.map(item => item.id),
-        fieldId,
-      );
+    const relations = await this.relationManager.loadRelations(
+      modelId,
+      data.map(item => item.id),
+      fieldId,
+    );
 
-      if (!relations.length) {
-        throw new Error(`No relations found for field: ${fieldId}`);
-      }
-
-      return await this.relationManager.loadRelatedContent<TRelation>(
-        relations,
-        this.options.defaultLocale,
-      );
-    }
-    catch (error: any) {
-      this.logger.error('Resolve relations error:', {
-        modelId,
-        fieldId,
-        error: error?.message || 'Unknown error',
-        stack: error?.stack,
-        context: {
-          options: this.options,
-          operation: 'resolveRelations',
-        },
-      });
-      throw error;
-    }
+    return this.relationManager.loadRelatedContent<TRelation>(
+      relations,
+      this.options.defaultLocale,
+    );
   }
 
   async load(model: string): Promise<ISQLiteLoaderResult<TData>> {
@@ -282,32 +244,16 @@ export class SQLiteLoader<TData extends IDBRecord> extends SQLiteContentManager 
     }
   }
 
-  private async getTableCount(): Promise<number> {
-    try {
-      const tables = await this.connection.query<{ name: string }>(
-        'SELECT name FROM sqlite_master WHERE type=\'table\' AND name NOT LIKE \'sqlite_%\'',
-      );
-      return tables.length;
-    }
-    catch (error: any) {
-      this.logger.error('Get table count error:', {
-        error: error?.message || 'Unknown error',
-        stack: error?.stack,
-      });
-      return 0;
-    }
-  }
-
   async getCacheStats(): Promise<ICacheStats> {
     return {
       modelConfigs: this.modelConfigs.size,
-      contents: await this.getTableCount(),
+      contents: await this.contentManager.getTableCount(),
       cache: this.cache?.getStats() || undefined,
     };
   }
 
   async close(): Promise<void> {
-    await super.close();
+    await this.contentManager.close();
     await this.relationManager.close();
     await this.translationManager.close();
   }

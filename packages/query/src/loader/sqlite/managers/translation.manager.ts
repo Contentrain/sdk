@@ -148,24 +148,9 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       const result = await this.connection.query<{ name: string }>(
         `PRAGMA table_info(${translationTable})`,
       );
-
-      // Debug log ekleyelim
-      this.logger.debug('Translation columns from PRAGMA', {
-        model,
-        table: translationTable,
-        columns: result.map(row => row.name),
-      });
-
       const columns = result
         .map(row => row.name)
         .filter(name => !['id', 'locale'].includes(name));
-
-      // Debug log ekleyelim
-      this.logger.debug('Filtered translation columns', {
-        model,
-        columns,
-      });
-
       return columns;
     }
     catch (error: any) {
@@ -194,14 +179,6 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       const result = await this.connection.query<{ name: string, type: string }>(
         `PRAGMA table_info(${mainTable})`,
       );
-
-      // Debug log ekleyelim
-      this.logger.debug('Getting all columns for non-translatable model', {
-        model,
-        table: mainTable,
-        columns: result.map(row => ({ name: row.name, type: row.type })),
-      });
-
       return result.map(row => row.name);
     }
     catch (error: any) {

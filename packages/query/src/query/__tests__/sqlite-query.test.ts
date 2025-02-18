@@ -164,14 +164,7 @@ interface IProjectStatsQuery extends ISQLiteQuery<
 > {}
 
 describe('sQLiteQueryBuilder', () => {
-  let serviceLoader: SQLiteLoader<Service>;
-  let workItemLoader: SQLiteLoader<WorkItem>;
-  let testimonialLoader: SQLiteLoader<TestimonialItem>;
-  let tabItemLoader: SQLiteLoader<TabItem>;
-  let socialLinkLoader: SQLiteLoader<SocialLink>;
-  let projectDetailsLoader: SQLiteLoader<ProjectDetails>;
-  let projectStatsLoader: SQLiteLoader<ProjectStats>;
-
+  let loader: SQLiteLoader;
   let builder: IServiceQuery;
   let workItemBuilder: IWorkItemQuery;
   let testimonialBuilder: ITestimonialQuery;
@@ -183,66 +176,32 @@ describe('sQLiteQueryBuilder', () => {
   const dbPath = join(__dirname, '../../../../../playground/contentrain-db/contentrain.db');
 
   beforeEach(() => {
-    serviceLoader = new SQLiteLoader<Service>({
+    // Tek bir loader instance'ı oluştur
+    loader = new SQLiteLoader({
       databasePath: dbPath,
       cache: true,
       maxCacheSize: 100,
     }, loggers.loader);
 
-    workItemLoader = new SQLiteLoader<WorkItem>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
+    // QueryFactory'ye loader'ı set et
+    QueryFactory.setLoader(loader);
 
-    testimonialLoader = new SQLiteLoader<TestimonialItem>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
-
-    tabItemLoader = new SQLiteLoader<TabItem>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
-
-    socialLinkLoader = new SQLiteLoader<SocialLink>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
-
-    projectDetailsLoader = new SQLiteLoader<ProjectDetails>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
-
-    projectStatsLoader = new SQLiteLoader<ProjectStats>({
-      databasePath: dbPath,
-      cache: true,
-      maxCacheSize: 100,
-    }, loggers.loader);
-
-    builder = QueryFactory.createSQLiteBuilder('services', serviceLoader);
-    workItemBuilder = QueryFactory.createSQLiteBuilder('workitems', workItemLoader);
-    testimonialBuilder = QueryFactory.createSQLiteBuilder('testimonial-items', testimonialLoader);
-    tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems', tabItemLoader);
-    socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks', socialLinkLoader);
-    projectDetailsBuilder = QueryFactory.createSQLiteBuilder('project-details', projectDetailsLoader);
-    projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats', projectStatsLoader);
+    // Builder'ları oluştur
+    builder = QueryFactory.createSQLiteBuilder('services');
+    workItemBuilder = QueryFactory.createSQLiteBuilder('workitems');
+    testimonialBuilder = QueryFactory.createSQLiteBuilder('testimonial-items');
+    tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems');
+    socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks');
+    projectDetailsBuilder = QueryFactory.createSQLiteBuilder('project-details');
+    projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats');
   });
 
   afterEach(async () => {
-    await serviceLoader.clearCache();
-    await workItemLoader.clearCache();
-    await testimonialLoader.clearCache();
-    await tabItemLoader.clearCache();
-    await socialLinkLoader.clearCache();
-    await projectDetailsLoader.clearCache();
-    await projectStatsLoader.clearCache();
+    // Tek bir loader instance'ı olduğu için sadece onu temizle
+    await loader.clearCache();
+    await loader.close();
   });
+
   describe('basic querying', () => {
     it('should retrieve records with publish status from services table', async () => {
       const result = await builder
@@ -571,7 +530,7 @@ describe('sQLiteQueryBuilder', () => {
 
   describe('error handling', () => {
     it('should handle invalid table name', async () => {
-      const invalidBuilder = QueryFactory.createSQLiteBuilder('invalid_table', serviceLoader);
+      const invalidBuilder = QueryFactory.createSQLiteBuilder('invalid_table');
       await expect(invalidBuilder.get()).rejects.toThrow();
     });
 

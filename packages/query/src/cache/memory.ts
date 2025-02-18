@@ -1,8 +1,5 @@
 import type { IBaseCacheStats, ICacheEntry, IMemoryCacheOptions } from './types';
 import { lru } from 'tiny-lru';
-import { loggers } from '../utils/logger';
-
-const logger = loggers.cache;
 
 export class MemoryCache {
   private cache;
@@ -120,7 +117,6 @@ export class MemoryCache {
     const now = Date.now();
     const expiredKeys: string[] = [];
     let totalSize = 0;
-    logger.debug('Cleaning up cache');
     // Find expired entries
     for (const key of this.cache.keys()) {
       const entry = this.cache.get(key) as ICacheEntry<unknown>;

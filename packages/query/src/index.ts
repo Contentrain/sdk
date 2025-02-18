@@ -44,7 +44,7 @@ export interface ContentrainSDKOptions {
 
 // SDK Class
 export class ContentrainSDK {
-  private readonly loader: JSONLoader<IBaseJSONRecord> | SQLiteLoader<IDBRecord>;
+  private static loader: JSONLoader<IBaseJSONRecord> | SQLiteLoader<IDBRecord>;
   private readonly logger: ILogger;
   private readonly options: ContentrainSDKOptions;
   private readonly type: LoaderType;
@@ -54,44 +54,46 @@ export class ContentrainSDK {
     this.options = options;
     this.type = type;
 
-    if (type === 'json') {
-      if (!options.contentDir)
-        throw new Error('contentDir is required for JSON loader');
+    if (!ContentrainSDK.loader) {
+      if (type === 'json') {
+        if (!options.contentDir)
+          throw new Error('contentDir is required for JSON loader');
 
-      this.loader = new JSONLoader({
-        contentDir: options.contentDir,
-        cache: options.cache,
-        ttl: options.ttl,
-        maxCacheSize: options.maxCacheSize,
-        defaultLocale: options.defaultLocale,
-        modelTTL: options.modelTTL,
-      }, this.logger);
-    }
-    else {
-      if (!options.databasePath)
-        throw new Error('databasePath is required for SQLite loader');
+        ContentrainSDK.loader = new JSONLoader({
+          contentDir: options.contentDir,
+          cache: options.cache,
+          ttl: options.ttl,
+          maxCacheSize: options.maxCacheSize,
+          defaultLocale: options.defaultLocale,
+          modelTTL: options.modelTTL,
+        }, this.logger);
+      }
+      else {
+        if (!options.databasePath)
+          throw new Error('databasePath is required for SQLite loader');
 
-      this.loader = new SQLiteLoader({
-        databasePath: options.databasePath,
-        cache: options.cache,
-        maxCacheSize: options.maxCacheSize,
-        defaultLocale: options.defaultLocale,
-        modelTTL: options.modelTTL,
-      }, this.logger);
+        ContentrainSDK.loader = new SQLiteLoader({
+          databasePath: options.databasePath,
+          cache: options.cache,
+          maxCacheSize: options.maxCacheSize,
+          defaultLocale: options.defaultLocale,
+          modelTTL: options.modelTTL,
+        }, this.logger);
+      }
+
+      // Loader'ı QueryFactory'ye set et
+      QueryFactory.setLoader(ContentrainSDK.loader);
     }
   }
 
   query<TData extends IDBRecord | IBaseJSONRecord>(model: string): TData extends IDBRecord
     ? ISQLiteQuery<TData & IDBRecord>
     : IJSONQuery<TData & IBaseJSONRecord> {
-    if (this.type === 'sqlite') {
-      return QueryFactory.createBuilder(model, this.loader as SQLiteLoader<TData & IDBRecord>) as any;
-    }
-    return QueryFactory.createBuilder(model, this.loader as JSONLoader<TData & IBaseJSONRecord>) as any;
+    return QueryFactory.createBuilder(model, ContentrainSDK.loader) as any;
   }
 
   async load<TData extends IDBRecord | IBaseJSONRecord>(model: string) {
-    const result = await this.loader.load(model);
+    const result = await ContentrainSDK.loader.load(model);
     const defaultLocale = this.type === 'json' ? 'default' : 'en';
     const locale = this.options.defaultLocale || defaultLocale;
 
@@ -108,14 +110,14 @@ export class ContentrainSDK {
   }
 
   async clearCache(): Promise<void> {
-    return this.loader.clearCache();
+    return ContentrainSDK.loader.clearCache();
   }
 
   async refreshCache(model: string): Promise<void> {
-    return this.loader.refreshCache(model);
+    return ContentrainSDK.loader.refreshCache(model);
   }
 
   async getCacheStats() {
-    return this.loader.getCacheStats();
+    return ContentrainSDK.loader.getCacheStats();
   }
 }
