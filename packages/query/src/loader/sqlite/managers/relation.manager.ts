@@ -159,37 +159,11 @@ export class SQLiteRelationManager extends SQLiteContentManager {
         WHERE source_model = ?
       `;
 
-      const hasTranslations = await this.translationManager.hasTranslations(model);
       const results = await this.connection.query<{
         field_id: string
         type: 'one-to-one' | 'one-to-many'
       }>(query, [model]);
 
-      const relationDetails = await Promise.all(results.map(async ({ field_id, type }) => {
-        const targetModelQuery = `
-          SELECT DISTINCT target_model
-          FROM tbl_contentrain_relations
-          WHERE source_model = ?
-          AND field_id = ?
-        `;
-        const targetResults = await this.connection.query<{ target_model: string }>(
-          targetModelQuery,
-          [model, field_id],
-        );
-        const targetResult = targetResults[0];
-
-        const targetModel = targetResult?.target_model;
-        const hasTargetTranslations = targetModel
-          ? await this.translationManager.hasTranslations(targetModel)
-          : false;
-
-        return {
-          field_id,
-          type,
-          targetModel,
-          hasTargetTranslations,
-        };
-      }));
       return results.reduce((acc: Record<string, 'one-to-one' | 'one-to-many'>, { field_id, type }) => {
         acc[field_id] = type;
         return acc;
