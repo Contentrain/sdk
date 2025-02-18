@@ -175,10 +175,10 @@ describe('sQLiteQueryBuilder', () => {
   let builder: IServiceQuery;
   let workItemBuilder: IWorkItemQuery;
   let testimonialBuilder: ITestimonialQuery;
-  let _tabItemBuilder: ITabItemQuery;
-  let _socialLinkBuilder: ISocialLinkQuery;
+  let tabItemBuilder: ITabItemQuery;
+  let socialLinkBuilder: ISocialLinkQuery;
   let projectDetailsBuilder: IProjectDetailsQuery;
-  let _projectStatsBuilder: IProjectStatsQuery;
+  let projectStatsBuilder: IProjectStatsQuery;
 
   const dbPath = join(__dirname, '../../../../../playground/contentrain-db/contentrain.db');
 
@@ -228,10 +228,10 @@ describe('sQLiteQueryBuilder', () => {
     builder = QueryFactory.createSQLiteBuilder('services', serviceLoader);
     workItemBuilder = QueryFactory.createSQLiteBuilder('workitems', workItemLoader);
     testimonialBuilder = QueryFactory.createSQLiteBuilder('testimonial-items', testimonialLoader);
-    _tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems', tabItemLoader);
-    _socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks', socialLinkLoader);
+    tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems', tabItemLoader);
+    socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks', socialLinkLoader);
     projectDetailsBuilder = QueryFactory.createSQLiteBuilder('project-details', projectDetailsLoader);
-    _projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats', projectStatsLoader);
+    projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats', projectStatsLoader);
   });
 
   afterEach(async () => {
@@ -413,7 +413,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should sort by user-generated field in non-translatable model', async () => {
-      const result = await _socialLinkBuilder
+      const result = await socialLinkBuilder
         .orderBy('link', 'asc')
         .get();
 
@@ -631,7 +631,7 @@ describe('sQLiteQueryBuilder', () => {
   describe('non-translatable models', () => {
     describe('sociallinks', () => {
       it('should load sociallinks without translations', async () => {
-        const result = await _socialLinkBuilder
+        const result = await socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
           .get();
 
@@ -645,7 +645,7 @@ describe('sQLiteQueryBuilder', () => {
       });
 
       it('should load sociallinks with related service', async () => {
-        const result = await _socialLinkBuilder
+        const result = await socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
           .include({ relation: 'service', locale: 'en' })
           .get();
@@ -706,7 +706,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle one-to-many relations', async () => {
-      const result = await _tabItemBuilder
+      const result = await tabItemBuilder
         .locale('en')
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .where('category_id', 'ne', '')
@@ -728,7 +728,7 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should handle multiple categories for a single item', async () => {
       const testItemId = '9ab7dcca9d1d'; // Vue.js item
-      const result = await _tabItemBuilder
+      const result = await tabItemBuilder
         .locale('en')
         .where('id', 'eq', testItemId)
         .include('category')
@@ -772,7 +772,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle both localized and non-localized relations', async () => {
-      const result = await _projectStatsBuilder
+      const result = await projectStatsBuilder
         .include([
           { relation: 'work', locale: 'en' },
           { relation: 'reference' },
@@ -791,7 +791,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should filter project stats by view count and load relations', async () => {
-      const result = await _projectStatsBuilder
+      const result = await projectStatsBuilder
         .include(['work', 'reference'])
         .where('view_count', 'gt', 2000)
         .get();
@@ -931,6 +931,186 @@ describe('sQLiteQueryBuilder', () => {
           expect(enResult.description).not.toBe(trResult.description);
         }
       }
+    });
+  });
+
+  describe('model specific tests', () => {
+    describe('tabItem tests', () => {
+      it('should handle one-to-many relationship with categories correctly', async () => {
+        const result = await tabItemBuilder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .include({ relation: 'category', locale: 'en' })
+          .get();
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((item) => {
+          // İlişkinin array olduğunu kontrol et
+          expect(Array.isArray(item._relations?.category)).toBe(true);
+
+          // Her kategorinin gerekli alanları var mı?
+          item._relations?.category?.forEach((category) => {
+            expect(category.category).toBeDefined();
+            expect(category.status).toBe('publish');
+            expect(category.field_order).toBeDefined();
+          });
+        });
+      });
+
+      it('should load categories with translations', async () => {
+        const result = await tabItemBuilder
+          .include({ relation: 'category', locale: 'tr' })
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .first();
+
+        expect(result).toBeDefined();
+        if (result) {
+          expect(Array.isArray(result._relations?.category)).toBe(true);
+          expect(result._relations?.category?.length).toBeGreaterThan(0);
+
+          // Türkçe kategori isimlerini kontrol et
+          result._relations?.category?.forEach((category) => {
+            expect(category.category).toBeDefined();
+            expect(typeof category.category).toBe('string');
+          });
+        }
+      });
+    });
+
+    describe('socialLink tests', () => {
+      it('should handle one-to-one relationship with service', async () => {
+        const result = await socialLinkBuilder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .include({ relation: 'service', locale: 'en' })
+          .first();
+
+        expect(result).toBeDefined();
+        if (result) {
+          // İlişkinin object olduğunu kontrol et (one-to-one)
+          expect(result._relations?.service).toBeInstanceOf(Object);
+          expect(Array.isArray(result._relations?.service)).toBe(false);
+
+          // Service alanlarını kontrol et
+          const service = result._relations?.service;
+          expect(service?.title).toBeDefined();
+          expect(service?.description).toBeDefined();
+          expect(service?.status).toBe('publish');
+        }
+      });
+
+      it('should load service with different locales', async () => {
+        // İngilizce servis
+        const enResult = await socialLinkBuilder
+          .include({ relation: 'service', locale: 'en' })
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .first();
+
+        // Türkçe servis
+        const trResult = await socialLinkBuilder
+          .include({ relation: 'service', locale: 'tr' })
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .first();
+
+        expect(enResult).toBeDefined();
+        expect(trResult).toBeDefined();
+
+        if (enResult && trResult) {
+          // Aynı social link olmalı
+          expect(enResult.id).toBe(trResult.id);
+          expect(enResult.link).toBe(trResult.link);
+          expect(enResult.icon).toBe(trResult.icon);
+
+          // Servis çevirileri farklı olmalı
+          const enService = enResult._relations?.service;
+          const trService = trResult._relations?.service;
+
+          expect(enService?.title).not.toBe(trService?.title);
+          expect(enService?.description).not.toBe(trService?.description);
+        }
+      });
+    });
+
+    describe('projectStats tests', () => {
+      it('should handle multiple one-to-one relationships', async () => {
+        const result = await projectStatsBuilder
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .include([
+            { relation: 'work', locale: 'en' },
+            { relation: 'reference' },
+          ])
+          .first();
+
+        expect(result).toBeDefined();
+        if (result) {
+          // Her iki ilişkinin de yüklendiğini kontrol et
+          expect(result._relations?.work).toBeDefined();
+          expect(result._relations?.reference).toBeDefined();
+
+          // İlişkilerin object olduğunu kontrol et (one-to-one)
+          expect(result._relations?.work).toBeInstanceOf(Object);
+          expect(result._relations?.reference).toBeInstanceOf(Object);
+
+          // Work alanlarını kontrol et
+          const work = result._relations?.work;
+          expect(work?.title).toBeDefined();
+          expect(work?.description).toBeDefined();
+          expect(work?.status).toBe('publish');
+
+          // Reference alanlarını kontrol et
+          const reference = result._relations?.reference;
+          expect(reference?.logo).toBeDefined();
+          expect(reference?.status).toBe('publish');
+        }
+      });
+
+      it('should handle mixed locale relationships', async () => {
+        const result = await projectStatsBuilder
+          .include([
+            { relation: 'work', locale: 'tr' },
+            { relation: 'reference' }, // Tip güvenliği için düzeltildi
+          ])
+          .where('status', 'eq', 'publish' as ContentrainStatus)
+          .first();
+
+        expect(result).toBeDefined();
+        if (result) {
+          // Work Türkçe yüklenmeli
+          const work = result._relations?.work;
+          expect(work?.title).toBeDefined();
+          expect(work?.description).toBeDefined();
+
+          // Reference normal yüklenmeli
+          const reference = result._relations?.reference;
+          expect(reference?.logo).toBeDefined();
+        }
+      });
+
+      it('should filter by view count and load relations', async () => {
+        const minViewCount = 1000;
+        const result = await projectStatsBuilder
+          .where('view_count', 'gt', minViewCount)
+          .include(['work', 'reference'])
+          .orderBy('view_count', 'desc')
+          .get();
+
+        expect(result.data.length).toBeGreaterThan(0);
+        result.data.forEach((stat) => {
+          // View count kontrolü
+          expect(stat.view_count).toBeGreaterThan(minViewCount);
+
+          // İlişkilerin yüklendiğini kontrol et
+          expect(stat._relations?.work).toBeDefined();
+          expect(stat._relations?.reference).toBeDefined();
+
+          // Work ve Reference ID'lerinin doğru olduğunu kontrol et
+          expect(stat._relations?.work?.id).toBe(stat.work_id);
+          expect(stat._relations?.reference?.id).toBe(stat.reference_id);
+        });
+
+        // Sıralama kontrolü
+        for (let i = 1; i < result.data.length; i++) {
+          expect(result.data[i].view_count).toBeLessThanOrEqual(result.data[i - 1].view_count);
+        }
+      });
     });
   });
 });
