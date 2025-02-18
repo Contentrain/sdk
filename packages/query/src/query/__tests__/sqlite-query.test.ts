@@ -1,5 +1,6 @@
 import type { ContentrainStatus } from '../../loader/types/common';
 import type { IDBRecord } from '../../loader/types/sqlite';
+import type { ISQLiteQuery } from '../types';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { QueryFactory } from '../..';
@@ -42,6 +43,7 @@ interface WorkItem extends IDBRecord {
   description?: string
   image?: string
   field_order?: number
+  status: ContentrainStatus
   _relations?: {
     category?: WorkCategory
     reference?: Reference
@@ -54,6 +56,7 @@ interface TestimonialItem extends IDBRecord {
   name: string
   description: string
   creative_work_id: string
+  status: ContentrainStatus
   _relations?: {
     'creative-work'?: WorkItem
   }
@@ -82,6 +85,7 @@ interface ProjectDetails extends IDBRecord {
   description: string
   work: string
   testimonial: string
+  status: ContentrainStatus
   _relations?: {
     work?: WorkItem
     testimonial?: TestimonialItem
@@ -92,11 +96,72 @@ interface ProjectStats extends IDBRecord {
   view_count: number
   work_id: string
   reference_id: string
+  status: ContentrainStatus
   _relations?: {
     work?: WorkItem
     reference?: Reference
   }
 }
+
+interface IServiceQuery extends ISQLiteQuery<
+  Service,
+  'en' | 'tr',
+  {
+    reference: Reference
+  }
+> {}
+
+interface IWorkItemQuery extends ISQLiteQuery<
+  WorkItem,
+  'en' | 'tr',
+  {
+    category: WorkCategory
+    reference: Reference
+    stats: Stats
+  }
+> {}
+
+interface ITestimonialQuery extends ISQLiteQuery<
+  TestimonialItem,
+  'en' | 'tr',
+  {
+    'creative-work': WorkItem
+  }
+> {}
+
+interface ITabItemQuery extends ISQLiteQuery<
+  TabItem,
+  'en' | 'tr',
+  {
+    category: WorkCategory
+  }
+> {}
+
+interface ISocialLinkQuery extends ISQLiteQuery<
+  SocialLink,
+  'en' | 'tr',
+  {
+    service: Service
+  }
+> {}
+
+interface IProjectDetailsQuery extends ISQLiteQuery<
+  ProjectDetails,
+  'en' | 'tr',
+  {
+    work: WorkItem
+    testimonial: TestimonialItem
+  }
+> {}
+
+interface IProjectStatsQuery extends ISQLiteQuery<
+  ProjectStats,
+  'en' | 'tr',
+  {
+    work: WorkItem
+    reference: Reference
+  }
+> {}
 
 describe('sQLiteQueryBuilder', () => {
   let serviceLoader: SQLiteLoader<Service>;
@@ -107,13 +172,13 @@ describe('sQLiteQueryBuilder', () => {
   let projectDetailsLoader: SQLiteLoader<ProjectDetails>;
   let projectStatsLoader: SQLiteLoader<ProjectStats>;
 
-  let builder: ReturnType<typeof QueryFactory.createSQLiteBuilder<Service>>;
-  let workItemBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<WorkItem>>;
-  let testimonialBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<TestimonialItem>>;
-  let tabItemBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<TabItem>>;
-  let socialLinkBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<SocialLink>>;
-  let projectDetailsBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<ProjectDetails>>;
-  let projectStatsBuilder: ReturnType<typeof QueryFactory.createSQLiteBuilder<ProjectStats>>;
+  let builder: IServiceQuery;
+  let workItemBuilder: IWorkItemQuery;
+  let testimonialBuilder: ITestimonialQuery;
+  let _tabItemBuilder: ITabItemQuery;
+  let _socialLinkBuilder: ISocialLinkQuery;
+  let projectDetailsBuilder: IProjectDetailsQuery;
+  let _projectStatsBuilder: IProjectStatsQuery;
 
   const dbPath = join(__dirname, '../../../../../playground/contentrain-db/contentrain.db');
 
@@ -163,10 +228,10 @@ describe('sQLiteQueryBuilder', () => {
     builder = QueryFactory.createSQLiteBuilder('services', serviceLoader);
     workItemBuilder = QueryFactory.createSQLiteBuilder('workitems', workItemLoader);
     testimonialBuilder = QueryFactory.createSQLiteBuilder('testimonial-items', testimonialLoader);
-    tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems', tabItemLoader);
-    socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks', socialLinkLoader);
+    _tabItemBuilder = QueryFactory.createSQLiteBuilder('tabitems', tabItemLoader);
+    _socialLinkBuilder = QueryFactory.createSQLiteBuilder('sociallinks', socialLinkLoader);
     projectDetailsBuilder = QueryFactory.createSQLiteBuilder('project-details', projectDetailsLoader);
-    projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats', projectStatsLoader);
+    _projectStatsBuilder = QueryFactory.createSQLiteBuilder('project-stats', projectStatsLoader);
   });
 
   afterEach(async () => {
@@ -178,16 +243,14 @@ describe('sQLiteQueryBuilder', () => {
     await projectDetailsLoader.clearCache();
     await projectStatsLoader.clearCache();
   });
-
   describe('basic querying', () => {
     it('should retrieve records with publish status from services table', async () => {
       const result = await builder
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .get();
 
-      expect(result.data.length).toBe(7); // We know this from database_structure.md
+      expect(result.data.length).toBe(7);
 
-      // Check the structure of the first item
       const firstItem = result.data[0];
       expect(firstItem).toHaveProperty('id');
       expect(firstItem).toHaveProperty('status', 'publish');
@@ -298,7 +361,7 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should handle records without translations', async () => {
       const result = await builder
-        .locale('fr') // A language that doesn't exist in database
+        .locale('fr' as any) // A language that doesn't exist in database
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .get();
 
@@ -350,7 +413,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should sort by user-generated field in non-translatable model', async () => {
-      const result = await socialLinkBuilder
+      const result = await _socialLinkBuilder
         .orderBy('link', 'asc')
         .get();
 
@@ -568,7 +631,7 @@ describe('sQLiteQueryBuilder', () => {
   describe('non-translatable models', () => {
     describe('sociallinks', () => {
       it('should load sociallinks without translations', async () => {
-        const result = await socialLinkBuilder
+        const result = await _socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
           .get();
 
@@ -582,7 +645,7 @@ describe('sQLiteQueryBuilder', () => {
       });
 
       it('should load sociallinks with related service', async () => {
-        const result = await socialLinkBuilder
+        const result = await _socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
           .include({ relation: 'service', locale: 'en' })
           .get();
@@ -643,7 +706,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle one-to-many relations', async () => {
-      const result = await tabItemBuilder
+      const result = await _tabItemBuilder
         .locale('en')
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .where('category_id', 'ne', '')
@@ -665,7 +728,7 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should handle multiple categories for a single item', async () => {
       const testItemId = '9ab7dcca9d1d'; // Vue.js item
-      const result = await tabItemBuilder
+      const result = await _tabItemBuilder
         .locale('en')
         .where('id', 'eq', testItemId)
         .include('category')
@@ -709,7 +772,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should handle both localized and non-localized relations', async () => {
-      const result = await projectStatsBuilder
+      const result = await _projectStatsBuilder
         .include([
           { relation: 'work', locale: 'en' },
           { relation: 'reference' },
@@ -728,7 +791,7 @@ describe('sQLiteQueryBuilder', () => {
     });
 
     it('should filter project stats by view count and load relations', async () => {
-      const result = await projectStatsBuilder
+      const result = await _projectStatsBuilder
         .include(['work', 'reference'])
         .where('view_count', 'gt', 2000)
         .get();
@@ -739,6 +802,135 @@ describe('sQLiteQueryBuilder', () => {
         expect(item._relations?.work).toBeDefined();
         expect(item._relations?.reference).toBeDefined();
       });
+    });
+  });
+  describe('complex query scenarios', () => {
+    it('should load multiple relations with different locales', async () => {
+      const result = await projectDetailsBuilder
+        .locale('en')
+        .include([
+          { relation: 'work', locale: 'en' },
+          { relation: 'testimonial', locale: 'tr' },
+        ])
+        .first();
+
+      expect(result).toBeDefined();
+      if (result) {
+        // İngilizce work kontrolü
+        expect(result._relations?.work).toBeDefined();
+        expect(result._relations?.work?.title).toBeDefined();
+
+        // Türkçe testimonial kontrolü
+        expect(result._relations?.testimonial).toBeDefined();
+        expect(result._relations?.testimonial?.name).toBeDefined();
+      }
+    });
+
+    it('should load nested relations', async () => {
+      const result = await testimonialBuilder
+        .locale('en')
+        .include([
+          {
+            relation: 'creative-work',
+            locale: 'en',
+          },
+        ])
+        .first();
+
+      expect(result).toBeDefined();
+      if (result) {
+        expect(result._relations?.['creative-work']).toBeDefined();
+        expect(result._relations?.['creative-work']?.title).toBeDefined();
+        expect(result._relations?.['creative-work']?.description).toBeDefined();
+      }
+    });
+
+    it('should handle complex filtering and sorting', async () => {
+      const result = await builder
+        .locale('en')
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .where('title', 'contains', 'Development')
+        .orderBy('created_at', 'desc')
+        .get();
+
+      expect(result.data.length).toBeGreaterThan(0);
+      if (result.data.length > 0) {
+        // İçerik kontrolü
+        result.data.forEach((item: Service) => {
+          expect(item.status).toBe('publish');
+          expect(item.title).toContain('Development');
+        });
+
+        // Sıralama kontrolü
+        const dates = result.data.map((item: Service) => new Date(item.created_at).getTime());
+        for (let i = 1; i < dates.length; i++) {
+          expect(dates[i]).toBeLessThanOrEqual(dates[i - 1]);
+        }
+      }
+    });
+
+    it('should load relations with pagination', async () => {
+      const pageSize = 2;
+      const result = await projectDetailsBuilder
+        .locale('en')
+        .include([
+          { relation: 'work', locale: 'en' },
+          { relation: 'testimonial', locale: 'en' },
+        ])
+        .limit(pageSize)
+        .offset(0)
+        .get();
+
+      expect(result.data.length).toBeLessThanOrEqual(pageSize);
+      expect(result.pagination).toBeDefined();
+      if (result.pagination) {
+        expect(result.pagination.limit).toBe(pageSize);
+        expect(result.pagination.offset).toBe(0);
+        expect(typeof result.pagination.hasMore).toBe('boolean');
+      }
+
+      // İlişkilerin yüklendiğini kontrol et
+      result.data.forEach((item) => {
+        expect(item._relations).toBeDefined();
+        if (item._relations?.work) {
+          expect(item._relations.work.title).toBeDefined();
+        }
+        if (item._relations?.testimonial) {
+          expect(item._relations.testimonial.name).toBeDefined();
+        }
+      });
+    });
+
+    it('should handle different translations for same content', async () => {
+      // İngilizce sorgu
+      const enResult = await builder
+        .locale('en')
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .first();
+
+      // Türkçe sorgu
+      const trResult = await builder
+        .locale('tr')
+        .where('status', 'eq', 'publish' as ContentrainStatus)
+        .first();
+
+      expect(enResult).toBeDefined();
+      expect(trResult).toBeDefined();
+
+      if (enResult && trResult) {
+        // Aynı ID'ye sahip olmalılar
+        expect(enResult.id).toBe(trResult.id);
+
+        // Farklı dillerde içerikler olmalı
+        if (enResult.title && trResult.title) {
+          expect(enResult.title).not.toBe(trResult.title);
+        }
+
+        // Açıklamalar da farklı dillerde olmalı
+        if (enResult.description && trResult.description) {
+          expect(enResult.description).not.toBe(trResult.description);
+        }
+      }
     });
   });
 });

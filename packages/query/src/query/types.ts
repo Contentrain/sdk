@@ -67,11 +67,41 @@ export interface SQLiteOptions {
   locale?: string
 }
 
-export interface ISQLiteQuery<TData extends IDBRecord> extends IBaseQueryBuilder<TData> {
-  include: (relations: string | string[] | IncludeOptions | IncludeOptions[]) => this
-  locale: (code: string) => this
+// Dil desteği için tip
+export type SupportedLocale = string;
+
+// İlişki desteği için tip
+export type RelationConfig<T> = {
+  [K in keyof T]: T[K] extends { _relations?: infer R } ? R : never;
+}[keyof T];
+
+// Sorgu yapılandırması için ana tip
+export interface QueryConfig<
+  TModel extends IDBRecord,
+  TLocale extends SupportedLocale = string,
+  TRelations extends Record<string, any> = Record<string, any>,
+> {
+  model: TModel
+  locale: TLocale
+  relations: {
+    [K in keyof TRelations]: {
+      relation: K
+      locale?: TLocale
+    };
+  }
 }
 
+// SQLite sorgu builder'ı için tip
+export interface ISQLiteQuery<
+  TModel extends IDBRecord,
+  TLocale extends SupportedLocale = string,
+  TRelations extends Record<string, any> = Record<string, any>,
+> extends IBaseQueryBuilder<TModel> {
+  include: <K extends keyof TRelations>(
+    relations: K | K[] | { relation: K, locale?: TLocale } | Array<{ relation: K, locale?: TLocale }>
+  ) => this
+  locale: (code: TLocale) => this
+}
 export interface SQLQuery {
   select: string[]
   from: string
