@@ -1,5 +1,5 @@
 import type { IDBRecord } from '../../loader/types/sqlite';
-import type { ISQLiteQuery, SQLiteOptions } from '../types';
+import type { IncludeOptions, ISQLiteQuery, SQLiteOptions } from '../types';
 import type { SQLiteQueryExecutor } from './sqlite-executor';
 import { QueryBuilderError } from '../../errors';
 import { loggers } from '../../utils/logger';
@@ -17,9 +17,22 @@ export class SQLiteQueryBuilder<TData extends IDBRecord> extends BaseQueryBuilde
     super(model);
   }
 
-  include(relations: string | string[]): this {
+  include(relations: string | string[] | IncludeOptions | IncludeOptions[]): this {
     try {
-      this.options.includes = Array.isArray(relations) ? relations : [relations];
+      if (typeof relations === 'string') {
+        this.options.includes = [{ relation: relations }];
+      }
+      else if (Array.isArray(relations)) {
+        this.options.includes = relations.map((relation) => {
+          if (typeof relation === 'string') {
+            return { relation };
+          }
+          return relation;
+        });
+      }
+      else {
+        this.options.includes = [relations];
+      }
       return this;
     }
     catch (error: any) {

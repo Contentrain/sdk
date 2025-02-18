@@ -1,7 +1,7 @@
 import type { SQLiteLoader } from '../../loader/sqlite/sqlite.loader';
 import type { IDBRecord } from '../../loader/types/sqlite';
 import type { Filter, Include, QueryResult, Sort, SQLiteOptions, SQLQuery } from '../types';
-import { QueryExecutorError } from '../../errors';
+import { QueryExecutorError, RelationError } from '../../errors';
 import { loggers } from '../../utils/logger';
 import { normalizeTableName, normalizeTranslationTableName } from '../../utils/normalizer';
 import { BaseQueryExecutor } from '../base/base-executor';
@@ -20,6 +20,16 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
     options: SQLiteOptions,
   ): Promise<TData[]> {
     try {
+      // İlişki tiplerini al
+      const relationTypes = await this.loader.relationManager.getRelationTypes(model);
+      const relationType = relationTypes[field];
+
+      if (!relationType) {
+        logger.warn('No relation type found', { model, field });
+        return data;
+      }
+
+      // İlişkileri yükle
       const relations = await this.loader.relationManager.loadRelations(
         model,
         data.map(item => item.id),
@@ -27,18 +37,58 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
       );
 
       if (!relations.length) {
-        return [];
+        return data;
       }
 
       // İlişkili içeriği yükle
       const relatedData = await this.loader.relationManager.loadRelatedContent<TData>(
         relations,
-        options?.locale || undefined,
+        options?.locale,
       );
 
-      return relatedData;
+      // İlişkileri grupla
+      const groupedData: Record<string, TData[]> = {};
+      relations.forEach((relation) => {
+        if (!groupedData[relation.source_id]) {
+          groupedData[relation.source_id] = [];
+        }
+        const relatedItem = relatedData.find(item => item.id === relation.target_id);
+        if (relatedItem) {
+          groupedData[relation.source_id].push(relatedItem);
+        }
+      });
+
+      // İlişkileri ana veriye ekle
+      data.forEach((item: any) => {
+        if (!item._relations) {
+          item._relations = {};
+        }
+        const relatedItems = groupedData[item.id] || [];
+        item._relations[field] = relationType === 'one-to-many' ? relatedItems : relatedItems[0];
+
+        // İlişkili alanları ana veriye ekle
+        if (relatedItems.length > 0) {
+          const relatedItem = relationType === 'one-to-many' ? relatedItems[0] : relatedItems[0];
+          Object.keys(relatedItem).forEach((key) => {
+            if (key !== 'id' && key !== 'created_at' && key !== 'updated_at' && key !== 'status') {
+              (item as Record<string, unknown>)[`${field}_${key}`] = (relatedItem as Record<string, unknown>)[key];
+            }
+          });
+        }
+      });
+
+      return data;
     }
     catch (error: any) {
+      if (error instanceof RelationError) {
+        logger.warn('Relation not found', {
+          model,
+          field,
+          error: error.message,
+        });
+        return data;
+      }
+
       logger.error('Failed to resolve relation', { error });
       throw new QueryExecutorError('Failed to resolve relation', 'resolve', {
         model,
@@ -91,7 +141,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
           const relations = await this.loader.relationManager.loadRelations(
             params.model,
             data.map(item => item.id),
-            include,
+            include.relation,
           );
 
           if (!relations.length) {
@@ -105,7 +155,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
           // İlişkili içeriği yükle
           const relatedData = await this.loader.relationManager.loadRelatedContent<TData>(
             relations,
-            params.options?.locale || undefined,
+            include.locale || params.options?.locale || undefined,
           );
 
           // İlişkileri grupla
@@ -126,7 +176,7 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
               item._relations = {};
             }
             const relatedItems = groupedData[item.id] || [];
-            item._relations[include] = isOneToMany ? relatedItems : relatedItems[0];
+            item._relations[include.relation] = isOneToMany ? relatedItems : relatedItems[0];
           });
         }
       }
@@ -219,7 +269,71 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
 
     // İlişkileri ekle
     if (params.options?.includes?.length) {
-      await this.addRelationJoins(query, params.model, params.options.includes);
+      // İlişki tiplerini al
+      const relationTypes = await this.loader.relationManager.getRelationTypes(params.model);
+
+      for (const include of params.options.includes) {
+        const relationType = relationTypes[include.relation];
+        if (!relationType) {
+          logger.warn('No relation type found', { model: params.model, field: include.relation });
+          continue;
+        }
+
+        const relations = await this.loader.relationManager.loadRelations(params.model, [], include.relation);
+        if (relations.length > 0) {
+          const relation = relations[0];
+          const relationTable = normalizeTableName(relation.target_model);
+
+          // İlişki tablosunu ekle
+          const relationAlias = `r_${include.relation}`;
+          query.joins.push({
+            type: 'LEFT',
+            table: relationTable,
+            alias: relationAlias,
+            conditions: [`m.${include.relation}_id = ${relationAlias}.id`],
+          });
+
+          // İlişkili tablonun alanlarını seç
+          const relationFields = await this.loader.translationManager.getMainColumns(relation.target_model);
+          query.select.push(
+            ...relationFields.map(field =>
+              `${relationAlias}.${field} as ${include.relation}_${field}`,
+            ),
+          );
+
+          // İlişkili tablonun çevirilerini ekle
+          if (include.locale) {
+            const hasTranslations = await this.loader.translationManager.hasTranslations(relation.target_model);
+            if (hasTranslations) {
+              const translationTable = normalizeTranslationTableName(relation.target_model);
+              const translationFields = await this.loader.translationManager.getTranslationColumns(relation.target_model);
+
+              if (translationFields.length > 0) {
+                // Çeviri tablosunu ekle
+                const joinAlias = `t_${include.relation}`;
+                query.joins.push({
+                  type: 'LEFT',
+                  table: translationTable,
+                  alias: joinAlias,
+                  conditions: [
+                    `${relationAlias}.id = ${joinAlias}.id`,
+                    `${joinAlias}.locale = ?`,
+                  ],
+                });
+
+                // Çeviri alanlarını ekle
+                query.select.push(
+                  ...translationFields.map(field =>
+                    `${joinAlias}.${field} as ${include.relation}_${field}`,
+                  ),
+                );
+
+                query.parameters.push(include.locale);
+              }
+            }
+          }
+        }
+      }
     }
 
     // WHERE koşullarını düzelt
@@ -422,65 +536,6 @@ export class SQLiteQueryExecutor<TData extends IDBRecord> extends BaseQueryExecu
           ],
         });
         query.parameters.push(locale);
-      }
-    }
-  }
-
-  private async addRelationJoins(query: SQLQuery, model: string, includes: string[]): Promise<void> {
-    for (const include of includes) {
-      const relations = await this.loader.relationManager.loadRelations(model, [], include);
-      if (relations.length > 0) {
-        const relation = relations[0];
-        const relationTable = normalizeTableName(relation.target_model);
-
-        // İlişki tablosunu ekle
-        const relationAlias = `r_${include}`;
-        query.joins.push({
-          type: 'LEFT',
-          table: relationTable,
-          alias: relationAlias,
-          conditions: [`m.${include}_id = ${relationAlias}.id`],
-        });
-
-        // İlişkili tablonun alanlarını seç
-        const relationFields = await this.loader.translationManager.getMainColumns(relation.target_model);
-        query.select.push(
-          ...relationFields.map(field =>
-            `${relationAlias}.${field} as ${include}_${field}`,
-          ),
-        );
-
-        // İlişkili tablonun çevirilerini ekle
-        if (query.options?.locale) {
-          const hasTranslations = await this.loader.translationManager.hasTranslations(relation.target_model);
-          if (hasTranslations) {
-            const translationTable = normalizeTranslationTableName(relation.target_model);
-            const translationFields = await this.loader.translationManager.getTranslationColumns(relation.target_model);
-
-            if (translationFields.length > 0) {
-              // Çeviri tablosunu ekle
-              const joinAlias = `t_${include}`;
-              query.joins.push({
-                type: 'LEFT',
-                table: translationTable,
-                alias: joinAlias,
-                conditions: [
-                  `${relationAlias}.id = ${joinAlias}.id`,
-                  `${joinAlias}.locale = ?`,
-                ],
-              });
-
-              // Çeviri alanlarını ekle
-              query.select.push(
-                ...translationFields.map(field =>
-                  `${joinAlias}.${field} as ${include}_${field}`,
-                ),
-              );
-
-              query.parameters.push(query.options.locale);
-            }
-          }
-        }
       }
     }
   }

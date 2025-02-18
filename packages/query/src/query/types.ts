@@ -40,11 +40,12 @@ export interface QueryResult<TData> {
 }
 
 // Base Include Types
-export interface Include {
-  [key: string]: {
-    include?: Include
-  }
+export interface IncludeOptions {
+  relation: string
+  locale?: string
 }
+
+export type Include = string | IncludeOptions | (string | IncludeOptions)[];
 
 // Base Query Builder Interfaces
 export interface IBaseQueryBuilder<TData> {
@@ -61,14 +62,14 @@ export interface IBaseQueryBuilder<TData> {
 }
 
 // SQLite Tipleri
-export interface SQLiteOptions extends QueryOptions {
-  translations?: boolean
-  includes?: string[]
+export interface SQLiteOptions {
+  includes?: IncludeOptions[]
+  locale?: string
 }
 
 export interface ISQLiteQuery<TData extends IDBRecord> extends IBaseQueryBuilder<TData> {
-  include: (relations: string | string[]) => this
-  locale: (code: string, translations?: boolean) => this
+  include: (relations: string | string[] | IncludeOptions | IncludeOptions[]) => this
+  locale: (code: string) => this
 }
 
 export interface SQLQuery {

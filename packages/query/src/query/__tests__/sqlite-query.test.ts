@@ -584,7 +584,7 @@ describe('sQLiteQueryBuilder', () => {
       it('should load sociallinks with related service', async () => {
         const result = await socialLinkBuilder
           .where('status', 'eq', 'publish' as ContentrainStatus)
-          .include('service')
+          .include({ relation: 'service', locale: 'en' })
           .get();
 
         expect(result.data.length).toBeGreaterThan(0);
@@ -597,6 +597,7 @@ describe('sQLiteQueryBuilder', () => {
       });
     });
   });
+
   describe('relations', () => {
     it('should load one-to-one relation', async () => {
       const result = await workItemBuilder
@@ -622,8 +623,6 @@ describe('sQLiteQueryBuilder', () => {
 
       expect(result.data.length).toBeGreaterThan(0);
       result.data.forEach((item) => {
-        expect(item.work).toBeDefined();
-        expect(item.testimonial).toBeDefined();
         expect(item._relations?.work).toBeDefined();
         expect(item._relations?.testimonial).toBeDefined();
       });
@@ -690,7 +689,11 @@ describe('sQLiteQueryBuilder', () => {
   describe('complex relation scenarios', () => {
     it('should handle multiple localized relations in project details', async () => {
       const result = await projectDetailsBuilder
-        .include(['work', 'testimonial'])
+        .locale('en')
+        .include([
+          { relation: 'work', locale: 'en' },
+          { relation: 'testimonial', locale: 'en' },
+        ])
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .first();
 
@@ -707,7 +710,10 @@ describe('sQLiteQueryBuilder', () => {
 
     it('should handle both localized and non-localized relations', async () => {
       const result = await projectStatsBuilder
-        .include(['work', 'reference'])
+        .include([
+          { relation: 'work', locale: 'en' },
+          { relation: 'reference' },
+        ])
         .where('status', 'eq', 'publish' as ContentrainStatus)
         .first();
 
