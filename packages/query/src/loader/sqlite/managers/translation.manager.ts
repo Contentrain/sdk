@@ -1,15 +1,16 @@
-import type { ILogger } from '../../types/common';
-import type { IDBTranslationRecord } from '../../types/sqlite';
+import type { IDBTranslationRecord } from 'src/loader/types/sqlite';
 import { TranslationError } from '../../../errors';
+import { loggers } from '../../../utils/logger';
 import { normalizeTableName, normalizeTranslationTableName } from '../../../utils/normalizer';
 import { SQLiteContentManager } from './content.manager';
+
+const logger = loggers.sqlite;
 
 export class SQLiteTranslationManager extends SQLiteContentManager {
   constructor(
     databasePath: string,
-    logger: ILogger,
   ) {
-    super(databasePath, logger);
+    super(databasePath);
   }
 
   async hasTranslations(model: string): Promise<boolean> {
@@ -124,7 +125,7 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       return result.map(row => row.name);
     }
     catch (error: any) {
-      this.logger.error('Failed to get main columns', {
+      logger.error('Failed to get main columns', {
         model,
         error: error?.message,
         code: error?.code,
@@ -154,7 +155,7 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       return columns;
     }
     catch (error: any) {
-      this.logger.error('Failed to get translation columns', {
+      logger.error('Failed to get translation columns', {
         model,
         error: error?.message,
         code: error?.code,
@@ -182,7 +183,7 @@ export class SQLiteTranslationManager extends SQLiteContentManager {
       return result.map(row => row.name);
     }
     catch (error: any) {
-      this.logger.error('Failed to get all columns', {
+      logger.error('Failed to get all columns', {
         model,
         error: error?.message,
         code: error?.code,

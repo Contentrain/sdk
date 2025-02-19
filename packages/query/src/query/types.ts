@@ -124,7 +124,6 @@ export interface SQLJoin {
   alias: string
   conditions: string[]
 }
-
 // JSON Tipleri
 export interface JSONOptions extends QueryOptions {
   defaultLocale?: string

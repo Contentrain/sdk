@@ -1,7 +1,9 @@
-import type { ILogger } from '../../types/common';
 import type { IBaseJSONRecord, IJSONContentFile, IJSONModelConfig } from '../../types/json';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { loggers } from '../../../utils/logger';
+
+const logger = loggers.loader;
 
 export class JSONContentManager {
   private readonly modelConfigCache = new Map<string, IJSONModelConfig>();
@@ -9,7 +11,6 @@ export class JSONContentManager {
 
   constructor(
     protected readonly contentDir: string,
-    protected readonly logger: ILogger,
     protected readonly defaultLocale?: string,
   ) {}
 
@@ -31,7 +32,7 @@ export class JSONContentManager {
 
       const modelMetadata = allMetadata.find((m: any) => m.modelId === modelId);
       if (!modelMetadata) {
-        this.logger.error('Model metadata not found:', {
+        logger.error('Model metadata not found:', {
           modelId,
           metadataPath,
           availableModels: allMetadata.map((m: any) => m.modelId),
@@ -51,7 +52,7 @@ export class JSONContentManager {
         modelFields = JSON.parse(modelContent);
       }
       catch (parseError: any) {
-        this.logger.error('Failed to parse model fields:', {
+        logger.error('Failed to parse model fields:', {
           modelId,
           modelPath,
           error: parseError?.message || 'Unknown error',
@@ -74,7 +75,7 @@ export class JSONContentManager {
       return config;
     }
     catch (error: any) {
-      this.logger.error('Failed to load model config:', {
+      logger.error('Failed to load model config:', {
         modelId,
         error: error?.message || 'Unknown error',
         stack: error?.stack,
@@ -106,7 +107,7 @@ export class JSONContentManager {
       if (modelConfig.metadata.localization) {
         if (locale === 'default') {
           if (!this.defaultLocale) {
-            this.logger.error('Default locale required:', {
+            logger.error('Default locale required:', {
               modelId,
               locale,
               isLocalized: true,
@@ -145,7 +146,7 @@ export class JSONContentManager {
         return result;
       }
       catch (parseError: any) {
-        this.logger.error('JSON parse error:', {
+        logger.error('JSON parse error:', {
           modelId,
           locale: effectiveLocale,
           contentPath,
@@ -163,7 +164,7 @@ export class JSONContentManager {
       if (error.message.includes('Invalid JSON format')) {
         throw error;
       }
-      this.logger.error('Content load error:', {
+      logger.error('Content load error:', {
         modelId,
         locale,
         error: error?.message || 'Unknown error',
@@ -185,7 +186,7 @@ export class JSONContentManager {
       return assets;
     }
     catch (error: any) {
-      this.logger.warn('Assets file not found or cannot be read:', {
+      logger.warn('Assets file not found or cannot be read:', {
         error: error?.message || 'Unknown error',
         path: join(this.contentDir, 'assets.json'),
         context: {
@@ -214,7 +215,7 @@ export class JSONContentManager {
         .filter(locale => locale !== modelId);
 
       if (locales.length === 0) {
-        this.logger.error('No locale files found:', {
+        logger.error('No locale files found:', {
           modelId,
           modelDir,
           files,
@@ -224,7 +225,7 @@ export class JSONContentManager {
       return locales;
     }
     catch (error: any) {
-      this.logger.error('Failed to read locales:', {
+      logger.error('Failed to read locales:', {
         modelId,
         error: error?.message || 'Unknown error',
         stack: error?.stack,

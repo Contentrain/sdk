@@ -1,5 +1,4 @@
 import type { ICacheStats } from '../../cache/types';
-import type { ILogger } from '../types/common';
 import type { IDBRecord, IDBTranslationRecord, ISQLiteLoaderOptions, ISQLiteLoaderResult } from '../types/sqlite';
 import { MemoryCache } from '../../cache/memory';
 import { LoaderError } from '../../errors';
@@ -30,11 +29,10 @@ export class SQLiteLoader<TData extends IDBRecord = IDBRecord> {
 
   constructor(
     private readonly options: ISQLiteLoaderOptions,
-    logger: ILogger,
   ) {
-    this.contentManager = new SQLiteContentManager(options.databasePath, logger);
-    this.relationManager = new SQLiteRelationManager(options.databasePath, logger);
-    this.translationManager = new SQLiteTranslationManager(options.databasePath, logger);
+    this.contentManager = new SQLiteContentManager(options.databasePath);
+    this.relationManager = new SQLiteRelationManager(options.databasePath);
+    this.translationManager = new SQLiteTranslationManager(options.databasePath);
 
     if (options.cache) {
       this.cache = new MemoryCache({

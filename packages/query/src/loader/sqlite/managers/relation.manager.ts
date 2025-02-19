@@ -1,23 +1,24 @@
-import type { ILogger } from '../../types/common';
 import type { IDBRecord, IDBRelation } from '../../types/sqlite';
 import { DatabaseError, RelationError } from '../../../errors';
+import { loggers } from '../../../utils/logger';
 import { normalizeTableName } from '../../../utils/normalizer';
 import { SQLiteContentManager } from './content.manager';
 import { SQLiteTranslationManager } from './translation.manager';
+
+const logger = loggers.sqlite;
 
 export class SQLiteRelationManager extends SQLiteContentManager {
   private readonly translationManager: SQLiteTranslationManager;
 
   constructor(
     databasePath: string,
-    logger: ILogger,
   ) {
-    super(databasePath, logger);
+    super(databasePath);
     try {
-      this.translationManager = new SQLiteTranslationManager(databasePath, logger);
+      this.translationManager = new SQLiteTranslationManager(databasePath);
     }
     catch (error: any) {
-      this.logger.error('Failed to initialize relation manager', {
+      logger.error('Failed to initialize relation manager', {
         databasePath,
         error: error?.message,
         code: error?.code,
@@ -73,7 +74,7 @@ export class SQLiteRelationManager extends SQLiteContentManager {
         throw error;
       }
 
-      this.logger.error('Failed to load relations', {
+      logger.error('Failed to load relations', {
         model,
         sourceIds,
         fieldId,
@@ -131,7 +132,7 @@ export class SQLiteRelationManager extends SQLiteContentManager {
       return data;
     }
     catch (error: any) {
-      this.logger.error('Failed to load related content', {
+      logger.error('Failed to load related content', {
         relations,
         locale,
         error: error?.message,
@@ -170,7 +171,7 @@ export class SQLiteRelationManager extends SQLiteContentManager {
       }, {});
     }
     catch (error: any) {
-      this.logger.error('Failed to get relation types', {
+      logger.error('Failed to get relation types', {
         model,
         error: error?.message,
         code: error?.code,
@@ -200,7 +201,7 @@ export class SQLiteRelationManager extends SQLiteContentManager {
       return results.map(r => r.field_id);
     }
     catch (error: any) {
-      this.logger.error('Failed to get relation fields', {
+      logger.error('Failed to get relation fields', {
         model,
         error: error?.message,
         code: error?.code,

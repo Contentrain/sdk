@@ -1,17 +1,18 @@
-import type { ILogger } from '../../types/common';
 import type { IBaseJSONRecord, IJSONRelationConfig } from '../../types/json';
 import { RelationError } from '../../../errors';
+import { loggers } from '../../../utils/logger';
 import { JSONContentManager } from './content.manager';
+
+const logger = loggers.loader;
 
 export class JSONRelationManager extends JSONContentManager {
   private readonly relationCache = new Map<string, IJSONRelationConfig[]>();
 
   constructor(
     contentDir: string,
-    logger: ILogger,
     defaultLocale?: string,
   ) {
-    super(contentDir, logger, defaultLocale);
+    super(contentDir, defaultLocale);
   }
 
   async loadRelations(modelId: string): Promise<IJSONRelationConfig[]> {
@@ -33,7 +34,7 @@ export class JSONRelationManager extends JSONContentManager {
         const reference = options?.reference?.form?.reference?.value;
 
         if (!reference) {
-          this.logger.error('Reference not found for relation field', {
+          logger.error('Reference not found for relation field', {
             modelId,
             fieldName: field.name,
             fieldId: field.fieldId,
@@ -64,7 +65,7 @@ export class JSONRelationManager extends JSONContentManager {
       return relations;
     }
     catch (error: any) {
-      this.logger.error('Failed to load relations', {
+      logger.error('Failed to load relations', {
         modelId,
         error: error?.message,
         stack: error?.stack,
@@ -93,7 +94,7 @@ export class JSONRelationManager extends JSONContentManager {
       // İlgili ilişkiyi bul
       const relation = relations.find(r => r.foreignKey === relationField);
       if (!relation) {
-        this.logger.error('Relation not found', {
+        logger.error('Relation not found', {
           modelId,
           relationField: String(relationField),
           availableFields: relations.map(r => r.foreignKey),
@@ -124,7 +125,7 @@ export class JSONRelationManager extends JSONContentManager {
             r.ID === item[relationField],
           );
           if (!relatedItem) {
-            this.logger.error('Related item not found', {
+            logger.error('Related item not found', {
               modelId,
               relationField: String(relationField),
               sourceId: item.ID,
@@ -165,7 +166,7 @@ export class JSONRelationManager extends JSONContentManager {
             !foundIds.includes(id),
           );
 
-          this.logger.error('Some related items not found', {
+          logger.error('Some related items not found', {
             modelId,
             relationField: String(relationField),
             missingIds,
@@ -187,7 +188,7 @@ export class JSONRelationManager extends JSONContentManager {
       }
     }
     catch (error: any) {
-      this.logger.error('Failed to resolve relation', {
+      logger.error('Failed to resolve relation', {
         modelId,
         relationField: String(relationField),
         error: error?.message,
@@ -212,7 +213,7 @@ export class JSONRelationManager extends JSONContentManager {
       await super.clearCache();
     }
     catch (error: any) {
-      this.logger.error('Failed to clear relation cache', {
+      logger.error('Failed to clear relation cache', {
         error: error?.message,
         stack: error?.stack,
       });

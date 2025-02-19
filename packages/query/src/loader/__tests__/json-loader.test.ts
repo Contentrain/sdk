@@ -1,7 +1,6 @@
 import type { IBaseJSONRecord } from '../types/json';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { loggers } from '../../utils/logger';
 import { JSONLoader } from '../json/json.loader';
 
 interface TestJSONRecord extends IBaseJSONRecord {
@@ -28,7 +27,7 @@ describe('jSONLoader', () => {
       cache: true,
       maxCacheSize: 100,
       defaultLocale: 'en',
-    }, loggers.loader);
+    });
   });
 
   afterEach(async () => {
@@ -164,7 +163,7 @@ describe('jSONLoader', () => {
         maxCacheSize: 100,
         defaultLocale: 'en',
         ttl: 100, // 100ms TTL
-      }, loggers.loader);
+      });
 
       await shortTTLLoader.load('workitems');
       await new Promise(resolve => setTimeout(resolve, 150));
@@ -199,7 +198,7 @@ describe('jSONLoader', () => {
       const invalidLoader = new JSONLoader({
         contentDir: join(__dirname, 'invalid-dir'),
         cache: true,
-      }, loggers.loader);
+      });
 
       await expect(invalidLoader.load('workitems')).rejects.toThrow();
     });
@@ -208,7 +207,7 @@ describe('jSONLoader', () => {
       const invalidLoader = new JSONLoader({
         contentDir: join(__dirname, 'test-data'),
         cache: true,
-      }, loggers.loader);
+      });
 
       await expect(invalidLoader.load('invalid-model')).rejects.toThrow();
     });

@@ -1,9 +1,11 @@
 import type { ICacheStats } from 'src/cache/types';
-import type { ILogger } from '../types/common';
 import type { IBaseJSONRecord, IJSONLoaderOptions, IJSONLoaderResult, IJSONModelConfig } from '../types/json';
 import { MemoryCache } from '../../cache/memory';
+import { loggers } from '../../utils/logger';
 import { JSONContentManager } from './managers/content.manager';
 import { JSONRelationManager } from './managers/relation.manager';
+
+const logger = loggers.loader;
 
 export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManager {
   private readonly relationManager: JSONRelationManager;
@@ -12,11 +14,10 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
 
   constructor(
     private readonly options: IJSONLoaderOptions,
-    logger: ILogger,
   ) {
-    super(options.contentDir, logger, options.defaultLocale);
+    super(options.contentDir, options.defaultLocale);
 
-    this.relationManager = new JSONRelationManager(options.contentDir, logger, options.defaultLocale);
+    this.relationManager = new JSONRelationManager(options.contentDir, options.defaultLocale);
 
     if (options.cache) {
       this.cache = new MemoryCache({
@@ -61,7 +62,7 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
             content[locale] = file.data;
           }
           catch (error: any) {
-            this.logger.warn('Failed to load content for locale:', {
+            logger.warn('Failed to load content for locale:', {
               locale,
               modelId,
               error: error?.message || 'Unknown error',
@@ -94,7 +95,7 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       return result;
     }
     catch (error: any) {
-      this.logger.error('Load error:', {
+      logger.error('Load error:', {
         modelId,
         error: error?.message || 'Unknown error',
         stack: error?.stack,
@@ -121,7 +122,7 @@ export class JSONLoader<TData extends IBaseJSONRecord> extends JSONContentManage
       );
     }
     catch (error: any) {
-      this.logger.error('Resolve relations error:', {
+      logger.error('Resolve relations error:', {
         modelId,
         relationKey: String(relationKey),
         error: error?.message || 'Unknown error',

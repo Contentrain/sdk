@@ -2,7 +2,6 @@ import type { IDBRecord } from '../types/sqlite';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DatabaseError, RelationError } from '../../errors';
-import { loggers } from '../../utils/logger';
 import { SQLiteLoader } from '../sqlite/sqlite.loader';
 
 interface TestRecord extends IDBRecord {
@@ -31,7 +30,7 @@ describe('sQLiteLoader', () => {
       databasePath: dbPath,
       cache: true,
       maxCacheSize: 100,
-    }, loggers.loader);
+    });
   });
 
   afterEach(async () => {
@@ -194,7 +193,7 @@ describe('sQLiteLoader', () => {
         cache: true,
         maxCacheSize: 100,
         modelTTL: { services: 100 }, // 100ms TTL
-      }, loggers.loader);
+      });
 
       await shortTTLLoader.load('services');
       await new Promise(resolve => setTimeout(resolve, 150));
@@ -238,7 +237,7 @@ describe('sQLiteLoader', () => {
       const createLoader = () => new SQLiteLoader({
         databasePath: 'invalid/path/to/db.sqlite',
         cache: true,
-      }, loggers.loader);
+      });
 
       expect(createLoader).toThrow(DatabaseError);
 
@@ -262,7 +261,7 @@ describe('sQLiteLoader', () => {
       const testLoader = new SQLiteLoader({
         databasePath: dbPath,
         cache: false, // Cache'i devre dışı bırak
-      }, loggers.loader);
+      });
 
       await testLoader.close();
       await expect(testLoader.load('services')).rejects.toThrow('Failed to load content');

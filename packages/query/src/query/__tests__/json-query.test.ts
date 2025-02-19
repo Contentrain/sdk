@@ -2,7 +2,6 @@ import type { IBaseJSONRecord } from '../../loader/types/json';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { JSONLoader } from '../../loader/json/json.loader';
-import { loggers } from '../../utils/logger';
 import { JSONQueryBuilder } from '../json/json-builder';
 
 interface TestJSONRecord extends IBaseJSONRecord {
@@ -37,7 +36,7 @@ describe('jSONQueryBuilder', () => {
       cache: true,
       maxCacheSize: 100,
       defaultLocale: 'en',
-    }, loggers.loader);
+    });
 
     builder = new JSONQueryBuilder<TestJSONRecord>('workitems', loader);
   });

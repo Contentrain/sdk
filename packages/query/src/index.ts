@@ -45,12 +45,10 @@ export interface ContentrainSDKOptions {
 // SDK Class
 export class ContentrainSDK {
   private static loader: JSONLoader<IBaseJSONRecord> | SQLiteLoader<IDBRecord>;
-  private readonly logger: ILogger;
   private readonly options: ContentrainSDKOptions;
   private readonly type: LoaderType;
 
   constructor(type: LoaderType, options: ContentrainSDKOptions) {
-    this.logger = options.logger || loggers.default;
     this.options = options;
     this.type = type;
 
@@ -66,7 +64,7 @@ export class ContentrainSDK {
           maxCacheSize: options.maxCacheSize,
           defaultLocale: options.defaultLocale,
           modelTTL: options.modelTTL,
-        }, this.logger);
+        });
       }
       else {
         if (!options.databasePath)
@@ -78,7 +76,7 @@ export class ContentrainSDK {
           maxCacheSize: options.maxCacheSize,
           defaultLocale: options.defaultLocale,
           modelTTL: options.modelTTL,
-        }, this.logger);
+        });
       }
 
       // Loader'ı QueryFactory'ye set et

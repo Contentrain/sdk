@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { QueryFactory } from '../..';
 import { SQLiteLoader } from '../../loader/sqlite/sqlite.loader';
-import { loggers } from '../../utils/logger';
 
 interface Reference extends IDBRecord {
   logo: string
@@ -181,7 +180,7 @@ describe('sQLiteQueryBuilder', () => {
       databasePath: dbPath,
       cache: true,
       maxCacheSize: 100,
-    }, loggers.loader);
+    });
 
     // QueryFactory'ye loader'ı set et
     QueryFactory.setLoader(loader);

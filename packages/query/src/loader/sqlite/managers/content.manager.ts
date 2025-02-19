@@ -1,23 +1,22 @@
-import type { ILogger } from '../../types/common';
 import type { IDBRecord } from '../../types/sqlite';
 import { DatabaseError } from '../../../errors';
+import { loggers } from '../../../utils/logger';
 import { normalizeTableName } from '../../../utils/normalizer';
 import { SQLiteConnection } from '../sqlite.connection';
 
+const logger = loggers.sqlite;
+
 export class SQLiteContentManager {
   protected readonly connection: SQLiteConnection;
-  protected readonly logger: ILogger;
 
   constructor(
     protected readonly databasePath: string,
-    logger: ILogger,
   ) {
-    this.logger = logger;
     try {
       this.connection = new SQLiteConnection(databasePath);
     }
     catch (error: any) {
-      this.logger.error('Failed to initialize content manager', {
+      logger.error('Failed to initialize content manager', {
         databasePath,
         error: error?.message,
         code: error?.code,
@@ -41,7 +40,7 @@ export class SQLiteContentManager {
       return await this.connection.query<T>(sql, params);
     }
     catch (error: any) {
-      this.logger.error('Query error:', {
+      logger.error('Query error:', {
         sql,
         params,
         error: error?.message,
@@ -64,7 +63,7 @@ export class SQLiteContentManager {
       return result;
     }
     catch (error: any) {
-      this.logger.error('Failed to find record by ID', {
+      logger.error('Failed to find record by ID', {
         model,
         id,
         error: error?.message,
@@ -101,7 +100,7 @@ export class SQLiteContentManager {
       return result;
     }
     catch (error: any) {
-      this.logger.error('Failed to find records', {
+      logger.error('Failed to find records', {
         model,
         conditions,
         error: error?.message,
@@ -129,7 +128,7 @@ export class SQLiteContentManager {
       return tables.length;
     }
     catch (error: any) {
-      this.logger.error('Failed to get table count', {
+      logger.error('Failed to get table count', {
         error: error?.message,
         code: error?.code,
       });
@@ -142,7 +141,7 @@ export class SQLiteContentManager {
       await this.connection.close();
     }
     catch (error: any) {
-      this.logger.error('Failed to close content manager', {
+      logger.error('Failed to close content manager', {
         error: error?.message,
         code: error?.code,
       });
