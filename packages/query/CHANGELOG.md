@@ -1,5 +1,11 @@
 # @contentrain/query
 
+## 4.0.0
+
+### Major Changes
+
+- new generator packages
+
 ## 3.2.0
 
 ### Minor Changes

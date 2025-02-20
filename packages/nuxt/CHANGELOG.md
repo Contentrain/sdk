@@ -1,5 +1,11 @@
 # @contentrain/nuxt
 
+## 3.0.0
+
+### Major Changes
+
+- new generator packages
+
 ## 2.2.3
 
 ### Patch Changes
