@@ -2,8 +2,7 @@ import { addImportsDir, addServerHandler, createResolver, defineNuxtModule } fro
 import defu from 'defu';
 
 export interface ModuleOptions {
-  contentDir: string
-  defaultLocale?: string
+  databasePath?: string
   cache: boolean
   ttl: number
   maxCacheSize: number
@@ -27,7 +26,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
-    contentDir: 'contentrain',
+    databasePath: 'contentrain.db',
     cache: true,
     ttl: 60 * 1000,
     maxCacheSize: 1000,
@@ -37,27 +36,35 @@ export default defineNuxtModule<ModuleOptions>({
     const resolve = resolver.resolve.bind(resolver);
 
     // Runtime config
+    const privateConfig: Record<string, any> = {
+      cache: options.cache,
+      ttl: options.ttl,
+      maxCacheSize: options.maxCacheSize,
+    };
+
+    // Optional fields'ları sadece varsa ekle
+    if (options.databasePath)
+      privateConfig.databasePath = options.databasePath;
+
+    if (options.modelTTL)
+      privateConfig.modelTTL = options.modelTTL;
+
     nuxt.options.runtimeConfig.contentrain = defu(
       nuxt.options.runtimeConfig.contentrain || {},
-      {
-        contentDir: options.contentDir,
-        defaultLocale: options.defaultLocale,
-        cache: options.cache,
-        ttl: options.ttl,
-        maxCacheSize: options.maxCacheSize,
-        modelTTL: options.modelTTL,
-      },
+      privateConfig,
     );
+
+    // Public config - sadece gerekli alanları ekle
+    const publicConfig: Record<string, any> = {};
 
     nuxt.options.runtimeConfig.public.contentrain = defu(
       nuxt.options.runtimeConfig.public.contentrain || {},
-      {
-        defaultLocale: options.defaultLocale,
-      },
+      publicConfig,
     );
 
     // Add composables
-    addImportsDir(resolve('./runtime/composables'));
+    const composablePath = resolve('./runtime/composables');
+    addImportsDir(composablePath);
 
     // Add API handlers
     addServerHandler({

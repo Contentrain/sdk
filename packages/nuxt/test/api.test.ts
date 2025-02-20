@@ -1,10 +1,10 @@
-import type { BaseContentrainType, LoaderResult, QueryResult } from '@contentrain/query';
+import type { IDBRecord, QueryResult } from '@contentrain/query';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { $fetch, setup, url } from '@nuxt/test-utils/e2e';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 // Model tipleri
-interface IWorkItem extends BaseContentrainType {
+interface IWorkItem extends IDBRecord {
   title: string
   description: string
   image: string
@@ -13,12 +13,12 @@ interface IWorkItem extends BaseContentrainType {
   order: number
 }
 
-interface IWorkCategory extends BaseContentrainType {
+interface IWorkCategory extends IDBRecord {
   category: string
   order: number
 }
 
-interface ITabItem extends BaseContentrainType {
+interface ITabItem extends IDBRecord {
   title: string
   description: string
   order: number
@@ -28,13 +28,13 @@ interface ITabItem extends BaseContentrainType {
   }
 }
 
-interface IFaqItem extends BaseContentrainType {
+interface IFaqItem extends IDBRecord {
   question: string
   answer: string
   order: number
 }
 
-interface ITestimonialItem extends BaseContentrainType {
+interface ITestimonialItem extends IDBRecord {
   'name': string
   'description': string
   'title': string
@@ -46,7 +46,7 @@ interface ITestimonialItem extends BaseContentrainType {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const contentDir = join(__dirname, '../../../playground/contentrain');
+const dbPath = join(__dirname, '../../../playground/contentrain-db/contentrain.db');
 
 describe('contentrain API Endpoints', async () => {
   await setup({
@@ -55,8 +55,7 @@ describe('contentrain API Endpoints', async () => {
     browser: false,
     nuxtConfig: {
       contentrain: {
-        contentDir,
-        defaultLocale: 'tr',
+        databasePath: dbPath,
         cache: true,
         ttl: 60 * 1000,
         maxCacheSize: 1000,
@@ -136,7 +135,7 @@ describe('contentrain API Endpoints', async () => {
       expect(response.data.length).toBeGreaterThan(0);
       response.data.forEach((item) => {
         expect(item._relations?.['creative-work']).toBeDefined();
-        expect(item._relations?.['creative-work'].ID).toBeDefined();
+        expect(item._relations?.['creative-work'].id).toBeDefined();
       });
     });
 
@@ -161,7 +160,7 @@ describe('contentrain API Endpoints', async () => {
           expect(item._relations).toBeDefined();
           expect(Array.isArray(item._relations?.category)).toBe(true);
           item.category.forEach((categoryId) => {
-            const found = item._relations?.category?.some(cat => cat.ID === categoryId);
+            const found = item._relations?.category?.some(cat => cat.id === categoryId);
             expect(found).toBe(true);
           });
         });
@@ -314,7 +313,7 @@ describe('contentrain API Endpoints', async () => {
 
   describe('6. Metadata ve Assets', () => {
     it('6.1 Model Metadata', async () => {
-      const response = await $fetch<LoaderResult<IWorkItem>>(url('/api/_contentrain/load'), {
+      const response = await $fetch<any>(url('/api/_contentrain/load'), {
         method: 'POST',
         body: {
           model: 'workitems',
@@ -327,7 +326,7 @@ describe('contentrain API Endpoints', async () => {
     });
 
     it('6.2 Assets Kontrolü', async () => {
-      const response = await $fetch<LoaderResult<IWorkItem>>(url('/api/_contentrain/load'), {
+      const response = await $fetch<any>(url('/api/_contentrain/load'), {
         method: 'POST',
         body: {
           model: 'workitems',

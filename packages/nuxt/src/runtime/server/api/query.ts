@@ -1,6 +1,7 @@
-import type { BaseContentrainType, Include, Operator, QueryConfig, QueryResult } from '@contentrain/query';
+import type { Filter, IDBRecord, Include, Operator, QueryResult, SQLiteOptions } from '@contentrain/query';
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
+import { QueryFactory } from '@contentrain/query';
 import { createError, defineEventHandler, readBody } from 'h3';
 import { getSDK } from '../utils/sdk';
 
@@ -18,11 +19,14 @@ const VALID_OPERATORS: Operator[] = [
   'endsWith',
 ];
 
-interface QueryBody {
+interface QueryBody<T extends IDBRecord = IDBRecord> {
   model: string
-  where?: Array<[string, Operator, unknown]>
-  include?: string[] | Record<string, { fields?: string[], include?: Include }>
-  orderBy?: Array<[string, 'asc' | 'desc']>
+  where?: Array<[keyof T & string, Operator, unknown]>
+  include?: Array<{
+    relation: keyof T['_relations'] & string
+    locale?: string
+  }>
+  orderBy?: Array<[keyof T & string, 'asc' | 'desc']>
   limit?: number
   offset?: number
   locale?: string
@@ -30,7 +34,7 @@ interface QueryBody {
   ttl?: number
 }
 
-function validateQueryBody(body: QueryBody): void {
+function validateQueryBody<T extends IDBRecord>(body: QueryBody<T>): void {
   if (!body.model) {
     throw createError({
       statusCode: 400,
@@ -88,38 +92,35 @@ function validateQueryBody(body: QueryBody): void {
 
   // Validate includes
   if (body.include) {
-    if (Array.isArray(body.include)) {
-      body.include.forEach((relation) => {
-        if (typeof relation !== 'string') {
-          throw createError({
-            statusCode: 400,
-            message: 'include items must be strings',
-          });
-        }
-      });
-    }
-    else if (typeof body.include === 'object') {
-      Object.entries(body.include).forEach(([relation, config]) => {
-        if (typeof relation !== 'string') {
-          throw createError({
-            statusCode: 400,
-            message: 'include relation must be a string',
-          });
-        }
-        if (config.fields && !Array.isArray(config.fields)) {
-          throw createError({
-            statusCode: 400,
-            message: 'include fields must be an array',
-          });
-        }
-      });
-    }
-    else {
+    if (!Array.isArray(body.include)) {
       throw createError({
         statusCode: 400,
-        message: 'include must be an array or an object',
+        message: 'include must be an array',
       });
     }
+
+    body.include.forEach((include) => {
+      if (!include || typeof include !== 'object') {
+        throw createError({
+          statusCode: 400,
+          message: 'Each include must be an object with relation property',
+        });
+      }
+
+      if (typeof include.relation !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'include relation must be a string',
+        });
+      }
+
+      if (include.locale !== undefined && typeof include.locale !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'include locale must be a string when provided',
+        });
+      }
+    });
   }
 
   if (body.limit !== undefined && (typeof body.limit !== 'number' || body.limit < 0)) {
@@ -176,45 +177,31 @@ export default defineEventHandler(async (event: H3Event) => {
     // Validate request body
     validateQueryBody(body);
 
+    // Get SDK instance
     const sdk = getSDK(config);
-    const query = sdk.query<QueryConfig<BaseContentrainType, string, Record<string, BaseContentrainType>>>(body.model);
+    const query = QueryFactory.createSQLiteBuilder<IDBRecord>(body.model, sdk);
 
     // Apply filters
     if (body.where) {
       body.where.forEach(([field, operator, value]) => {
-        query.where(field as any, operator, value);
+        query.where(field, operator, value);
       });
     }
 
     // Apply includes
     if (body.include) {
-      if (Array.isArray(body.include)) {
-        body.include.forEach((relation) => {
-          query.include(relation);
+      body.include.forEach((include) => {
+        query.include({
+          relation: include.relation,
+          locale: include.locale || body.locale,
         });
-      }
-      else if (typeof body.include === 'string') {
-        query.include(body.include);
-      }
-      else {
-        Object.entries(body.include).forEach(([relation, config]) => {
-          query.include(relation);
-
-          if (config.fields) {
-            console.warn('fields property in include is not supported yet');
-          }
-
-          if (config.include) {
-            console.warn('nested includes are not supported yet');
-          }
-        });
-      }
+      });
     }
 
     // Apply sorting
     if (body.orderBy) {
       body.orderBy.forEach(([field, direction]) => {
-        query.orderBy(field as any, direction);
+        query.orderBy(field, direction);
       });
     }
 

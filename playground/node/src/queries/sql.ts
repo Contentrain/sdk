@@ -114,7 +114,7 @@ export async function sqlQueryExample() {
       cache: true,
       maxCacheSize: 100,
       defaultLocale: 'tr',
-    }, loggers.loader);
+    });
 
     // Loader'ı QueryFactory'ye set et
     QueryFactory.setLoader(loader);
