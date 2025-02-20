@@ -1,71 +1,81 @@
 <script setup lang="ts">
-import type { BaseContentrainType, ContentrainStatus } from '@contentrain/query';
+import type { ContentrainStatus, IDBRecord } from '@contentrain/query';
 import { onMounted, ref } from 'vue';
 import { useContentrain } from '../../../.nuxt/imports';
 
-interface IWorkCategory extends BaseContentrainType {
-  category: string
-  order: number
-  status: ContentrainStatus
-}
-
-interface IWorkItem extends BaseContentrainType {
+interface IWorkItem extends IDBRecord {
   title: string
   description: string
   image: string
-  category: string
+  category_id: string
   link: string
-  order: number
-  status: ContentrainStatus
+  field_order: number
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
   _relations: {
     category: IWorkCategory
   }
 }
 
-interface ITabItem extends BaseContentrainType {
+interface IWorkCategory extends IDBRecord {
+  category: string
+  field_order: number
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
+}
+
+interface ITabItem extends IDBRecord {
   title: string
   description: string
-  order: number
-  category: string[]
-  status: ContentrainStatus
-  _relations?: {
+  field_order: number
+  category_id: string
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
+  _relations: {
     category: IWorkCategory[]
   }
 }
 
-interface IFaqItem extends BaseContentrainType {
-  question: string
-  answer: string
-  order: number
-  status: ContentrainStatus
-}
-
-interface ITestimonialItem extends BaseContentrainType {
+interface ITestimonialItem extends IDBRecord {
   'name': string
   'description': string
   'title': string
   'image': string
-  'creative-work': string
-  'status': ContentrainStatus
-  '_relations'?: {
+  'creative-work_id': string
+  'status': 'publish' | 'draft'
+  'created_at': string
+  'updated_at': string
+  '_relations': {
     'creative-work': IWorkItem
   }
 }
 
-interface ISection extends BaseContentrainType {
-  title: string
-  description: string
-  buttonText?: string
-  buttonLink?: string
-  name: string
-  subtitle?: string
-  status: ContentrainStatus
+interface IFaqItem extends IDBRecord {
+  question: string
+  answer: string
+  field_order: number
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
 }
 
-interface ISocialLink extends BaseContentrainType {
+interface ISocialLink extends IDBRecord {
   icon: string
   link: string
-  status: ContentrainStatus
+  service_id: string
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
+}
+
+interface ISection extends IDBRecord {
+  title: string
+  description: string
+  field_order: number
+  status: 'publish' | 'draft'
 }
 
 // Temel Sorgular
@@ -91,14 +101,14 @@ const modelMetadata = ref<any>(null);
 const assetsCount = ref<number>(0);
 
 onMounted(async () => {
-  const { query, load } = useContentrain();
+  const { query } = useContentrain();
 
   // 1. Temel Sorgular
   // 1.1 Filtreleme ve Sıralama
   const workItems = await query<IWorkItem>('workitems')
     .where('status', 'eq', 'publish')
-    .where('order', 'lt', 5)
-    .orderBy('order', 'asc')
+    .where('field_order', 'lt', 5)
+    .orderBy('field_order', 'asc')
     .get();
   basicQueryItems.value = workItems.data;
 
@@ -117,15 +127,21 @@ onMounted(async () => {
   // 2. İlişki Sorguları
   // 2.1 Bire-Bir İlişki
   const testimonials = await query<ITestimonialItem>('testimonial-items')
-    .include('creative-work')
+    .include({
+      relation: 'creative-work',
+      locale: 'tr',
+    })
     .get();
   testimonialItems.value = testimonials.data;
 
   // 2.2 Bire-Çok İlişki
   const tabs = await query<ITabItem>('tabitems')
     .where('status', 'eq', 'publish')
-    .include('category')
-    .orderBy('order', 'asc')
+    .include({
+      relation: 'category',
+      locale: 'tr',
+    })
+    .orderBy('field_order', 'asc')
     .get();
   tabItems.value = tabs.data;
 
@@ -133,10 +149,10 @@ onMounted(async () => {
   // 3.1 Çoklu Filtreler
   const services = await query<IWorkItem>('workitems')
     .where('status', 'eq', 'publish')
-    .where('order', 'gt', 2)
-    .where('order', 'lt', 6)
+    .where('field_order', 'gt', 2)
+    .where('field_order', 'lt', 6)
     .where('description', 'contains', 'platform')
-    .orderBy('order', 'asc')
+    .orderBy('field_order', 'asc')
     .get();
   filteredServices.value = services.data;
 
@@ -161,11 +177,6 @@ onMounted(async () => {
     .noCache()
     .get();
   bypassCacheItems.value = bypassCache.data;
-
-  // 6. Metadata ve Assets
-  const modelData = await load('workitems');
-  modelMetadata.value = modelData.model.metadata;
-  assetsCount.value = modelData.assets?.length || 0;
 });
 </script>
 
@@ -181,9 +192,9 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>1.1 Filtreleme ve Sıralama</h3>
         <div v-if="basicQueryItems.length">
-          <div v-for="item in basicQueryItems" :key="item.ID" class="item">
+          <div v-for="item in basicQueryItems" :key="item.id" class="item">
             <h4>{{ item.title }}</h4>
-            <p>Sıra: {{ item.order }}</p>
+            <p>Sıra: {{ item.field_order }}</p>
           </div>
         </div>
       </div>
@@ -192,7 +203,7 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>1.2 Sayfalama</h3>
         <div v-if="paginatedItems.length">
-          <div v-for="item in paginatedItems" :key="item.ID" class="item">
+          <div v-for="item in paginatedItems" :key="item.id" class="item">
             <h4>{{ item.title }}</h4>
           </div>
           <div class="pagination-info">
@@ -212,7 +223,7 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>2.1 Bire-Bir İlişki (Testimonials)</h3>
         <div v-if="testimonialItems.length">
-          <div v-for="item in testimonialItems" :key="item.ID" class="item">
+          <div v-for="item in testimonialItems" :key="item.id" class="item">
             <h4>{{ item.title }}</h4>
             <p>İlişkili İş: {{ item._relations?.['creative-work']?.title }}</p>
           </div>
@@ -223,9 +234,8 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>2.2 Bire-Çok İlişki (Tab Items)</h3>
         <div v-if="tabItems.length">
-          <div v-for="item in tabItems" :key="item.ID" class="item">
+          <div v-for="item in tabItems" :key="item.id" class="item">
             <h4>{{ item.title }}</h4>
-            <p>Kategoriler: {{ item._relations?.category?.map(c => c.category).join(', ') }}</p>
           </div>
         </div>
       </div>
@@ -239,9 +249,9 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>3.1 Çoklu Filtreler</h3>
         <div v-if="filteredServices.length">
-          <div v-for="item in filteredServices" :key="item.ID" class="item">
+          <div v-for="item in filteredServices" :key="item.id" class="item">
             <h4>{{ item.title }}</h4>
-            <p>Sıra: {{ item.order }}</p>
+            <p>Sıra: {{ item.field_order }}</p>
             <p>{{ item.description.slice(0, 100) }}...</p>
           </div>
         </div>
@@ -267,7 +277,7 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>4.2 Lokalize Olmayan Model (Social Links)</h3>
         <div v-if="socialLinks.length">
-          <div v-for="link in socialLinks" :key="link.ID" class="item">
+          <div v-for="link in socialLinks" :key="link.id" class="item">
             <p>{{ link.icon }}: {{ link.link }}</p>
           </div>
         </div>
@@ -280,7 +290,7 @@ onMounted(async () => {
       <div class="sub-section">
         <h3>Cache Bypass Sonuçları</h3>
         <div v-if="bypassCacheItems.length">
-          <div v-for="item in bypassCacheItems" :key="item.ID" class="item">
+          <div v-for="item in bypassCacheItems" :key="item.id" class="item">
             <h4>{{ item.question }}</h4>
             <p>{{ item.answer }}</p>
           </div>

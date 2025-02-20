@@ -3,27 +3,40 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { $fetch, setup, url } from '@nuxt/test-utils/e2e';
 import { describe, expect, it } from 'vitest';
+
 // Model tipleri
 interface IWorkItem extends IDBRecord {
   title: string
   description: string
   image: string
-  category: string
+  category_id: string
   link: string
-  order: number
+  field_order: number
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
+  _relations: {
+    category: IWorkCategory
+  }
 }
 
 interface IWorkCategory extends IDBRecord {
   category: string
-  order: number
+  field_order: number
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
 }
 
 interface ITabItem extends IDBRecord {
   title: string
   description: string
-  order: number
-  category: string[]
-  _relations?: {
+  field_order: number
+  category_id: string
+  status: 'publish' | 'draft'
+  created_at: string
+  updated_at: string
+  _relations: {
     category: IWorkCategory[]
   }
 }
@@ -39,8 +52,11 @@ interface ITestimonialItem extends IDBRecord {
   'description': string
   'title': string
   'image': string
-  'creative-work': string
-  '_relations'?: {
+  'creative-work_id': string
+  'status': 'publish' | 'draft'
+  'created_at': string
+  'updated_at': string
+  '_relations': {
     'creative-work': IWorkItem
   }
 }
@@ -49,6 +65,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(__dirname, '../../../playground/contentrain-db/contentrain.db');
 
 describe('contentrain API Endpoints', async () => {
+  // Test ortamını hazırla
   await setup({
     rootDir: fileURLToPath(new URL('./fixtures/basic', import.meta.url)),
     server: true,
@@ -59,6 +76,12 @@ describe('contentrain API Endpoints', async () => {
         cache: true,
         ttl: 60 * 1000,
         maxCacheSize: 1000,
+      },
+      experimental: {
+        asyncContext: true,
+      },
+      nitro: {
+        moduleSideEffects: ['better-sqlite3'],
       },
     },
   });
@@ -86,9 +109,9 @@ describe('contentrain API Endpoints', async () => {
           model: 'workitems',
           where: [
             ['status', 'eq', 'publish'],
-            ['order', 'lt', 5],
+            ['field_order', 'lt', 5],
           ],
-          orderBy: [['order', 'asc']],
+          orderBy: [['field_order', 'asc']],
         },
       });
 
@@ -97,7 +120,7 @@ describe('contentrain API Endpoints', async () => {
       expect(response.data.length).toBeGreaterThan(0);
       response.data.forEach((item) => {
         expect(item.status).toBe('publish');
-        expect(item.order).toBeLessThan(5);
+        expect(item.field_order).toBeLessThan(5);
       });
     });
 
@@ -126,7 +149,8 @@ describe('contentrain API Endpoints', async () => {
         method: 'POST',
         body: {
           model: 'testimonial-items',
-          include: ['creative-work'],
+          include: [{ relation: 'creative-work', locale: 'tr' }],
+          locale: 'tr',
         },
       });
 
@@ -145,7 +169,8 @@ describe('contentrain API Endpoints', async () => {
         body: {
           model: 'tabitems',
           where: [['status', 'eq', 'publish']],
-          include: ['category'],
+          include: [{ relation: 'category', locale: 'tr' }],
+          locale: 'tr',
         },
       }).catch((error) => {
         console.error('Bire-Çok İlişki Hatası:', error.cause || error);
@@ -156,12 +181,12 @@ describe('contentrain API Endpoints', async () => {
       expect(Array.isArray(response.data)).toBe(true);
       if (response.data.length > 0) {
         response.data.forEach((item) => {
-          expect(Array.isArray(item.category)).toBe(true);
           expect(item._relations).toBeDefined();
           expect(Array.isArray(item._relations?.category)).toBe(true);
-          item.category.forEach((categoryId) => {
-            const found = item._relations?.category?.some(cat => cat.id === categoryId);
-            expect(found).toBe(true);
+          expect(item._relations?.category.length).toBeGreaterThan(0);
+          item._relations?.category.forEach((cat) => {
+            expect(cat.id).toBeDefined();
+            expect(cat.category).toBeDefined();
           });
         });
       }
@@ -176,11 +201,12 @@ describe('contentrain API Endpoints', async () => {
           model: 'workitems',
           where: [
             ['status', 'eq', 'publish'],
-            ['order', 'gt', 2],
-            ['order', 'lt', 6],
+            ['field_order', 'gt', 2],
+            ['field_order', 'lt', 6],
             ['description', 'contains', 'platform'],
           ],
-          orderBy: [['order', 'asc']],
+          orderBy: [['field_order', 'asc']],
+          locale: 'tr',
         },
       });
 
@@ -188,8 +214,8 @@ describe('contentrain API Endpoints', async () => {
       expect(Array.isArray(response.data)).toBe(true);
       response.data.forEach((item) => {
         expect(item.status).toBe('publish');
-        expect(item.order).toBeGreaterThan(2);
-        expect(item.order).toBeLessThan(6);
+        expect(item.field_order).toBeGreaterThan(2);
+        expect(item.field_order).toBeLessThan(6);
         expect(item.description.toLowerCase()).toContain('platform');
       });
     });
