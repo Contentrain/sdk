@@ -1,6 +1,6 @@
 {
   "name": "@contentrain/nuxt",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Official Nuxt module for Contentrain SDK, providing seamless integration with Contentrain CMS",
   "author": "Contentrain Inc.",
   "license": "MIT",
