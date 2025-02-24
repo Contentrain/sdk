@@ -7,24 +7,42 @@ import { QueryFactory, SQLiteLoader as SQLiteLoaderImpl } from '@contentrain/que
 
 let _sdk: SQLiteLoader | null = null;
 
+function resolveDatabasePath(config: RuntimeConfig): string {
+  if (!config.contentrain?.databasePath) {
+    throw new Error('databasePath is required for SQLite loader');
+  }
+
+  const dbPath = config.contentrain.databasePath;
+
+  // Development ortamında public/ ile başlayan path'i kullan
+  if (process.env.NODE_ENV === 'development' && dbPath.includes('.output/public/')) {
+    return dbPath.replace('.output/public/', 'public/');
+  }
+
+  return resolve(process.cwd(), dbPath);
+}
+
 export function getSDK(config: RuntimeConfig): SQLiteLoader {
   if (!config.contentrain) {
     throw new Error('Contentrain config is missing');
   }
 
   if (!_sdk) {
-    if (!config.contentrain.databasePath) {
-      throw new Error('databasePath is required for SQLite loader');
-    }
-
-    // Resolve absolute path
-    const dbPath = resolve(process.cwd(), config.contentrain.databasePath);
+    // Database path'i çözümle
+    const dbPath = resolveDatabasePath(config);
 
     // Check if database file exists
     const dbExists = existsSync(dbPath);
     console.log('Contentrain DB Path:', dbPath);
     console.log('DB File Exists:', dbExists);
-    console.log('Current Working Directory:', process.cwd());
+    console.log('Environment:', process.env.NODE_ENV);
+
+    if (!dbExists) {
+      console.warn('Database file not found at path:', dbPath);
+      if (dbPath.includes('public/')) {
+        console.warn('Make sure the database file exists in the public directory');
+      }
+    }
 
     const loader = new SQLiteLoaderImpl({
       databasePath: dbPath,

@@ -1,0 +1,151 @@
+[
+  {
+    "name": "createdAt",
+    "fieldId": "createdAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "faq-categories"
+  },
+  {
+    "name": "updatedAt",
+    "fieldId": "updatedAt",
+    "componentId": "date",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "date",
+    "system": true,
+    "defaultField": false,
+    "modelId": "faq-categories"
+  },
+  {
+    "name": "ID",
+    "fieldId": "ID",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "faq-categories"
+  },
+  {
+    "name": "status",
+    "fieldId": "status",
+    "componentId": "single-line-text",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string",
+    "system": true,
+    "defaultField": false,
+    "modelId": "faq-categories"
+  },
+  {
+    "name": "Title",
+    "fieldId": "title",
+    "modelId": "faq-categories",
+    "componentId": "multi-line-text",
+    "options": {
+      "title-field": {
+        "value": true
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Description",
+    "fieldId": "description",
+    "modelId": "faq-categories",
+    "componentId": "rich-text-editor",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Category",
+    "fieldId": "category",
+    "modelId": "faq-categories",
+    "componentId": "select",
+    "options": {
+      "select": {
+        "value": true,
+        "form": {
+          "options": [
+            "general",
+            "features",
+            "technical"
+          ]
+        }
+      }
+    },
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "string"
+  },
+  {
+    "name": "Order",
+    "fieldId": "order",
+    "modelId": "faq-categories",
+    "componentId": "integer",
+    "options": {},
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "fieldType": "number"
+  },
+  {
+    "name": "Questions",
+    "fieldId": "questions",
+    "modelId": "faq-categories",
+    "componentId": "one-to-many",
+    "fieldType": "relation",
+    "validations": {
+      "required-field": {
+        "value": true
+      }
+    },
+    "options": {
+      "reference": {
+        "value": true,
+        "form": {
+          "reference": {
+            "value": "faq"
+          }
+        }
+      }
+    }
+  }
+]

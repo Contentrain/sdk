@@ -1,0 +1,1322 @@
+[
+  {
+    "ID": "6648150c-bca5-4b99-8841-a1bded450ee9",
+    "key": "error-boundary-title",
+    "group": "error",
+    "value": "Bir hata oluştu",
+    "description": "Hata sınırı bileşeni başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "fc8abc27-f3a0-4d08-b730-019a10efd520",
+    "key": "error-boundary-description",
+    "group": "error",
+    "value": "Uygulama bir hata ile karşılaştı. Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.",
+    "description": "Hata sınırı bileşeni açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "025712dc-7017-428b-bdc2-ccf2e45915e0",
+    "key": "error-boundary-retry-button",
+    "group": "button",
+    "value": "Tekrar Dene",
+    "description": "Hata sınırı bileşeni yeniden deneme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "8b735089-22cb-4ddc-8b57-e2efe1ec3248",
+    "key": "error-404-title",
+    "group": "error",
+    "value": "Sayfa Bulunamadı",
+    "description": "404 hata sayfası başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "32f6ed60-e5da-41a7-9bce-f04be72427b4",
+    "key": "error-403-title",
+    "group": "error",
+    "value": "Erişim Reddedildi",
+    "description": "403 hata sayfası başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "88ae46e9-223a-4f7f-9e83-b82b3b1cb765",
+    "key": "error-500-title",
+    "group": "error",
+    "value": "Sunucu Hatası",
+    "description": "500 hata sayfası başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "40ff9aba-0b65-4366-ab84-9a711214d52a",
+    "key": "error-404-message",
+    "group": "error",
+    "value": "Aradığınız sayfa bulunamadı veya taşınmış olabilir.",
+    "description": "404 hata sayfası mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "605ea41b-b440-431d-9543-880082b360f4",
+    "key": "error-403-message",
+    "group": "error",
+    "value": "Bu sayfaya erişim yetkiniz bulunmuyor.",
+    "description": "403 hata sayfası mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "b6e2e24e-92a4-4b24-9955-23b8e612b245",
+    "key": "error-500-message",
+    "group": "error",
+    "value": "Sunucuda beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+    "description": "500 hata sayfası mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ba4e9b65-52a9-4653-a168-dada98682cd9",
+    "key": "error-default-message",
+    "group": "error",
+    "value": "Beklenmeyen bir hata oluştu.",
+    "description": "Varsayılan hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "a9d42ed0-d901-4837-a719-47a0391d9895",
+    "key": "error-stack-title",
+    "group": "error",
+    "value": "Hata Detayı",
+    "description": "Hata yığını başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4c781840-d1d6-4376-b6af-85ae79bb23fb",
+    "key": "error-home-button",
+    "group": "button",
+    "value": "Ana Sayfaya Dön",
+    "description": "Ana sayfa yönlendirme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "761a0706-0063-48a9-800d-7c413bf7b12b",
+    "key": "error-refresh-button",
+    "group": "button",
+    "value": "Sayfayı Yenile",
+    "description": "Sayfa yenileme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "f787368e-ada9-4545-9816-b02e7577be0b",
+    "key": "comparison-unsaved-changes",
+    "group": "notification",
+    "value": "Kaydedilmemiş değişiklikler",
+    "description": "Kaydedilmemiş karşılaştırma değişiklikleri için uyarı metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "2bad1118-1d39-4945-a689-58d6b20f8313",
+    "key": "comparison-shortcut-info",
+    "group": "toolbar",
+    "value": "⌘/Ctrl + Enter ile karşılaştır",
+    "description": "Karşılaştırma için kısayol bilgisi",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ecd119ba-7245-4bea-af0a-618c87464f5f",
+    "key": "comparison-inputs-toggle",
+    "group": "button",
+    "value": "Girdiler",
+    "description": "Girdi alanları için geçiş butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "200ed352-9d55-4726-8879-9d4b965550b5",
+    "key": "comparison-button",
+    "group": "button",
+    "value": "Karşılaştır",
+    "description": "Karşılaştırma butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "0eb817e5-f298-4961-bbf4-1dcc0fadd0ad",
+    "key": "comparison-processing",
+    "group": "button",
+    "value": "İşleniyor...",
+    "description": "Karşılaştırma butonu işlem durumu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4aefd19f-fed2-40c1-bc4f-eab3b035c903",
+    "key": "comparison-start-title",
+    "group": "diff",
+    "value": "Karşılaştırma Başlat",
+    "description": "Boş karşılaştırma durumu için başlık",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "17d7efab-cddd-4ea2-bd43-d5211c66ed20",
+    "key": "comparison-start-description",
+    "group": "diff",
+    "value": "Karşılaştırmak istediğiniz metinleri yukarıdaki alanlara yapıştırın ve \"Karşılaştır\" butonuna tıklayın.",
+    "description": "Boş karşılaştırma durumu için açıklama",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5c23a8d2-c585-4826-94c3-62a81261adb4",
+    "key": "comparison-shortcut-hint",
+    "group": "diff",
+    "value": "⌘/Ctrl + Enter kısayolunu kullanabilirsiniz",
+    "description": "Karşılaştırma için kısayol ipucu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "39ad038a-c0f2-4899-aa33-f1bee51712c6",
+    "key": "comparison-show-inputs",
+    "group": "button",
+    "value": "Girdi alanlarını göster",
+    "description": "Girdi alanlarını gösterme butonu başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "6a05b4b4-3c2e-4ac5-8c9b-e81b2e88bfa0",
+    "key": "comparison-hide-inputs",
+    "group": "button",
+    "value": "Girdi alanlarını gizle",
+    "description": "Girdi alanlarını gizleme butonu başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "86b46a3a-2a3f-4d27-a5cd-96f86769ffc5",
+    "key": "comparison-empty-text",
+    "group": "notification",
+    "value": "Karşılaştırmak için metin girin",
+    "description": "Metin girilmediğinde gösterilen mesaj",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e655121b-c54f-4b90-89a5-8435137a4a75",
+    "key": "comparison-unsaved-changes-confirm",
+    "group": "notification",
+    "value": "Kaydedilmemiş değişiklikler var. Yeni karşılaştırma başlatmak istediğinize emin misiniz?",
+    "description": "Kaydedilmemiş değişiklikler için onay mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "39486f2c-ad96-4700-8429-37267dc55cd7",
+    "key": "toast-close-button",
+    "group": "toast",
+    "value": "Kapat",
+    "description": "Toast kapatma butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "16b63322-6a3f-4075-856f-3c6039a0b614",
+    "key": "comments-edit-button",
+    "group": "comments",
+    "value": "Düzenle",
+    "description": "Yorum düzenleme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "a6666478-5776-4e6a-a528-1a9c6659da80",
+    "key": "comments-delete-button",
+    "group": "comments",
+    "value": "Sil",
+    "description": "Yorum silme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "da764893-fb92-4e65-9756-ac965d950e49",
+    "key": "comments-save-button",
+    "group": "comments",
+    "value": "Kaydet",
+    "description": "Yorum kaydetme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "befc2ab1-f342-438c-b19b-e9810815767c",
+    "key": "comments-cancel-button",
+    "group": "comments",
+    "value": "İptal",
+    "description": "Yorum iptal butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "3c6a3811-77b9-483d-b907-b1ac067fb3ff",
+    "key": "comments-saving",
+    "group": "comments",
+    "value": "Kaydediliyor...",
+    "description": "Yorum kaydetme durumu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "108e0a7e-e813-49d3-9b62-d70539d0b73a",
+    "key": "comments-loading",
+    "group": "comments",
+    "value": "Yorumlar yükleniyor...",
+    "description": "Yorumlar yükleme durumu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "b6bdece4-a039-4104-872e-0d4ffdcfd414",
+    "key": "comments-delete-confirm",
+    "group": "comments",
+    "value": "Bu yorumu silmek istediğinize emin misiniz?",
+    "description": "Yorum silme onayı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "cefdb7be-66a8-4bc4-9aef-ab49ce738bf8",
+    "key": "comments-edit-placeholder",
+    "group": "comments",
+    "value": "Yorumu düzenleyin",
+    "description": "Yorum düzenleme placeholder",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "905d8817-af05-4af4-8a2a-d67da822ed39",
+    "key": "comments-new-placeholder",
+    "group": "comments",
+    "value": "Yeni yorum ekleyin",
+    "description": "Yeni yorum placeholder",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "0e562809-be00-47b2-8706-0e77e794d9c3",
+    "key": "toolbar-merge-original",
+    "group": "toolbar",
+    "value": "Orijinali Kullan",
+    "description": "Orijinal metni kullanma butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "f058888b-84ec-4742-bab3-822904c05a75",
+    "key": "toolbar-merge-modified",
+    "group": "toolbar",
+    "value": "Değiştirilmişi Kullan",
+    "description": "Değiştirilmiş metni kullanma butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "36ab6b35-64e3-47a7-b989-5ae9ead78c2d",
+    "key": "toolbar-copy",
+    "group": "toolbar",
+    "value": "Kopyala",
+    "description": "Metin kopyalama butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "77c1fec2-1310-494d-9641-2ddfe5dfbdb0",
+    "key": "toolbar-copied",
+    "group": "toolbar",
+    "value": "Kopyalandı!",
+    "description": "Kopyalama başarılı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4f4dbd0d-1b2d-4b62-adbb-d4746ab1f49b",
+    "key": "toolbar-comment",
+    "group": "toolbar",
+    "value": "Yorum",
+    "description": "Yorum ekleme butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "02c00877-bf77-4133-9cd7-3d513c7009b6",
+    "key": "toolbar-recompare",
+    "group": "toolbar",
+    "value": "Yinele",
+    "description": "Yeniden karşılaştırma butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "f7f80fda-5389-4a47-8c27-39e5aee1d478",
+    "key": "expand-up",
+    "group": "diff",
+    "value": "Önceki satırları göster",
+    "description": "Önceki satırları gösterme butonu için tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "b5be692b-a0b2-45b1-a5f8-ff514460966c",
+    "key": "expand-down",
+    "group": "diff",
+    "value": "Sonraki satırları göster",
+    "description": "Sonraki satırları gösterme butonu için tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "f44c27f6-a6fc-41d1-9ce7-a4df578b3912",
+    "key": "expand-all",
+    "group": "diff",
+    "value": "Tüm satırları göster",
+    "description": "Tüm satırları gösterme butonu için tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4cdadcd0-3223-4e9c-829b-b7feadb8f01a",
+    "key": "expand-lines",
+    "group": "diff",
+    "value": "satır",
+    "description": "Genişletme butonundaki satır sayısı metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "17d615a0-f775-4f8a-8184-db0cdae09d7a",
+    "key": "options-view-mode",
+    "group": "options",
+    "value": "Görünüm Modu",
+    "description": "Görünüm modu bölüm başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "fd18c12f-ac4a-414a-b516-b0e754039f8d",
+    "key": "options-view-unified",
+    "group": "options",
+    "value": "Birleşik",
+    "description": "Birleşik görünüm modu seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "7d1cd634-b143-4a0d-b590-ea224b1dfc62",
+    "key": "options-view-split",
+    "group": "options",
+    "value": "Ayrık",
+    "description": "Ayrık görünüm modu seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "6e6373d6-cfa9-4e7b-9c1e-4471cae7f793",
+    "key": "options-export",
+    "group": "options",
+    "value": "Dışa Aktar",
+    "description": "Dışa aktarma butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "a4c5ee76-41d6-4e70-aca4-253cefd0978f",
+    "key": "options-export-processing",
+    "group": "options",
+    "value": "Aktarılıyor...",
+    "description": "Dışa aktarma işlem durumu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "487d6d08-ca96-4dc3-a27e-478fc9bfc2a3",
+    "key": "options-stats-total",
+    "group": "options",
+    "value": "Toplam",
+    "description": "Toplam satır istatistiği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "8bb12d10-6502-462f-893d-6ff99bc74dc8",
+    "key": "options-stats-added",
+    "group": "options",
+    "value": "Eklenen",
+    "description": "Eklenen satır istatistiği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "647f06aa-9010-4a1f-bab0-ec548f3aa2b4",
+    "key": "options-stats-deleted",
+    "group": "options",
+    "value": "Silinen",
+    "description": "Silinen satır istatistiği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "1617079b-d67e-464c-b54a-772fb723b010",
+    "key": "options-stats-modified",
+    "group": "options",
+    "value": "Değiştirilen",
+    "description": "Değiştirilen satır istatistiği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "aa542fea-b0c5-4276-8c9a-94a316361991",
+    "key": "options-stats-changes",
+    "group": "options",
+    "value": "değişiklik",
+    "description": "Değişiklik sayısı metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "df855fc3-6a93-4707-8276-545e37060fb5",
+    "key": "options-view-mode-tooltip",
+    "group": "options",
+    "value": "Görünüm modunu değiştir",
+    "description": "Görünüm modu butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "f41362f3-88d4-46a1-a072-d2a69302e5ca",
+    "key": "options-word-wrap-tooltip",
+    "group": "options",
+    "value": "Satır kaydırmayı aç/kapat",
+    "description": "Satır kaydırma butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "08c11a8e-4c77-4154-ac12-8107c8863fee",
+    "key": "options-comparison-tooltip",
+    "group": "options",
+    "value": "Karşılaştırma seçenekleri",
+    "description": "Karşılaştırma seçenekleri butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e9d7a1f3-9cc1-4005-97bb-a186c18e4341",
+    "key": "options-export-tooltip",
+    "group": "options",
+    "value": "Dokümanı dışarı alın",
+    "description": "Dışa aktarma butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ee6694d6-7fba-4d19-b018-d5336948b094",
+    "key": "history-title",
+    "group": "history",
+    "value": "Karşılaştırma Geçmişi",
+    "description": "Geçmiş modal başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "684fd2d7-fdfd-41f7-b4b9-2a048aa25bee",
+    "key": "history-empty",
+    "group": "history",
+    "value": "Henüz karşılaştırma geçmişi yok",
+    "description": "Boş geçmiş mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "470593b2-2489-4510-b94a-6fb6f32cc3e4",
+    "key": "history-delete-confirm",
+    "group": "history",
+    "value": "Bu karşılaştırmayı silmek istediğinize emin misiniz?",
+    "description": "Karşılaştırma silme onayı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e8fa28a5-59b7-4cdb-8ed9-515e585bf905",
+    "key": "history-button-tooltip",
+    "group": "history",
+    "value": "Karşılaştırma geçmişini görüntüle",
+    "description": "Geçmiş butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "8c0e5041-6aba-4fc7-bed0-9322f457be8b",
+    "key": "history-button-text",
+    "group": "history",
+    "value": "Geçmiş",
+    "description": "Geçmiş butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4adf81cb-dd68-4b66-8fbd-2a273be86c48",
+    "key": "history-load-error",
+    "group": "history",
+    "value": "Geçmiş yüklenirken bir hata oluştu",
+    "description": "Geçmiş yükleme hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "b907091e-2709-4fcc-9e10-b1cf0af83a32",
+    "key": "history-delete-error",
+    "group": "history",
+    "value": "Karşılaştırma silinirken bir hata oluştu",
+    "description": "Karşılaştırma silme hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ea2226bc-5f49-44ee-9c75-b41a03282ceb",
+    "key": "history-delete-success",
+    "group": "history",
+    "value": "Karşılaştırma başarıyla silindi",
+    "description": "Karşılaştırma silme başarı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "0025ddc8-fa75-4af6-b346-2aec1753246a",
+    "key": "diff-empty-title",
+    "group": "diff",
+    "value": "Metinler Aynı",
+    "description": "Fark bulunamadığında gösterilen başlık",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5b168f1b-5062-439f-8c0d-120de09beac6",
+    "key": "diff-empty-description",
+    "group": "diff",
+    "value": "Karşılaştırılan metinler arasında herhangi bir fark bulunamadı.",
+    "description": "Fark bulunamadığında gösterilen açıklama",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "86b5665a-bf2a-4f88-989f-fc0989728a46",
+    "key": "comment-save-shortcut",
+    "group": "comments",
+    "value": "Ctrl+Enter ile kaydet",
+    "description": "Yorum kaydetme kısayolu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "03dce7ae-77f1-4438-9799-d10137805444",
+    "key": "comment-cancel-shortcut",
+    "group": "comments",
+    "value": "ESC ile iptal et",
+    "description": "Yorum iptal kısayolu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "73a74f76-d802-4143-bcb1-437ade776cad",
+    "key": "footer-app-version",
+    "group": "footer",
+    "value": "LineDiff v1.0.0",
+    "description": "Uygulama versiyonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e65dfa37-0c77-40cb-8fcc-208d44c8d7e9",
+    "key": "footer-copyright",
+    "group": "footer",
+    "value": "Tüm hakları saklıdır",
+    "description": "Telif hakkı metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "aafe357c-9217-4a6e-bd17-af274c3e6584",
+    "key": "footer-help-tooltip",
+    "group": "footer",
+    "value": "Yardım ve destek",
+    "description": "Yardım butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "543f49e3-e17f-4d22-82af-c169d2efba30",
+    "key": "footer-help-button",
+    "group": "footer",
+    "value": "Yardım",
+    "description": "Yardım butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "6d667de4-a739-4c4b-9c12-e65b271bb868",
+    "key": "footer-feedback-tooltip",
+    "group": "footer",
+    "value": "Geri bildirim gönder",
+    "description": "Geri bildirim butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "aa45da3b-ee23-45c8-b80c-19494beb027f",
+    "key": "footer-feedback-button",
+    "group": "footer",
+    "value": "Geri Bildirim",
+    "description": "Geri bildirim butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "38708ce1-ea93-4a11-a885-075807bfe725",
+    "key": "footer-license-tooltip",
+    "group": "footer",
+    "value": "Lisans bilgisi",
+    "description": "Lisans butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "9a0608bb-6824-4618-b8ab-5cd8521b7dc9",
+    "key": "footer-license-button",
+    "group": "footer",
+    "value": "Lisans",
+    "description": "Lisans butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "2ce0af08-d494-4e98-9eab-23c28d64cef8",
+    "key": "header-app-title",
+    "group": "header",
+    "value": "LineDiff",
+    "description": "Uygulama başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "fa376c3c-a3fc-4157-85ee-382a203336d3",
+    "key": "header-new-button",
+    "group": "header",
+    "value": "Yeni",
+    "description": "Yeni karşılaştırma butonu",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "a3097cc4-72cf-408a-865d-d5b3c7248a2c",
+    "key": "input-original-label",
+    "group": "input",
+    "value": "Orijinal Metin",
+    "description": "Orijinal metin girdi alanı etiketi",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5ede70a9-8ba5-4519-a0bc-72b111103be3",
+    "key": "input-modified-label",
+    "group": "input",
+    "value": "Değiştirilmiş Metin",
+    "description": "Değiştirilmiş metin girdi alanı etiketi",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "2cc84214-bf60-4ebe-a59a-26e375915552",
+    "key": "input-drag-drop-text",
+    "group": "input",
+    "value": "Dosyayı buraya sürükleyip bırakın",
+    "description": "Dosya sürükleme alanı metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "7cbdff95-61c2-4c3b-a5f1-0adadf770f26",
+    "key": "input-file-upload-error",
+    "group": "input",
+    "value": "Dosya yüklenirken bir hata oluştu",
+    "description": "Dosya yükleme hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "c5ea3cb4-0191-4ff9-ae8e-89f0775d7577",
+    "key": "loading-default-message",
+    "group": "loading",
+    "value": "Yükleniyor...",
+    "description": "Varsayılan yükleme mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "3a45edd3-74ba-4ae3-9abf-8da583880a79",
+    "key": "loading-progress-text",
+    "group": "loading",
+    "value": "% tamamlandı",
+    "description": "İlerleme durumu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "13f4cdee-514c-41c3-9ad4-cefe863f2029",
+    "key": "input-file-upload-tooltip",
+    "group": "input",
+    "value": "Dosya yükle",
+    "description": "Dosya yükleme butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5fed39dc-450e-46ba-aaeb-705be41ba793",
+    "key": "input-copy-tooltip",
+    "group": "input",
+    "value": "Metni kopyala",
+    "description": "Kopyalama butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5b8f356c-5c1c-4386-b526-21e774b11d14",
+    "key": "input-clear-tooltip",
+    "group": "input",
+    "value": "Metni temizle",
+    "description": "Temizleme butonu tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "eb35a8a3-f37b-4302-a1ce-2fd53e153d9c",
+    "key": "input-placeholder-original",
+    "group": "input",
+    "value": "Karşılaştırmak istediğiniz ilk metni buraya yapıştırın veya dosya sürükleyin...",
+    "description": "Orijinal metin alanı placeholder",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "2dd3726b-1c1b-4717-93d2-0feb9dbbfdde",
+    "key": "input-placeholder-modified",
+    "group": "input",
+    "value": "Karşılaştırmak istediğiniz ikinci metni buraya yapıştırın veya dosya sürükleyin...",
+    "description": "Değiştirilmiş metin alanı placeholder",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "bb88ae56-98d5-4d99-a80b-216e9b44f014",
+    "key": "theme-light",
+    "group": "theme",
+    "value": "Açık",
+    "description": "Açık tema seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "8c17962d-02c9-48e5-8c42-1245caf3b1bb",
+    "key": "theme-dark",
+    "group": "theme",
+    "value": "Koyu",
+    "description": "Koyu tema seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "03f65601-c7d5-4b07-90c9-e74897e79637",
+    "key": "theme-system",
+    "group": "theme",
+    "value": "Sistem",
+    "description": "Sistem teması seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ec3d49ff-ff61-461d-80b3-2fb58d9cb250",
+    "key": "language-switch-tooltip",
+    "group": "language",
+    "value": "Dil değiştir",
+    "description": "Dil değiştirme işlemi için tooltip",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "79fe0712-5294-49f8-becd-020ca3dca95c",
+    "key": "language-tr",
+    "group": "language",
+    "value": "Türkçe",
+    "description": "Türkçe dil seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ca59a10f-dfdd-4c1c-bb4a-1f2abc0c4644",
+    "key": "language-en",
+    "group": "language",
+    "value": "İngilizce",
+    "description": "İngilizce dil seçeneği",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "45052d93-e78a-4e63-9131-5f16a6946319",
+    "key": "support-page-title",
+    "group": "support",
+    "value": "Yardım ve Destek",
+    "description": "Support page title",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e2dea98f-b9a6-4bd9-96b4-c56d42130234",
+    "key": "support-page-description",
+    "group": "support",
+    "value": "Sık sorulan sorular ve destek ekibimizle iletişime geçin",
+    "description": "Support page description",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "086706b1-ffff-4142-a2a9-c17d31bd33d0",
+    "key": "support-contact-title",
+    "group": "support",
+    "value": "İletişime Geçin",
+    "description": "Support contact title",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "5599ee45-5218-4087-b482-0a70efc03a0f",
+    "key": "support-contact-description",
+    "group": "support",
+    "value": "Sorularınız için bize ulaşın, en kısa sürede yanıt vereceğiz.",
+    "description": "Support contact description",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "33e546d3-fe5d-4d73-a362-96771f391167",
+    "key": "support-contact-hours",
+    "group": "support",
+    "value": "Pazartesi - Cuma, 09:00 - 18:00",
+    "description": "Support contact hours",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "56ae69c5-d3b4-438a-bda3-3eec67c35388",
+    "key": "support-contact-languages",
+    "group": "support",
+    "value": "Türkçe ve İngilizce destek",
+    "description": "Support contact languages",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "a4197611-b707-4f29-9419-7ec6f7c99f10",
+    "key": "support-form-name",
+    "group": "support",
+    "value": "Adınız",
+    "description": "Support form name",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "1e065a25-c205-4530-89f4-4e853480e30b",
+    "key": "support-form-email",
+    "group": "support",
+    "value": "E-posta Adresiniz",
+    "description": "Support form email",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "23e20945-c038-43e3-8b3c-409733f3e21a",
+    "key": "support-form-subject",
+    "group": "support",
+    "value": "Konu",
+    "description": "Support form subject",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "29594fe7-c4ee-41ea-81d0-4fc36855f363",
+    "key": "support-form-message",
+    "group": "support",
+    "value": "Mesajınız",
+    "description": "Support form message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "c8256ae0-d795-4f4b-ab34-af5c1deb6c13",
+    "key": "support-form-submit",
+    "group": "support",
+    "value": "Gönder",
+    "description": "Support form submit",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "ac66732b-6ef8-4fc9-9936-bd43dd3e5a0d",
+    "key": "support-form-submitting",
+    "group": "support",
+    "value": "Gönderiliyor...",
+    "description": "Support form submitting",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "7342f9af-e3ae-4830-b1d5-147bff2842d9",
+    "key": "support-form-success",
+    "group": "support",
+    "value": "Mesajınız başarıyla gönderildi",
+    "description": "Support form success",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "22633e0d-8cbf-44a5-86ec-5f9c17f26ab6",
+    "key": "support-form-error",
+    "group": "support",
+    "value": "Mesaj gönderilirken bir hata oluştu",
+    "description": "Support form error",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "034b4e75-1b24-49aa-9cee-ef9d5f89ec10",
+    "key": "support-faq-title",
+    "group": "support",
+    "value": "Sık Sorulan Sorular",
+    "description": "Support FAQ title",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "24d4eafe-77b5-4937-b26b-9ae3e9c5b873",
+    "key": "pwa-update-available",
+    "group": "pwa",
+    "value": "Yeni bir güncelleme mevcut",
+    "description": "PWA güncelleme bildirimi başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "c60eb575-7610-4d62-95b2-4508cdb949d4",
+    "key": "pwa-update-description",
+    "group": "pwa",
+    "value": "Güncellemek için yenile butonuna tıklayın",
+    "description": "PWA güncelleme bildirimi açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "b736f5db-5dcf-40d3-88c1-5602de933823",
+    "key": "pwa-update-button",
+    "group": "pwa",
+    "value": "Yenile",
+    "description": "PWA güncelleme butonu metni",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "26e7777b-e701-4a5e-9f8e-1263258af34a",
+    "key": "support-license-title",
+    "group": "support",
+    "value": "Lisans Bilgisi",
+    "description": "Lisans bölümü başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "1496dd0e-5956-4d53-8457-95ecc7bfe5e0",
+    "key": "support-license-private-title",
+    "group": "support",
+    "value": "Özel Yazılım",
+    "description": "Özel yazılım başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "1cca6973-a56c-4d2c-8a8d-f73f6af375ab",
+    "key": "support-license-private-description",
+    "group": "support",
+    "value": "LineDiff, tüm hakları saklı olan özel bir yazılımdır. Yazılımın kopyalanması, dağıtılması veya değiştirilmesi yasaktır.",
+    "description": "Özel yazılım açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "e8da6295-3128-4f14-bf0b-2776019d2281",
+    "key": "support-license-desktop-title",
+    "group": "support",
+    "value": "Masaüstü Versiyonları",
+    "description": "Masaüstü versiyonları başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "fd849d2b-6c24-46dc-85f8-ce91f4cef45b",
+    "key": "support-license-desktop-description",
+    "group": "support",
+    "value": "Yakında Windows, macOS ve Linux için masaüstü uygulamaları yayınlanacaktır.",
+    "description": "Masaüstü versiyonları açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "3a121593-ac84-40b2-a2e0-a347aa508819",
+    "key": "support-license-premium-title",
+    "group": "support",
+    "value": "Premium Özellikler",
+    "description": "Premium özellikler başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "4bd39df4-3735-4748-8c72-be075bf68cd7",
+    "key": "support-license-premium-description",
+    "group": "support",
+    "value": "Yakında gelişmiş özellikler ve profesyonel kullanım için premium seçenekler sunulacaktır.",
+    "description": "Premium özellikler açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "aa90e51b-0965-4f89-8f05-3f0d1e5af346",
+    "key": "support-license-enterprise-title",
+    "group": "support",
+    "value": "Kurumsal Lisans",
+    "description": "Kurumsal lisans başlığı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "1ceea88d-42fb-4fa1-8ba2-7f2f84ac36b4",
+    "key": "support-license-enterprise-description",
+    "group": "support",
+    "value": "Kurumsal müşteriler için özel lisans ve destek seçenekleri sunulmaktadır.",
+    "description": "Kurumsal lisans açıklaması",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "3c9779ef-928e-4d5f-881a-a283285c1ad6",
+    "key": "features-page-title",
+    "value": "Güçlü Özellikler, Kusursuz Deneyim",
+    "description": "Özellikler sayfası başlığı",
+    "group": "header",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "97551fc7-354a-4491-93e7-3c4bc4038d6d",
+    "key": "features-page-description",
+    "value": "LineDiff ile kod karşılaştırma deneyiminizi bir üst seviyeye taşıyın. Modern, hızlı ve kullanıcı dostu arayüz ile fark analizi artık çok daha kolay.",
+    "description": "Özellikler sayfası açıklaması",
+    "group": "header",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "33e455e3-d982-498d-9f1d-49aabfc0e984",
+    "key": "features-cta-title",
+    "value": "Hemen Başlayın",
+    "description": "Özellikler sayfası CTA başlığı",
+    "group": "button",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "c8c68ad9-0609-4d7a-b36e-88179b64db5b",
+    "key": "features-cta-description",
+    "value": "LineDiff'in tüm özelliklerini keşfedin ve kod karşılaştırma sürecinizi daha verimli hale getirin.",
+    "description": "Özellikler sayfası CTA açıklaması",
+    "group": "button",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "062dc6f9-35f2-4ba5-9149-e4b64638a13e",
+    "key": "features-cta-button",
+    "value": "Ücretsiz Deneyin",
+    "description": "Özellikler sayfası CTA buton metni",
+    "group": "button",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "11aaeb28-15ff-4f11-a049-1dd289a0e3ff",
+    "key": "footer-features-button",
+    "value": "Özellikler",
+    "description": "Footer features button text",
+    "group": "button",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "13e47c03-6b41-4677-8a5d-bf5d531766be",
+    "key": "footer-features-tooltip",
+    "value": "LineDiff'in tüm özelliklerini keşfedin ve kod karşılaştırma sürecinizi daha verimli hale getirin.",
+    "description": "Footer features button tooltip",
+    "group": "tooltip",
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  }
+]

@@ -1,0 +1,262 @@
+[
+  {
+    "ID": "sm2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "basic",
+    "content": "LineDiff - Metin Karşılaştırma Aracı",
+    "description": "Temel meta tag",
+    "page": "index"
+  },
+  {
+    "ID": "sn2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff - Satır Satır Metin Karşılaştırma Aracı",
+    "description": "Sayfa başlığı",
+    "page": "index"
+  },
+  {
+    "ID": "so2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "LineDiff, iki metni satır satır karşılaştırmanıza, farklılıkları görüntülemenize ve yorum eklemenize olanak sağlayan güçlü bir araçtır.",
+    "description": "Sayfa açıklaması",
+    "page": "index"
+  },
+  {
+    "ID": "sp2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "metin karşılaştırma, diff tool, satır karşılaştırma, kod karşılaştırma, metin analizi",
+    "description": "Anahtar kelimeler",
+    "page": "index"
+  },
+  {
+    "ID": "sq2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff - Gelişmiş Metin Karşılaştırma Aracı",
+    "description": "Open Graph başlığı",
+    "page": "index"
+  },
+  {
+    "ID": "sr2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "Metinleri kolayca karşılaştırın, farklılıkları görselleştirin ve işbirliği yapın. Kod, doküman ve her türlü metin için ideal karşılaştırma aracı.",
+    "description": "Open Graph açıklaması",
+    "page": "index"
+  },
+  {
+    "ID": "ss2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:image",
+    "content": "/images/linediff-social.png",
+    "description": "Open Graph görseli",
+    "page": "index"
+  },
+  {
+    "ID": "st2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:card",
+    "content": "summary_large_image",
+    "description": "Twitter kart tipi",
+    "page": "index"
+  },
+  {
+    "ID": "su2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "robots",
+    "content": "index, follow",
+    "description": "Arama motoru indexleme talimatları",
+    "page": "index"
+  },
+  {
+    "ID": "sv2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "author",
+    "content": "LineDiff",
+    "description": "Site sahibi",
+    "page": "index"
+  },
+  {
+    "ID": "sw2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:type",
+    "content": "website",
+    "description": "Open Graph içerik tipi",
+    "page": "index"
+  },
+  {
+    "ID": "sx2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:locale",
+    "content": "tr_TR",
+    "description": "Open Graph dil ayarı",
+    "page": "index"
+  },
+  {
+    "ID": "sy2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff Destek - SSS, İletişim ve Lisans Bilgileri",
+    "description": "Destek sayfası başlığı",
+    "page": "support"
+  },
+  {
+    "ID": "sz2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "LineDiff destek sayfası: Sıkça sorulan sorular, iletişim formu ve lisans bilgileri. Kod karşılaştırma aracı hakkında tüm bilgilere ulaşın.",
+    "description": "Destek sayfası açıklaması",
+    "page": "support"
+  },
+  {
+    "ID": "ta2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "linediff destek, kod karşılaştırma yardım, sss, iletişim, lisans bilgisi, müşteri desteği, teknik destek",
+    "description": "Destek sayfası anahtar kelimeleri",
+    "page": "support"
+  },
+  {
+    "ID": "tb2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff Destek - SSS, İletişim ve Lisans Bilgileri",
+    "description": "Destek sayfası Open Graph başlığı",
+    "page": "support"
+  },
+  {
+    "ID": "tc2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "LineDiff ile ilgili yardım alın. SSS bölümünde cevaplar bulun, destek ekibimizle iletişime geçin veya lisans seçenekleri hakkında bilgi edinin.",
+    "description": "Destek sayfası Open Graph açıklaması",
+    "page": "support"
+  },
+  {
+    "ID": "td2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:title",
+    "content": "LineDiff Destek - SSS, İletişim ve Lisans Bilgileri",
+    "description": "Destek sayfası Twitter başlığı",
+    "page": "support"
+  },
+  {
+    "ID": "te2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:description",
+    "content": "LineDiff ile ilgili yardım alın. SSS bölümünde cevaplar bulun, destek ekibimizle iletişime geçin veya lisans seçenekleri hakkında bilgi edinin.",
+    "description": "Destek sayfası Twitter açıklaması",
+    "page": "support"
+  },
+  {
+    "ID": "tf2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff Özellikleri - Gelişmiş Kod Karşılaştırma Aracı",
+    "description": "Özellikler sayfası başlığı",
+    "page": "features"
+  },
+  {
+    "ID": "tg2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "LineDiff ile kodlarınızı akıllı karşılaştırın. Gerçek zamanlı işbirliği, Git entegrasyonları ve özelleştirilebilir arayüz ile kod karşılaştırma deneyiminizi geliştirin.",
+    "description": "Özellikler sayfası açıklaması",
+    "page": "features"
+  },
+  {
+    "ID": "th2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "kod karşılaştırma, diff tool, metin karşılaştırma, git diff, dosya karşılaştırma, gerçek zamanlı işbirliği, kod analizi",
+    "description": "Özellikler sayfası anahtar kelimeleri",
+    "page": "features"
+  },
+  {
+    "ID": "ti2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff Özellikleri - Gelişmiş Kod Karşılaştırma Aracı",
+    "description": "Özellikler sayfası Open Graph başlığı",
+    "page": "features"
+  },
+  {
+    "ID": "tj2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "LineDiff'in güçlü özelliklerini keşfedin. Akıllı karşılaştırma, gerçek zamanlı işbirliği, Git entegrasyonları ve özelleştirilebilir arayüz.",
+    "description": "Özellikler sayfası Open Graph açıklaması",
+    "page": "features"
+  },
+  {
+    "ID": "tk2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:title",
+    "content": "LineDiff Özellikleri - Gelişmiş Kod Karşılaştırma Aracı",
+    "description": "Özellikler sayfası Twitter başlığı",
+    "page": "features"
+  },
+  {
+    "ID": "tl2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:description",
+    "content": "LineDiff'in güçlü özelliklerini keşfedin. Akıllı karşılaştırma, gerçek zamanlı işbirliği, Git entegrasyonları ve özelleştirilebilir arayüz.",
+    "description": "Özellikler sayfası Twitter açıklaması",
+    "page": "features"
+  }
+] 

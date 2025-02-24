@@ -29,6 +29,13 @@ export async function generateDatabase() {
 
     // Veritabanını oluştur
     await generator.generate();
+    const generator2 = new SQLiteGenerator({
+      modelsDir: join(__dirname, '../../../contentrain-2/models'),
+      contentDir: join(__dirname, '../../../contentrain-2'),
+      outputDir: dbDir,
+      dbName: 'contentrain2.db',
+    });
+    await generator2.generate();
 
     console.log('SQLite database created successfully!');
     console.log(`Database location: ${join(__dirname, '../outputs/db/contentrain.db')}`);

@@ -1,4 +1,4 @@
-import type { Filter, IDBRecord, Include, Operator, QueryResult, SQLiteOptions } from '@contentrain/query';
+import type { IDBRecord, Operator } from '@contentrain/query';
 import type { H3Event } from 'h3';
 import { useRuntimeConfig } from '#imports';
 import { QueryFactory } from '@contentrain/query';

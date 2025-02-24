@@ -1,0 +1,54 @@
+[
+  {
+    "ID": "f1a2b3c4d5e6",
+    "title": "Smart Comparison",
+    "description": "LineDiff's advanced algorithm precisely detects even the smallest changes between texts. Line-based and word-based comparison options allow you to see changes down to the finest detail. Thanks to its custom diff algorithm, you get fast and accurate results even in large text blocks.",
+    "shortDescription": "Detect even the smallest changes with our advanced algorithm. Perform detailed analysis with line-based and word-based comparison options.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff smart comparison feature illustration",
+    "category": "core",
+    "order": 1,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "g1h2i3j4k5l6",
+    "title": "Real-Time Collaboration",
+    "description": "Discover the power of working simultaneously with your team members. With LineDiff's real-time collaboration features, team members can instantly comment on, discuss, and make decisions about changes. Optimize your code review process with change suggestions, comment threads, and approval workflows. Provide a transparent and efficient working environment for all team members.",
+    "shortDescription": "Work simultaneously with your team members. Comment, discuss changes, and make decisions. All in one place.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff real-time collaboration feature illustration",
+    "category": "collaboration",
+    "order": 2,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "m1n2o3p4q5r6",
+    "title": "Powerful Integrations",
+    "description": "LineDiff offers seamless integration with the most popular development tools. It works fully compatible with Git, GitHub, GitLab, and other version control systems. Continue your development process uninterrupted with IDE plugins and CI/CD pipeline integrations. Create custom automations for your workflow using API and webhook support.",
+    "shortDescription": "Seamless integration with your favorite tools. Work compatibly with Git, GitHub, GitLab, and more. Continue without disrupting your workflow.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff integrations feature illustration",
+    "category": "integration",
+    "order": 3,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "s1t2u3v4w5x6",
+    "title": "Customizable Interface",
+    "description": "Create an interface that suits your working style. LineDiff's customizable interface offers dark/light theme options, adjustable color schemes, and flexible layout options. Set your code viewing preferences, customize shortcut keys, and arrange panels as you like. Make your code more readable with syntax highlighting and code folding features.",
+    "shortDescription": "An interface that suits your working style. Customize with dark/light theme, customizable color schemes, and layout options.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff customizable interface feature illustration",
+    "category": "customization",
+    "order": 4,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  }
+] 

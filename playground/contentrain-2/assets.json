@@ -1,0 +1,30 @@
+[
+  {
+    "path": "public/linediff-logo-dark.png",
+    "mimetype": "image/png",
+    "size": 5574,
+    "alt": "LineDiff - Line by Line Text Comparison Tool dark mode logo",
+    "meta": {
+      "user": {
+        "name": "Ahmet Bayhan BAYRAMOĞLU",
+        "email": "bayhanbayramoglu@gmail.com",
+        "avatar": "https://lh3.googleusercontent.com/a-/AOh14GiukvNPwUeS58RDXlPU1MKUfOtsMvGsSHlBfgIsbQ=s96-c"
+      },
+      "createdAt": "2024-09-26T13:58:32.966Z"
+    }
+  },
+  {
+    "path": "public/linediff-logo-light.png",
+    "mimetype": "image/png",
+    "size": 5574,
+    "alt": "LineDiff - Line by Line Text Comparison Tool light mode logo",
+    "meta": {
+      "user": {
+        "name": "Ahmet Bayhan BAYRAMOĞLU",
+        "email": "bayhanbayramoglu@gmail.com",
+        "avatar": "https://lh3.googleusercontent.com/a-/AOh14GiukvNPwUeS58RDXlPU1MKUfOtsMvGsSHlBfgIsbQ=s96-c"
+      },
+      "createdAt": "2024-09-26T13:58:32.966Z"
+    }
+  }
+]

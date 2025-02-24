@@ -1,0 +1,47 @@
+[
+  {
+    "ID": "f1a2b3c4d5e6",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "What is LineDiff?",
+    "answer": "LineDiff is a powerful tool that allows you to compare differences between two texts line by line.",
+    "order": 1
+  },
+  {
+    "ID": "g2h3i4j5k6l7",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "How to use LineDiff?",
+    "answer": "Paste your texts or upload files to the left and right panels, then click the 'Compare' button.",
+    "order": 2
+  },
+  {
+    "ID": "m3n4o5p6q7r8",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "What file types are supported?",
+    "answer": "TXT, MD, JSON, XML, HTML, CSS, JS and many programming language files are supported.",
+    "order": 3
+  },
+  {
+    "ID": "s4t5u6v7w8x9",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "What export formats are available?",
+    "answer": "You can export in PDF, HTML, Word and Excel formats.",
+    "order": 1
+  },
+  {
+    "ID": "y5z6a7b8c9d0",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "How does the comment system work?",
+    "answer": "You can add, edit and delete comments on each line. Comments are automatically saved.",
+    "order": 2
+  }
+] 

@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { addImportsDir, addServerHandler, createResolver, defineNuxtModule } from '@nuxt/kit';
 import defu from 'defu';
 
@@ -35,6 +36,20 @@ export default defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url);
     const resolve = resolver.resolve.bind(resolver);
 
+    // Build sonrası için path'i güncelle
+    if (options.databasePath?.startsWith('public/')) {
+      // Development'ta public/ ile başlayan path'i kullan
+      // Build sonrasında .output/public/ ile değiştir
+      const runtimePath = options.databasePath.replace('public/', '.output/public/');
+
+      console.log('Contentrain: Database in public directory');
+      console.log('Development path:', options.databasePath);
+      console.log('Runtime path:', runtimePath);
+
+      // Runtime config için path'i güncelle
+      options.databasePath = runtimePath;
+    }
+
     // Runtime config
     const privateConfig: Record<string, any> = {
       cache: options.cache,
@@ -42,7 +57,6 @@ export default defineNuxtModule<ModuleOptions>({
       maxCacheSize: options.maxCacheSize,
     };
 
-    // Optional fields'ları sadece varsa ekle
     if (options.databasePath)
       privateConfig.databasePath = options.databasePath;
 
@@ -54,7 +68,7 @@ export default defineNuxtModule<ModuleOptions>({
       privateConfig,
     );
 
-    // Public config - sadece gerekli alanları ekle
+    // Public config
     const publicConfig: Record<string, any> = {};
 
     nuxt.options.runtimeConfig.public.contentrain = defu(

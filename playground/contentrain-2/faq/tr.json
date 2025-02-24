@@ -1,0 +1,47 @@
+[
+  {
+    "ID": "f1a2b3c4d5e6",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "LineDiff nedir?",
+    "answer": "LineDiff, iki metin arasındaki farkları satır satır karşılaştırmanıza olanak sağlayan güçlü bir araçtır.",
+    "order": 1
+  },
+  {
+    "ID": "g2h3i4j5k6l7",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "LineDiff nasıl kullanılır?",
+    "answer": "Sol ve sağ panellere metinlerinizi yapıştırın veya dosya yükleyin, ardından 'Karşılaştır' butonuna tıklayın.",
+    "order": 2
+  },
+  {
+    "ID": "m3n4o5p6q7r8",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "Hangi dosya türleri destekleniyor?",
+    "answer": "TXT, MD, JSON, XML, HTML, CSS, JS ve birçok programlama dili dosyası desteklenmektedir.",
+    "order": 3
+  },
+  {
+    "ID": "s4t5u6v7w8x9",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "Hangi dışa aktarma formatları mevcut?",
+    "answer": "PDF, HTML, Word ve Excel formatlarında dışa aktarım yapabilirsiniz.",
+    "order": 1
+  },
+  {
+    "ID": "y5z6a7b8c9d0",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "question": "Yorum sistemi nasıl çalışır?",
+    "answer": "Her satıra yorum ekleyebilir, düzenleyebilir ve silebilirsiniz. Yorumlar otomatik olarak kaydedilir.",
+    "order": 2
+  }
+] 

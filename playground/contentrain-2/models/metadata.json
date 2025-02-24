@@ -1,0 +1,50 @@
+[
+  {
+    "name": "UiTexts",
+    "modelId": "ui-texts",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  {
+    "name": "SystemMessages",
+    "modelId": "system-messages",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  {
+    "name": "MetaTags",
+    "modelId": "meta-tags",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  {
+    "name": "Faq",
+    "modelId": "faq",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  {
+    "name": "FaqCategories",
+    "modelId": "faq-categories",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  },
+  {
+    "name": "Features",
+    "modelId": "features",
+    "localization": true,
+    "type": "JSON",
+    "createdBy": "user",
+    "isServerless": false
+  }
+]

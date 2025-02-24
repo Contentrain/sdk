@@ -1,0 +1,262 @@
+[
+  {
+    "ID": "sm2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "basic",
+    "content": "LineDiff - Text Comparison Tool",
+    "description": "Basic meta tag",
+    "page": "index"
+  },
+  {
+    "ID": "sn2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff - Line by Line Text Comparison Tool",
+    "description": "Page title",
+    "page": "index"
+  },
+  {
+    "ID": "so2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "LineDiff is a powerful tool that allows you to compare two texts line by line, visualize differences, and add comments.",
+    "description": "Page description",
+    "page": "index"
+  },
+  {
+    "ID": "sp2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "text comparison, diff tool, line comparison, code comparison, text analysis",
+    "description": "Keywords",
+    "page": "index"
+  },
+  {
+    "ID": "sq2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff - Advanced Text Comparison Tool",
+    "description": "Open Graph title",
+    "page": "index"
+  },
+  {
+    "ID": "sr2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "Easily compare texts, visualize differences, and collaborate. The ideal comparison tool for code, documents, and any type of text.",
+    "description": "Open Graph description",
+    "page": "index"
+  },
+  {
+    "ID": "ss2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:image",
+    "content": "/images/linediff-social.png",
+    "description": "Open Graph image",
+    "page": "index"
+  },
+  {
+    "ID": "st2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:card",
+    "content": "summary_large_image",
+    "description": "Twitter card type",
+    "page": "index"
+  },
+  {
+    "ID": "su2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "robots",
+    "content": "index, follow",
+    "description": "Search engine indexing instructions",
+    "page": "index"
+  },
+  {
+    "ID": "sv2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "author",
+    "content": "LineDiff",
+    "description": "Site author",
+    "page": "index"
+  },
+  {
+    "ID": "sw2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:type",
+    "content": "website",
+    "description": "Open Graph content type",
+    "page": "index"
+  },
+  {
+    "ID": "sx2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:locale",
+    "content": "en_US",
+    "description": "Open Graph locale setting",
+    "page": "index"
+  },
+  {
+    "ID": "sy2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff Support - FAQ, Contact & License Information",
+    "description": "Support page title",
+    "page": "support"
+  },
+  {
+    "ID": "sz2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "LineDiff support page: Frequently asked questions, contact form, and license information. Get all the information about our code comparison tool.",
+    "description": "Support page description",
+    "page": "support"
+  },
+  {
+    "ID": "ta2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "linediff support, code comparison help, faq, contact, license information, customer support, technical support",
+    "description": "Support page keywords",
+    "page": "support"
+  },
+  {
+    "ID": "tb2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff Support - FAQ, Contact & License Information",
+    "description": "Support page Open Graph title",
+    "page": "support"
+  },
+  {
+    "ID": "tc2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "Get help with LineDiff. Find answers in our FAQ, contact our support team, or learn about licensing options.",
+    "description": "Support page Open Graph description",
+    "page": "support"
+  },
+  {
+    "ID": "td2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:title",
+    "content": "LineDiff Support - FAQ, Contact & License Information",
+    "description": "Support page Twitter title",
+    "page": "support"
+  },
+  {
+    "ID": "te2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:description",
+    "content": "Get help with LineDiff. Find answers in our FAQ, contact our support team, or learn about licensing options.",
+    "description": "Support page Twitter description",
+    "page": "support"
+  },
+  {
+    "ID": "tf2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "title",
+    "content": "LineDiff Features - Advanced Code Comparison Tool",
+    "description": "Features page title",
+    "page": "features"
+  },
+  {
+    "ID": "tg2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "description",
+    "content": "Compare your code intelligently with LineDiff. Enhance your code comparison experience with real-time collaboration, Git integrations, and customizable interface.",
+    "description": "Features page description",
+    "page": "features"
+  },
+  {
+    "ID": "th2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "keywords",
+    "content": "code comparison, diff tool, text comparison, git diff, file comparison, real-time collaboration, code analysis",
+    "description": "Features page keywords",
+    "page": "features"
+  },
+  {
+    "ID": "ti2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:title",
+    "content": "LineDiff Features - Advanced Code Comparison Tool",
+    "description": "Features page Open Graph title",
+    "page": "features"
+  },
+  {
+    "ID": "tj2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "og:description",
+    "content": "Discover LineDiff's powerful features. Smart comparison, real-time collaboration, Git integrations, and customizable interface.",
+    "description": "Features page Open Graph description",
+    "page": "features"
+  },
+  {
+    "ID": "tk2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:title",
+    "content": "LineDiff Features - Advanced Code Comparison Tool",
+    "description": "Features page Twitter title",
+    "page": "features"
+  },
+  {
+    "ID": "tl2ewen3o4p5q6t",
+    "createdAt": "2024-01-21T10:00:00.000Z",
+    "updatedAt": "2024-01-21T10:00:00.000Z",
+    "status": "publish",
+    "name": "twitter:description",
+    "content": "Discover LineDiff's powerful features. Smart comparison, real-time collaboration, Git integrations, and customizable interface.",
+    "description": "Features page Twitter description",
+    "page": "features"
+  }
+] 

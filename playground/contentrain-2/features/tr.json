@@ -1,0 +1,54 @@
+[
+  {
+    "ID": "f1a2b3c4d5e6",
+    "title": "Akıllı Karşılaştırma",
+    "description": "LineDiff'in gelişmiş algoritması, metinler arasındaki en küçük değişiklikleri bile hassas bir şekilde tespit eder. Satır bazlı ve kelime bazlı karşılaştırma seçenekleri, değişiklikleri en ince ayrıntısına kadar görmenizi sağlar. Özel diff algoritması sayesinde, büyük metin bloklarında bile hızlı ve doğru sonuçlar elde edersiniz.",
+    "shortDescription": "Gelişmiş algoritma sayesinde en küçük değişiklikleri bile tespit edin. Satır bazlı ve kelime bazlı karşılaştırma seçenekleri ile detaylı analiz yapın.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff akıllı karşılaştırma özelliği görseli",
+    "category": "core",
+    "order": 1,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "g1h2i3j4k5l6",
+    "title": "Gerçek Zamanlı İşbirliği",
+    "description": "Ekip arkadaşlarınızla aynı anda çalışmanın gücünü keşfedin. LineDiff'in gerçek zamanlı işbirliği özellikleri sayesinde, ekip üyeleri değişiklikler üzerinde anında yorum yapabilir, tartışabilir ve kararlar alabilir. Değişiklik önerileri, yorum dizileri ve onay süreçleri ile kod inceleme sürecinizi optimize edin. Tüm ekip üyeleri için şeffaf ve verimli bir çalışma ortamı sağlayın.",
+    "shortDescription": "Ekip arkadaşlarınızla aynı anda çalışın. Yorum yapın, değişiklikleri tartışın ve kararlar alın. Tüm süreç tek bir yerde.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff gerçek zamanlı işbirliği özelliği görseli",
+    "category": "collaboration",
+    "order": 2,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "m1n2o3p4q5r6",
+    "title": "Güçlü Entegrasyonlar",
+    "description": "LineDiff, en popüler geliştirme araçlarıyla sorunsuz entegrasyon sunar. Git, GitHub, GitLab ve diğer versiyon kontrol sistemleriyle tam uyumlu çalışır. IDE eklentileri ve CI/CD pipeline entegrasyonları ile geliştirme sürecinizi kesintisiz devam ettirin. API ve webhook desteği sayesinde, kendi iş akışınıza özel otomasyonlar oluşturabilirsiniz.",
+    "shortDescription": "Favori araçlarınızla sorunsuz entegrasyon. Git, GitHub, GitLab ve daha fazlası ile uyumlu çalışın. İş akışınızı bozmadan devam edin.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff entegrasyonlar özelliği görseli",
+    "category": "integration",
+    "order": 3,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  },
+  {
+    "ID": "s1t2u3v4w5x6",
+    "title": "Özelleştirilebilir Arayüz",
+    "description": "Çalışma stilinize uygun bir arayüz oluşturun. LineDiff'in özelleştirilebilir arayüzü, koyu/açık tema seçenekleri, ayarlanabilir renk şemaları ve esnek düzen seçenekleri sunar. Kod görüntüleme tercihlerinizi belirleyin, kısayol tuşlarını özelleştirin ve panelleri istediğiniz gibi düzenleyin. Syntax highlighting ve kod katlanabilirlik özellikleri ile kodunuzu daha okunabilir hale getirin.",
+    "shortDescription": "Çalışma stilinize uygun arayüz. Koyu/açık tema, özelleştirilebilir renk şemaları ve düzen seçenekleri ile kişiselleştirin.",
+    "image": "/public/features.png",
+    "imageAlt": "LineDiff özelleştirilebilir arayüz görseli",
+    "category": "customization",
+    "order": 4,
+    "status": "publish",
+    "createdAt": "2024-01-23T10:00:00.000Z",
+    "updatedAt": "2024-01-23T10:00:00.000Z"
+  }
+] 

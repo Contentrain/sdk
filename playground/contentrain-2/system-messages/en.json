@@ -1,0 +1,252 @@
+[
+  {
+    "ID": "sm1ewen3o4p5q6t",
+    "code": "DATABASE_SERVER_ERROR",
+    "group": "database",
+    "value": "Database cannot be used on server side",
+    "description": "Error when trying to use database on server",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm2ewen3o4p5q6t",
+    "code": "DATABASE_NOT_READY",
+    "group": "database",
+    "value": "Database is not initialized yet",
+    "description": "Error when database is not ready",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm3ewen3o4p5q6t",
+    "code": "COMPARISON_SAVE_ERROR",
+    "group": "database",
+    "value": "Failed to save comparison",
+    "description": "Error when saving comparison to database",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm4ewen3o4p5q6t",
+    "code": "COMPARISON_LOAD_ERROR",
+    "group": "database",
+    "value": "Failed to load comparison",
+    "description": "Error when loading comparison",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm5ewen3o4p5q6t",
+    "code": "COMPARISONS_LOAD_ERROR",
+    "group": "database",
+    "value": "Failed to load comparisons",
+    "description": "Error when loading comparisons list",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm6ewen3o4p5q6t",
+    "code": "COMPARISON_DELETE_ERROR",
+    "group": "database",
+    "value": "Failed to delete comparison",
+    "description": "Error when deleting comparison",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm7ewen3o4p5q6t",
+    "code": "COMPARISON_UPDATE_ERROR",
+    "group": "database",
+    "value": "Failed to update comparison name",
+    "description": "Error when updating comparison name",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm8ewen3o4p5q6t",
+    "code": "COMMENT_ADD_ERROR",
+    "group": "comment",
+    "value": "Failed to add comment",
+    "description": "Error when adding comment",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm9ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_ERROR",
+    "group": "comment",
+    "value": "Failed to update comment",
+    "description": "Error when updating comment",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm10ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_ERROR",
+    "group": "comment",
+    "value": "Failed to delete comment",
+    "description": "Error when deleting comment",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm11ewen3o4p5q6t",
+    "code": "FILE_UPLOAD_PROGRESS",
+    "group": "upload",
+    "value": "Uploading {type} file...",
+    "description": "File upload progress message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm12ewen3o4p5q6t",
+    "code": "FILE_UPLOAD_ERROR",
+    "group": "upload",
+    "value": "File upload error:",
+    "description": "File upload error message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm13ewen3o4p5q6t",
+    "code": "COMMENTS_LOAD_ERROR",
+    "group": "comment",
+    "value": "Failed to load comments:",
+    "description": "Comments loading error message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm14ewen3o4p5q6t",
+    "code": "COMMENTS_LOAD_ERROR_DETAIL",
+    "group": "comment",
+    "value": "An error occurred while loading comments",
+    "description": "Comments loading error detail message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm15ewen3o4p5q6t",
+    "code": "COMMENT_EMPTY_ERROR",
+    "group": "validation",
+    "value": "Comment cannot be empty",
+    "description": "Empty comment validation error",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm16ewen3o4p5q6t",
+    "code": "COMMENT_ADD_SUCCESS",
+    "group": "comment",
+    "value": "Comment added successfully",
+    "description": "Comment add success message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm17ewen3o4p5q6t",
+    "code": "COMMENT_ADD_ERROR_DETAIL",
+    "group": "comment",
+    "value": "An error occurred while adding comment",
+    "description": "Comment add error detail message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm18ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_SUCCESS",
+    "group": "comment",
+    "value": "Comment updated successfully",
+    "description": "Comment update success message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm19ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_ERROR_DETAIL",
+    "group": "comment",
+    "value": "An error occurred while updating comment",
+    "description": "Comment update error detail message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm20ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_SUCCESS",
+    "group": "comment",
+    "value": "Comment deleted successfully",
+    "description": "Comment delete success message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm21ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_ERROR_DETAIL",
+    "group": "comment",
+    "value": "An error occurred while deleting comment",
+    "description": "Comment delete error detail message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm22ewen3o4p5q6t",
+    "code": "EXPORT_PROGRESS",
+    "group": "process",
+    "value": "Creating {type} file...",
+    "description": "Export process progress message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm23ewen3o4p5q6t",
+    "code": "EXPORT_SUCCESS",
+    "group": "process",
+    "value": "{type} file created successfully",
+    "description": "Export process success message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm24ewen3o4p5q6t",
+    "code": "EXPORT_ERROR",
+    "group": "process",
+    "value": "Export error:",
+    "description": "Export process error message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm25ewen3o4p5q6t",
+    "code": "EXPORT_ERROR_DETAIL",
+    "group": "process",
+    "value": "An error occurred while creating {type} file",
+    "description": "Export process detailed error message",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  }
+] 

@@ -1,5 +1,11 @@
 # @contentrain/nuxt
 
+## 3.1.3
+
+### Patch Changes
+
+- Path fix
+
 ## 3.1.2
 
 ### Patch Changes

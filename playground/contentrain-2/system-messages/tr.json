@@ -1,0 +1,252 @@
+[
+  {
+    "ID": "sm1ewen3o4p5q6t",
+    "code": "DATABASE_SERVER_ERROR",
+    "group": "database",
+    "value": "Database server tarafında kullanılamaz",
+    "description": "Database server tarafında kullanılmaya çalışıldığında",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm2ewen3o4p5q6t",
+    "code": "DATABASE_NOT_READY",
+    "group": "database",
+    "value": "Database henüz başlatılmadı",
+    "description": "Database hazır olmadığında",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm3ewen3o4p5q6t",
+    "code": "COMPARISON_SAVE_ERROR",
+    "group": "database",
+    "value": "Karşılaştırma kaydedilemedi",
+    "description": "Karşılaştırma kaydedilirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm4ewen3o4p5q6t",
+    "code": "COMPARISON_LOAD_ERROR",
+    "group": "database",
+    "value": "Karşılaştırma yüklenemedi",
+    "description": "Karşılaştırma yüklenirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm5ewen3o4p5q6t",
+    "code": "COMPARISONS_LOAD_ERROR",
+    "group": "database",
+    "value": "Karşılaştırmalar yüklenemedi",
+    "description": "Karşılaştırma listesi yüklenirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm6ewen3o4p5q6t",
+    "code": "COMPARISON_DELETE_ERROR",
+    "group": "database",
+    "value": "Karşılaştırma silinemedi",
+    "description": "Karşılaştırma silinirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm7ewen3o4p5q6t",
+    "code": "COMPARISON_UPDATE_ERROR",
+    "group": "database",
+    "value": "Karşılaştırma adı güncellenemedi",
+    "description": "Karşılaştırma adı güncellenirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm8ewen3o4p5q6t",
+    "code": "COMMENT_ADD_ERROR",
+    "group": "comment",
+    "value": "Yorum eklenemedi",
+    "description": "Yorum eklenirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm9ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_ERROR",
+    "group": "comment",
+    "value": "Yorum güncellenemedi",
+    "description": "Yorum güncellenirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm10ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_ERROR",
+    "group": "comment",
+    "value": "Yorum silinemedi",
+    "description": "Yorum silinirken hata",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm11ewen3o4p5q6t",
+    "code": "FILE_UPLOAD_PROGRESS",
+    "group": "upload",
+    "value": "{type} dosya yükleniyor...",
+    "description": "Dosya yükleme ilerleme mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm12ewen3o4p5q6t",
+    "code": "FILE_UPLOAD_ERROR",
+    "group": "upload",
+    "value": "Dosya yükleme hatası:",
+    "description": "Dosya yükleme hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm13ewen3o4p5q6t",
+    "code": "COMMENTS_LOAD_ERROR",
+    "group": "comment",
+    "value": "Yorumlar yüklenemedi:",
+    "description": "Yorumlar yüklenirken hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm14ewen3o4p5q6t",
+    "code": "COMMENTS_LOAD_ERROR_DETAIL",
+    "group": "comment",
+    "value": "Yorumlar yüklenirken bir hata oluştu",
+    "description": "Yorumlar yükleme detaylı hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm15ewen3o4p5q6t",
+    "code": "COMMENT_EMPTY_ERROR",
+    "group": "validation",
+    "value": "Yorum boş olamaz",
+    "description": "Boş yorum doğrulama hatası",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm16ewen3o4p5q6t",
+    "code": "COMMENT_ADD_SUCCESS",
+    "group": "comment",
+    "value": "Yorum eklendi",
+    "description": "Yorum ekleme başarılı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm17ewen3o4p5q6t",
+    "code": "COMMENT_ADD_ERROR_DETAIL",
+    "group": "comment",
+    "value": "Yorum eklenirken bir hata oluştu",
+    "description": "Yorum ekleme detaylı hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm18ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_SUCCESS",
+    "group": "comment",
+    "value": "Yorum güncellendi",
+    "description": "Yorum güncelleme başarılı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm19ewen3o4p5q6t",
+    "code": "COMMENT_UPDATE_ERROR_DETAIL",
+    "group": "comment",
+    "value": "Yorum güncellenirken bir hata oluştu",
+    "description": "Yorum güncelleme detaylı hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm20ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_SUCCESS",
+    "group": "comment",
+    "value": "Yorum silindi",
+    "description": "Yorum silme başarılı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm21ewen3o4p5q6t",
+    "code": "COMMENT_DELETE_ERROR_DETAIL",
+    "group": "comment",
+    "value": "Yorum silinirken bir hata oluştu",
+    "description": "Yorum silme detaylı hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm22ewen3o4p5q6t",
+    "code": "EXPORT_PROGRESS",
+    "group": "process",
+    "value": "{type} dosyası oluşturuluyor...",
+    "description": "Export işlemi ilerleme mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm23ewen3o4p5q6t",
+    "code": "EXPORT_SUCCESS",
+    "group": "process",
+    "value": "{type} dosyası başarıyla oluşturuldu",
+    "description": "Export işlemi başarılı mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm24ewen3o4p5q6t",
+    "code": "EXPORT_ERROR",
+    "group": "process",
+    "value": "Export hatası:",
+    "description": "Export işlemi hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  },
+  {
+    "ID": "sm25ewen3o4p5q6t",
+    "code": "EXPORT_ERROR_DETAIL",
+    "group": "process",
+    "value": "{type} dosyası oluşturulurken bir hata oluştu",
+    "description": "Export işlemi detaylı hata mesajı",
+    "createdAt": "2024-01-13T10:00:00.000Z",
+    "updatedAt": "2024-01-13T10:00:00.000Z",
+    "status": "publish"
+  }
+] 
