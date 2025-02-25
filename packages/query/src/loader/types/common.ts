@@ -1,7 +1,7 @@
 // Common Types
 export type LoaderType = 'json' | 'sqlite';
 export type RelationType = 'one-to-one' | 'one-to-many';
-export type ContentrainStatus = 'publish' | 'draft' | 'private';
+export type ContentrainStatus = 'publish' | 'draft' | 'changed';
 // Logger Interface
 export interface ILogger {
   debug: (message: string, context?: Record<string, unknown>) => void

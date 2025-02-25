@@ -1,0 +1,35 @@
+[
+  {
+    "ID": "pd001",
+    "createdAt": "2024-01-15T10:00:00.000Z",
+    "updatedAt": "2024-01-15T10:00:00.000Z",
+    "status": "publish",
+    "title": "Contentrain Proje Detayları",
+    "description": "Modern geliştirme pratiklerini içerik yönetimiyle birleştiren, Git tabanlı kapsamlı bir headless CMS çözümü. Ölçeklenebilirlik ve geliştirici deneyimi göz önünde bulundurularak oluşturuldu.",
+    "work": "8a8044e883e8",
+    "testimonial": "89ae53eb8370",
+    "scheduled": false
+  },
+  {
+    "ID": "pd002",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z",
+    "status": "publish",
+    "title": "Bloom & Fresh Proje Analizi",
+    "description": "Vue.js ve Nuxt.js kullanarak frontend iyileştirmelerine odaklanan ve optimal performans için mevcut backend sistemleriyle entegre edilen e-ticaret platformu modernizasyon projesi.",
+    "work": "8a8044e883e9",
+    "testimonial": "b770c71013d2",
+    "scheduled": false
+  },
+  {
+    "ID": "pd003",
+    "createdAt": "2024-01-15T11:00:00.000Z",
+    "updatedAt": "2024-01-15T11:00:00.000Z",
+    "status": "publish",
+    "title": "Visivi İK Platformu Genel Bakış",
+    "description": "İK yönetimi için geliştirilen, mobil için React Native ve web arayüzleri için Vue.js/Nuxt.js kullanılarak oluşturulan çapraz platform mobil ve web uygulama geliştirme projesi.",
+    "work": "8a8044e883eb",
+    "testimonial": "c421eb634cfa",
+    "scheduled": false
+  }
+]

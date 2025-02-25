@@ -1,0 +1,208 @@
+[
+  {
+    "ID": "3442ac47e4cc",
+    "createdAt": "Mon Oct 14 2024 12:50:29 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-10-25T17:11:37.612Z",
+    "category": [
+      "cab37361e7e8"
+    ],
+    "link": "https://www.adobe.com/tr/products/photoshop.html",
+    "description": "Adobe Photoshop is a widely used graphic design and image editing software developed by Adobe. It is primarily used for editing photos, creating digital artwork, and designing graphics for both print and web.",
+    "image": "public/1728898765927_Photoshop.svg",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d1d",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.618Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://vuejs.org/",
+    "description": "Vue.js is a progressive JavaScript framework used for building user interfaces, especially single-page applications. It is designed to be incrementally adoptable and integrates well with other libraries.",
+    "image": "public/1728541493988_vuejs.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d1e",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.623Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://reactjs.dev/",
+    "description": "React.js is a JavaScript library for building user interfaces or UI components. It is maintained by Facebook and a large community of developers. React is known for its fast rendering and virtual DOM.",
+    "image": "public/1728541679333_react.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d1f",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.628Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://nuxtjs.com/",
+    "description": "Nuxt.js is a framework built on top of Vue.js that simplifies the development of server-rendered applications and static websites. It offers powerful features like SSR, static site generation, and improved SEO support.",
+    "image": "public/1728541702569_nuxt.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d20",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.632Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://nextjs.org/",
+    "description": "Next.js is a React framework that enables functionality such as server-side rendering and static website generation for building high-performance, SEO-friendly applications.",
+    "image": "public/1728541725437_next.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d21",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.637Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://astro.build/",
+    "description": "Astro is a new frontend framework for building fast, content-focused websites. It uses an innovative approach to page rendering called partial hydration, which makes websites faster by reducing the JavaScript sent to the browser.",
+    "image": "public/1728541750606_astro.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d22",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.641Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e6",
+      "cab37361e7e8"
+    ],
+    "link": "https://svelte.dev/",
+    "description": "Svelte is a modern JavaScript framework that shifts much of the work to the compile step instead of the runtime. This results in smaller bundle sizes and faster load times, making it an excellent choice for building fast web applications.",
+    "image": "public/1728541774910_svelte.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d23",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.646Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e7",
+      "cab37361e7e8"
+    ],
+    "link": "https://nodejs.org/en",
+    "description": "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine. It allows you to run JavaScript on the server, enabling you to build scalable and high-performance applications.",
+    "image": "public/1728542310638_nodejs.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d24",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.661Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e7",
+      "cab37361e7e8"
+    ],
+    "link": "https://expressjs.com/",
+    "description": "Express.js is a minimal and flexible Node.js web application framework that provides a robust set of features for building web and mobile applications. It is designed to create APIs and web servers quickly and easily.",
+    "image": "public/1728542335115_expressjs.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d25",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.673Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e7",
+      "cab37361e7e8"
+    ],
+    "link": "https://nestjs.com/",
+    "description": "Nest.js is a progressive Node.js framework for building efficient, reliable, and scalable server-side applications. It uses TypeScript and is heavily inspired by Angular, providing a solid architectural design for your applications.",
+    "image": "public/1728542360382_nestjs.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d26",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.681Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e7",
+      "cab37361e7e8"
+    ],
+    "link": "https://koajs.com/",
+    "description": "Koa.js is a modern web framework for Node.js that aims to be smaller, more expressive, and more robust. It uses async functions to eliminate callbacks and increase error-handling capabilities.",
+    "image": "public/1728542379255_koajs.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d27",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.698Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e7",
+      "cab37361e7e8"
+    ],
+    "link": "https://graphql.org/",
+    "description": "GraphQL is a query language for APIs and a runtime for executing those queries. It provides a more efficient and powerful alternative to REST by allowing clients to request only the data they need.",
+    "image": "public/1728542406152_graphql.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d28",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.703Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e8"
+    ],
+    "link": "https://www.figma.com/",
+    "description": "Figma is the leading collaborative design tool for building meaningful products. Seamlessly design, prototype, develop, and collect feedback in a single platform.",
+    "image": "public/1728898720249_figma.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "9ab7dcca9d29",
+    "createdAt": "2024-09-26T18:06:53.000Z",
+    "updatedAt": "2024-10-25T17:11:37.707Z",
+    "status": "publish",
+    "category": [
+      "cab37361e7e8"
+    ],
+    "link": "https://www.sketch.com/",
+    "description": "Sketch is a design software suite that helps you create beautiful products at scale, whether you’re working alone or collaboratively.",
+    "image": "public/1728898732629_sketch.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "bc311eb63570",
+    "createdAt": "Mon Oct 14 2024 12:44:44 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-10-25T17:11:37.709Z",
+    "category": [
+      "cab37361e7e8"
+    ],
+    "link": "https://www.adobe.com/tr/products/illustrator.html",
+    "description": "Adobe Illustrator is a vector-based graphic design software developed by Adobe, primarily used for creating scalable graphics such as logos, illustrations, icons, typography, and complex illustrations.",
+    "image": "public/1728898754502_Illustrator.svg",
+    "status": "publish",
+    "scheduled": false
+  }
+]
