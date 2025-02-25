@@ -1,61 +1,83 @@
 <script setup lang="ts">
 import type { Content, LocalizedContent, QueryResult } from '../src/module';
 
-interface LocalizedBaseRecord extends LocalizedContent {
-  ID: string
-  createdAt: string
-  updatedAt: string
-  status: 'publish' | 'draft'
-}
-
-interface WorkItem extends LocalizedBaseRecord {
+interface WorkItem extends LocalizedContent {
   title: string
   description: string
   image: string
   order: number
-  category_id: string
+  _lang: 'tr' | 'en'
+  category: string
   _relations?: {
     category?: WorkCategory
   }
 }
 
-interface WorkCategory extends LocalizedBaseRecord {
+interface WorkCategory extends LocalizedContent {
   category: string
   order: number
 }
 
-interface TestimonialItem extends LocalizedBaseRecord {
-  title: string
+interface TestimonialItem extends LocalizedContent {
   name: string
+  title: string
   description: string
-  creative_work_id: string
+  image: string
+  creative_work: string
   _relations?: {
     'creative-work'?: WorkItem
   }
 }
 
-interface TabItem extends LocalizedBaseRecord {
-  category_id: string
+interface TabItem extends LocalizedContent {
   title: string
   description: string
+  image: string
+  link: string
+  category: string[]
   _relations?: {
-    category: WorkCategory[]
+    category?: WorkCategory[]
+  }
+}
+
+interface Service extends LocalizedContent {
+  title: string
+  description: string
+  image: string
+  reference: string
+  _relations?: {
+    reference?: Reference
   }
 }
 
 interface SocialLink extends Content {
   link: string
   icon: string
-  service_id: string
+  service: string
+  _relations?: {
+    service?: Service
+  }
 }
 
-interface FaqItem extends LocalizedBaseRecord {
-  title: string
-  description: string
+interface ProjectStat extends LocalizedContent {
+  view_count: number
+  work: string
+  reference: string
+  _relations?: {
+    work?: WorkItem
+    reference?: Reference
+  }
+}
+
+interface Reference extends LocalizedContent {
+  logo: string
+}
+
+interface FaqItem extends LocalizedContent {
+  question: string
+  answer: string
   order: number
 }
-
-// Debug için
 
 // === 1. Temel Sorgular ===
 // 1.1 Filtreleme ve Sıralama
@@ -78,7 +100,7 @@ const { data: pagedWorkItems } = await useAsyncData<QueryResult<WorkItem>>('page
 });
 
 // === 2. İlişki Sorguları ===
-// 2.1 Bire-Bir İlişki
+// 2.1 Bire-Bir İlişkiler (Testimonial -> Work)
 const { data: testimonials } = await useAsyncData<QueryResult<TestimonialItem>>('testimonials', () => {
   const query = useContentrainQuery<TestimonialItem>('testimonial-items');
   return query
@@ -87,13 +109,44 @@ const { data: testimonials } = await useAsyncData<QueryResult<TestimonialItem>>(
     .get();
 });
 
-// 2.2 Bire-Çok İlişki
+// 2.2 Bire-Çok İlişkiler (TabItems -> WorkCategories)
 const { data: tabItems } = await useAsyncData<QueryResult<TabItem>>('tab-items', () => {
   const query = useContentrainQuery<TabItem>('tabitems');
   return query
     .locale('tr')
     .where('status', 'eq', 'publish')
     .include('category')
+    .get();
+});
+
+// 2.3 Çoklu İlişkiler
+const { data: projectStats } = await useAsyncData<QueryResult<ProjectStat>>('project-stats', () => {
+  const query = useContentrainQuery<ProjectStat>('project-stats');
+  return query
+    .include('work')
+    .include('reference')
+    .where('status', 'eq', 'publish')
+    .get();
+});
+
+// 2.4 Servis ve Referans İlişkisi
+const { data: services } = await useAsyncData<QueryResult<Service>>('services', () => {
+  const query = useContentrainQuery<Service>('services');
+  return query
+    .locale('tr')
+    .include('reference')
+    .where('status', 'eq', 'publish')
+    .orderBy('title', 'asc')
+    .get();
+});
+
+// 2.5 Sosyal Medya ve Servis İlişkisi
+const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('social-links', () => {
+  const query = useContentrainQuery<SocialLink>('sociallinks');
+  return query
+    .include('service')
+    .where('status', 'eq', 'publish')
+    .orderBy('icon', 'asc')
     .get();
 });
 
@@ -181,14 +234,6 @@ const { data: enContent } = await useAsyncData<WorkItem | null>('en-content', as
 });
 
 // 4.2 Lokalize Olmayan Model
-const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('social-links', () => {
-  const query = useContentrainQuery<SocialLink>('sociallinks');
-  return query
-    .where('status', 'eq', 'publish')
-    .orderBy('icon', 'asc')
-    .get();
-});
-
 const { data: socialLinks2 } = await useAsyncData<QueryResult<SocialLink>>('social-links-2', () => {
   const query = useContentrainQuery<SocialLink>('sociallinks');
   return query
@@ -235,15 +280,16 @@ console.log('Tüm Sorgular ve Sonuçları:', {
 <template>
   <div class="container mx-auto p-8">
     <h1 class="text-3xl font-bold mb-12 text-center">Contentrain SDK Test Senaryoları</h1>
+
     <!-- 1. Temel Sorgular -->
     <section class="mb-12">
       <h2 class="text-2xl font-semibold mb-6 pb-2 border-b">1. Temel Sorgular</h2>
-      {{ JSON.stringify(socialLinks2, null, 2) }}
+
       <!-- 1.1 Filtreleme ve Sıralama -->
       <div class="mb-8">
         <h3 class="text-xl font-medium mb-4">1.1 Filtreleme ve Sıralama</h3>
         <div class="bg-white shadow rounded-lg p-6">
-          <div v-if="workItems" class="grid gap-4">
+          <div v-if="workItems?.data" class="grid gap-4">
             <div v-for="item in workItems.data" :key="item.ID"
               class="border p-4 rounded-lg hover:shadow-md transition-shadow">
               <h4 class="font-medium">{{ item.title }}</h4>
@@ -254,6 +300,20 @@ console.log('Tüm Sorgular ve Sonuçları:', {
         </div>
       </div>
 
+      <!-- 1.2 Sayfalama -->
+      <div class="mb-8">
+        <h3 class="text-xl font-medium mb-4">1.2 Sayfalama</h3>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div v-if="pagedWorkItems?.data" class="grid gap-4">
+            <div v-for="item in pagedWorkItems.data" :key="item.ID"
+              class="border p-4 rounded-lg hover:shadow-md transition-shadow">
+              <h4 class="font-medium">{{ item.title }}</h4>
+              <p class="text-gray-600 text-sm">Sıra: {{ item.order }}</p>
+              <p class="text-gray-500 mt-2">{{ item.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- 2. İlişki Sorguları -->
@@ -264,7 +324,7 @@ console.log('Tüm Sorgular ve Sonuçları:', {
       <div class="mb-8">
         <h3 class="text-xl font-medium mb-4">2.1 Bire-Bir İlişki (Testimonials)</h3>
         <div class="bg-white shadow rounded-lg p-6">
-          <div v-if="testimonials" class="grid gap-6">
+          <div v-if="testimonials?.data" class="grid gap-6">
             <div v-for="item in testimonials.data" :key="item.ID"
               class="border p-4 rounded-lg hover:shadow-md transition-shadow">
               <div class="flex items-center gap-4">
@@ -288,7 +348,7 @@ console.log('Tüm Sorgular ve Sonuçları:', {
       <div class="mb-8">
         <h3 class="text-xl font-medium mb-4">2.2 Bire-Çok İlişki (Tab Items)</h3>
         <div class="bg-white shadow rounded-lg p-6">
-          <div v-if="tabItems" class="grid gap-4">
+          <div v-if="tabItems?.data" class="grid gap-4">
             <div v-for="item in tabItems.data" :key="item.ID"
               class="border p-4 rounded-lg hover:shadow-md transition-shadow">
               <h4 class="font-medium">{{ item.title }}</h4>
@@ -298,6 +358,91 @@ console.log('Tüm Sorgular ve Sonuçları:', {
                   class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   {{ cat.category }}
                 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2.3 Çoklu İlişkiler -->
+      <div class="mb-8">
+        <h3 class="text-xl font-medium mb-4">2.3 Çoklu İlişkiler (Proje İstatistikleri)</h3>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div v-if="projectStats?.data" class="grid gap-6">
+            <div v-for="stat in projectStats.data" :key="stat.ID"
+              class="border p-4 rounded-lg hover:shadow-md transition-shadow">
+
+              <!-- İstatistik Bilgileri -->
+              <div class="mb-4">
+                <h4 class="font-medium text-xl">Görüntülenme: {{ stat.view_count }}</h4>
+              </div>
+
+              <!-- İlişkili Proje -->
+              <div v-if="stat._relations?.work" class="mb-4 p-3 bg-gray-50 rounded">
+                <h5 class="font-medium">İlişkili Proje</h5>
+                <p class="text-gray-600">{{ stat._relations.work.title }}</p>
+                <p class="text-gray-500 text-sm">{{ stat._relations.work.description }}</p>
+              </div>
+
+              <!-- İlişkili Referans -->
+              <div v-if="stat._relations?.reference" class="mt-4 p-3 bg-gray-50 rounded">
+                <h5 class="font-medium">Referans Logo Path</h5>
+                <span class="bg-gray-200 p-2 rounded">{{ stat._relations.reference.logo }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2.4 Servis ve Referans İlişkisi -->
+      <div class="mb-8">
+        <h3 class="text-xl font-medium mb-4">2.4 Servis ve Referans İlişkisi</h3>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div v-if="services?.data" class="grid gap-8">
+            <div v-for="service in services.data" :key="service.ID"
+              class="border p-4 rounded-lg hover:shadow-md transition-shadow">
+              <div class="flex items-center gap-4 mb-4">
+                <img v-if="service.image" :src="service.image" alt="Servis Görseli"
+                  class="h-16 w-16 object-cover rounded" />
+                <div>
+                  <h4 class="font-medium text-xl">{{ service.title }}</h4>
+                  <p class="text-gray-600">{{ service.description }}</p>
+                </div>
+              </div>
+
+              <!-- İlişkili Referans -->
+              <div v-if="service._relations?.reference" class="mt-4">
+                <h5 class="font-medium mb-2">Referans Logo Path </h5>
+                <div class="p-3 bg-gray-50 rounded">
+                  <span class="bg-gray-200 p-2 rounded">{{ service._relations.reference.logo }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2.5 Sosyal Medya ve Servis İlişkisi -->
+      <div class="mb-8">
+        <h3 class="text-xl font-medium mb-4">2.5 Sosyal Medya ve Servis İlişkisi</h3>
+        <div class="bg-white shadow rounded-lg p-6">
+          <div v-if="socialLinks?.data" class="grid gap-6">
+            <div v-for="link in socialLinks.data" :key="link.ID"
+              class="border p-4 rounded-lg hover:shadow-md transition-shadow">
+
+              <!-- Sosyal Medya Bilgileri -->
+              <div class="flex items-center gap-4">
+                <span class="text-2xl">{{ link.icon }}</span>
+                <a :href="link.link" target="_blank" class="text-blue-600 hover:underline">
+                  {{ link.link }}
+                </a>
+              </div>
+
+              <!-- İlişkili Servis -->
+              <div v-if="link._relations?.service" class="mt-4 p-3 bg-gray-50 rounded">
+                <h5 class="font-medium">Bağlı Olduğu Servis</h5>
+                <p class="text-gray-600">{{ link._relations.service.title }}</p>
+                <p class="text-gray-500 text-sm">{{ link._relations.service.description }}</p>
               </div>
             </div>
           </div>

@@ -155,7 +155,7 @@ export interface BaseContent {
 }
 
 export interface LocalizedContent extends BaseContent {
-  lang: string
+  _lang: string
   [key: string]: unknown
 }
 

@@ -101,7 +101,7 @@ export default defineNitroPlugin(async (nitro) => {
                 const contentData = await fs.readFile(langPath, 'utf-8')
                 const langContent = JSON.parse(contentData) as Content[]
                 console.log(`Loaded ${langContent.length} items for ${model.modelId} in ${lang}`)
-                return langContent.map(item => ({ ...item, lang })) as LocalizedContent[]
+                return langContent.map(item => ({ ...item, _lang: lang })) as LocalizedContent[]
               }
               catch (error) {
                 console.error(`Error loading ${lang} content for ${model.modelId}:`, error)

@@ -8,13 +8,25 @@ import type {
   QuerySort,
 } from '../types/contentrain'
 
+// İlişki tiplerini çıkarmak için yardımcı tip
+type ExtractRelations<T> = T extends { _relations?: infer R } ? keyof R : never
+
+// Locale tipini LocalizedContent'ten çıkaralım
+type ExtractLocale<T> = T extends LocalizedContent
+  ? T['_lang'] extends Array<infer L>
+    ? L
+    : T['_lang'] extends string
+      ? T['_lang']
+      : never
+  : never
+
 export class ContentrainQuery<M extends Content | LocalizedContent> {
-  private _locale?: string
+  private _locale?: ExtractLocale<M>
   private _filters: QueryFilter[] = []
   private _sort: QuerySort[] = []
   private _limit?: number
   private _offset?: number
-  private _includes: string[] = []
+  private _includes: Array<ExtractRelations<M>> = []
   private readonly _data: Ref<M[]>
   private readonly _total: Ref<number>
   private readonly _loading: Ref<boolean>
@@ -27,18 +39,25 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     this._error = ref(null)
   }
 
-  locale(locale: string): this {
-    this._locale = locale
+  // Locale için dinamik tip güvenliği
+  locale(locale: M extends LocalizedContent ? ExtractLocale<M> : never): this {
+    this._locale = locale as ExtractLocale<M>
     return this
   }
 
-  where(field: keyof M & string, operator: QueryFilter['operator'], value: unknown): this {
-    this._filters.push({ field, operator, value })
+  // Field'lar için tip güvenliği
+  where<K extends keyof M>(
+    field: keyof M,
+    operator: QueryFilter['operator'],
+    value: M[K] extends Array<infer U> ? U | U[] : M[K],
+  ): this {
+    this._filters.push({ field: field as string, operator, value })
     return this
   }
 
-  orderBy(field: keyof M & string, direction: 'asc' | 'desc' = 'asc'): this {
-    this._sort.push({ field, direction })
+  // Sıralama için tip güvenliği
+  orderBy<K extends keyof M>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
+    this._sort.push({ field: field as string, direction })
     return this
   }
 
@@ -52,7 +71,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     return this
   }
 
-  include(relation: string): this {
+  // İlişkiler için tip güvenliği
+  include<R extends ExtractRelations<M>>(relation: R): this {
     if (!this._includes.includes(relation)) {
       this._includes.push(relation)
     }
