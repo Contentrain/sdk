@@ -5,205 +5,205 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export class JSONAnalyzer implements Analyzer {
-  constructor(private config: JSONSourceConfig) {}
+    constructor(private config: JSONSourceConfig) {}
 
-  async analyze(): Promise<GeneratedTypes> {
-    try {
-      console.log('Reading model files...');
-      const modelFiles = this.getModelFiles();
-      console.log('Found model files:', modelFiles);
+    async analyze(): Promise<GeneratedTypes> {
+        try {
+            console.log('Reading model files...');
+            const modelFiles = this.getModelFiles();
+            console.log('Found model files:', modelFiles);
 
-      console.log('Reading metadata...');
-      const metadata = this.getMetadata();
-      console.log('Metadata:', metadata);
+            console.log('Reading metadata...');
+            const metadata = this.getMetadata();
+            console.log('Metadata:', metadata);
 
-      console.log('Processing model files...');
-      const { baseTypes, queryTypes } = this.processModelFiles(modelFiles, metadata);
+            console.log('Processing model files...');
+            const { baseTypes, queryTypes } = this.processModelFiles(modelFiles, metadata);
 
-      return {
-        baseTypes: this.initializeTypeDefinitions() + baseTypes,
-        queryTypes,
-      };
+            return {
+                baseTypes: this.initializeTypeDefinitions() + baseTypes,
+                queryTypes,
+            };
+        }
+        catch (error) {
+            console.error('❌ Error details:', error instanceof Error ? error.cause : error);
+            throw new Error('Type generation failed', { cause: error });
+        }
     }
-    catch (error) {
-      console.error('❌ Error details:', error instanceof Error ? error.cause : error);
-      throw new Error('Type generation failed', { cause: error });
-    }
-  }
 
-  private getModelFiles(): string[] {
-    try {
-      if (!fs.existsSync(this.config.source.modelsDir)) {
-        throw new Error(`Model directory not found: ${this.config.source.modelsDir}`);
-      }
-      const files = fs.readdirSync(this.config.source.modelsDir)
-        .filter(file => file.endsWith('.json') && file !== 'metadata.json');
-      if (files.length === 0) {
-        throw new Error(`No JSON files found in model directory: ${this.config.source.modelsDir}`);
-      }
-      return files;
+    private getModelFiles(): string[] {
+        try {
+            if (!fs.existsSync(this.config.source.modelsDir)) {
+                throw new Error(`Model directory not found: ${this.config.source.modelsDir}`);
+            }
+            const files = fs.readdirSync(this.config.source.modelsDir)
+                .filter(file => file.endsWith('.json') && file !== 'metadata.json');
+            if (files.length === 0) {
+                throw new Error(`No JSON files found in model directory: ${this.config.source.modelsDir}`);
+            }
+            return files;
+        }
+        catch (error) {
+            console.error('❌ Error reading model files:', error instanceof Error ? error.message : String(error));
+            throw new Error(`Failed to read model directory: ${this.config.source.modelsDir}`, { cause: error });
+        }
     }
-    catch (error) {
-      console.error('❌ Error reading model files:', error instanceof Error ? error.message : String(error));
-      throw new Error(`Failed to read model directory: ${this.config.source.modelsDir}`, { cause: error });
-    }
-  }
 
-  private getMetadata(): ModelMetadata[] {
-    try {
-      const metadataPath = path.join(this.config.source.modelsDir, 'metadata.json');
-      if (!fs.existsSync(metadataPath)) {
-        throw new Error(`Metadata file not found: ${metadataPath}`);
-      }
-      const content = fs.readFileSync(metadataPath, 'utf-8');
-      const metadata = JSON.parse(content);
-      if (!Array.isArray(metadata)) {
-        throw new TypeError('Metadata is not a valid array');
-      }
-      return metadata;
+    private getMetadata(): ModelMetadata[] {
+        try {
+            const metadataPath = path.join(this.config.source.modelsDir, 'metadata.json');
+            if (!fs.existsSync(metadataPath)) {
+                throw new Error(`Metadata file not found: ${metadataPath}`);
+            }
+            const content = fs.readFileSync(metadataPath, 'utf-8');
+            const metadata = JSON.parse(content);
+            if (!Array.isArray(metadata)) {
+                throw new TypeError('Metadata is not a valid array');
+            }
+            return metadata;
+        }
+        catch (error) {
+            console.error('❌ Error reading metadata:', error instanceof Error ? error.message : String(error));
+            throw new Error('Failed to read metadata', { cause: error });
+        }
     }
-    catch (error) {
-      console.error('❌ Error reading metadata:', error instanceof Error ? error.message : String(error));
-      throw new Error('Failed to read metadata', { cause: error });
-    }
-  }
 
-  private initializeTypeDefinitions(): string {
-    return `// Automatically generated by @contentrain/types-generator
+    private initializeTypeDefinitions(): string {
+        return `// Automatically generated by @contentrain/types-generator
 // Do not edit this file manually
 
 import type { BaseContentrainType, QueryConfig } from '@contentrain/query';\n\n`;
-  }
-
-  private processModelFiles(
-    modelFiles: string[],
-    metadata: ModelMetadata[],
-  ): GeneratedTypes {
-    let baseTypes = '';
-    let queryTypes = '';
-
-    modelFiles.forEach((file) => {
-      try {
-        const modelId = path.basename(file, '.json');
-        const modelPath = path.join(this.config.source.modelsDir, file);
-        const modelContent: FieldMetadata[] = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
-        const modelMetadata = metadata.find(m => m.modelId === modelId);
-
-        if (!modelMetadata) {
-          throw new Error(`Model metadata not found: ${modelId}`);
-        }
-
-        // Base Type Generation
-        const interfaceName = this.formatInterfaceName(modelMetadata);
-        const { typeDefinition, relations } = this.generateTypeForModel(modelContent, metadata);
-        baseTypes += `export interface ${interfaceName} extends BaseContentrainType ${typeDefinition}\n\n`;
-
-        // Query Type Generation
-        const queryInterfaceName = `${interfaceName}Query`;
-        queryTypes += this.generateQueryType(interfaceName, queryInterfaceName, modelMetadata, relations);
-      }
-      catch (error) {
-        console.error(`✗ Error in file ${file}: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    });
-
-    return { baseTypes, queryTypes };
-  }
-
-  private generateTypeForModel(
-    modelFields: FieldMetadata[],
-    metadata: ModelMetadata[],
-  ): { typeDefinition: string, relations: Record<string, { model: string, type: string }> } {
-    let typeDefinition = '{\n';
-    const relations: Record<string, { model: string, type: string }> = {};
-    const relationFields: string[] = [];
-
-    modelFields.forEach((field) => {
-      if (!['ID', 'createdAt', 'updatedAt', 'status'].includes(field.fieldId)) {
-        if (field.fieldType === 'relation' && field.options.reference) {
-          const relatedModelId = field.options.reference.form.reference.value;
-          const relatedModel = metadata.find(m => m.modelId === relatedModelId);
-
-          if (relatedModel) {
-            const relatedInterfaceName = this.formatInterfaceName(relatedModel);
-            relations[field.fieldId] = {
-              model: relatedInterfaceName,
-              type: field.componentId,
-            };
-
-            // İlişki ID'lerini tutan property'yi ekle
-            typeDefinition += `  "${this.formatPropertyName(field.fieldId)}": string${field.componentId === 'one-to-many' ? '[]' : ''};\n`;
-            relationFields.push(field.fieldId);
-          }
-        }
-        else {
-          const fieldType = this.determineTypeScriptType(field);
-          const isRequired = this.isFieldRequired(field);
-          const propertyName = this.formatPropertyName(field.fieldId);
-          typeDefinition += `  "${propertyName}"${isRequired ? '' : '?'}: ${fieldType};\n`;
-        }
-      }
-    });
-
-    // İlişkiler varsa _relations nesnesini ekle
-    if (relationFields.length > 0) {
-      typeDefinition += '\n  "_relations"?: {\n';
-      relationFields.forEach((fieldId) => {
-        const relation = relations[fieldId];
-        typeDefinition += `    "${this.formatPropertyName(fieldId)}": ${relation.model}${relation.type === 'one-to-many' ? '[]' : ''};\n`;
-      });
-      typeDefinition += '  };\n';
     }
 
-    typeDefinition += '}';
-    return { typeDefinition, relations };
-  }
+    private processModelFiles(
+        modelFiles: string[],
+        metadata: ModelMetadata[],
+    ): GeneratedTypes {
+        let baseTypes = '';
+        let queryTypes = '';
 
-  private generateQueryType(
-    interfaceName: string,
-    queryInterfaceName: string,
-    modelMetadata: ModelMetadata,
-    relations: Record<string, { model: string, type: string }>,
-  ): string {
-    const hasRelations = Object.keys(relations).length > 0;
-    const relationsType = hasRelations
-      ? `{\n    ${Object.entries(relations)
-        .map(([key]) => `"${this.formatPropertyName(key)}": ${relations[key].model}`)
-        .join(';\n    ')}\n  }`
-      : 'Record<string, never>';
+        modelFiles.forEach((file) => {
+            try {
+                const modelId = path.basename(file, '.json');
+                const modelPath = path.join(this.config.source.modelsDir, file);
+                const modelContent: FieldMetadata[] = JSON.parse(fs.readFileSync(modelPath, 'utf-8'));
+                const modelMetadata = metadata.find(m => m.modelId === modelId);
 
-    const locales = modelMetadata.localization ? '\'en\' | \'tr\'' : 'never';
+                if (!modelMetadata) {
+                    throw new Error(`Model metadata not found: ${modelId}`);
+                }
 
-    return `export type ${queryInterfaceName} = QueryConfig<
+                // Base Type Generation
+                const interfaceName = this.formatInterfaceName(modelMetadata);
+                const { typeDefinition, relations } = this.generateTypeForModel(modelContent, metadata);
+                baseTypes += `export interface ${interfaceName} extends BaseContentrainType ${typeDefinition}\n\n`;
+
+                // Query Type Generation
+                const queryInterfaceName = `${interfaceName}Query`;
+                queryTypes += this.generateQueryType(interfaceName, queryInterfaceName, modelMetadata, relations);
+            }
+            catch (error) {
+                console.error(`✗ Error in file ${file}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        });
+
+        return { baseTypes, queryTypes };
+    }
+
+    private generateTypeForModel(
+        modelFields: FieldMetadata[],
+        metadata: ModelMetadata[],
+    ): { typeDefinition: string, relations: Record<string, { model: string, type: string }> } {
+        let typeDefinition = '{\n';
+        const relations: Record<string, { model: string, type: string }> = {};
+        const relationFields: string[] = [];
+
+        modelFields.forEach((field) => {
+            if (!['ID', 'createdAt', 'updatedAt', 'status'].includes(field.fieldId)) {
+                if (field.fieldType === 'relation' && field.options.reference) {
+                    const relatedModelId = field.options.reference.form.reference.value;
+                    const relatedModel = metadata.find(m => m.modelId === relatedModelId);
+
+                    if (relatedModel) {
+                        const relatedInterfaceName = this.formatInterfaceName(relatedModel);
+                        relations[field.fieldId] = {
+                            model: relatedInterfaceName,
+                            type: field.componentId,
+                        };
+
+                        // İlişki ID'lerini tutan property'yi ekle
+                        typeDefinition += `  "${this.formatPropertyName(field.fieldId)}": string${field.componentId === 'one-to-many' ? '[]' : ''};\n`;
+                        relationFields.push(field.fieldId);
+                    }
+                }
+                else {
+                    const fieldType = this.determineTypeScriptType(field);
+                    const isRequired = this.isFieldRequired(field);
+                    const propertyName = this.formatPropertyName(field.fieldId);
+                    typeDefinition += `  "${propertyName}"${isRequired ? '' : '?'}: ${fieldType};\n`;
+                }
+            }
+        });
+
+        // İlişkiler varsa _relations nesnesini ekle
+        if (relationFields.length > 0) {
+            typeDefinition += '\n  "_relations"?: {\n';
+            relationFields.forEach((fieldId) => {
+                const relation = relations[fieldId];
+                typeDefinition += `    "${this.formatPropertyName(fieldId)}": ${relation.model}${relation.type === 'one-to-many' ? '[]' : ''};\n`;
+            });
+            typeDefinition += '  };\n';
+        }
+
+        typeDefinition += '}';
+        return { typeDefinition, relations };
+    }
+
+    private generateQueryType(
+        interfaceName: string,
+        queryInterfaceName: string,
+        modelMetadata: ModelMetadata,
+        relations: Record<string, { model: string, type: string }>,
+    ): string {
+        const hasRelations = Object.keys(relations).length > 0;
+        const relationsType = hasRelations
+            ? `{\n    ${Object.entries(relations)
+                .map(([key]) => `"${this.formatPropertyName(key)}": ${relations[key].model}`)
+                .join(';\n    ')}\n  }`
+            : 'Record<string, never>';
+
+        const locales = modelMetadata.localization ? '\'en\' | \'tr\'' : 'never';
+
+        return `export type ${queryInterfaceName} = QueryConfig<
   ${interfaceName},
   ${locales},
   ${relationsType}
 >;\n\n`;
-  }
+    }
 
-  private determineTypeScriptType(field: FieldMetadata): string {
-    const typeMap: Record<string, string> = {
-      string: 'string',
-      number: 'number',
-      boolean: 'boolean',
-      date: 'string',
-      media: 'string',
-      relation: field.componentId === 'one-to-one' ? 'string' : 'string[]',
-    };
+    private determineTypeScriptType(field: FieldMetadata): string {
+        const typeMap: Record<string, string> = {
+            string: 'string',
+            number: 'number',
+            boolean: 'boolean',
+            date: 'string',
+            media: 'string',
+            relation: field.componentId === 'one-to-one' ? 'string' : 'string[]',
+        };
 
-    return typeMap[field.fieldType] || 'unknown';
-  }
+        return typeMap[field.fieldType] || 'unknown';
+    }
 
-  private formatPropertyName(name: string): string {
-    return name;
-  }
+    private formatPropertyName(name: string): string {
+        return name;
+    }
 
-  private formatInterfaceName(metadata: ModelMetadata): string {
-    const baseName = metadata.name || metadata.modelId;
-    return `I${baseName.replace(/\s+/g, '').replace(/-./g, (x: string) => x[1].toUpperCase())}`;
-  }
+    private formatInterfaceName(metadata: ModelMetadata): string {
+        const baseName = metadata.name || metadata.modelId;
+        return `I${baseName.replace(/\s+/g, '').replace(/-./g, (x: string) => x[1].toUpperCase())}`;
+    }
 
-  private isFieldRequired(field: FieldMetadata): boolean {
-    return field.validations?.['required-field']?.value === true;
-  }
+    private isFieldRequired(field: FieldMetadata): boolean {
+        return field.validations?.['required-field']?.value === true;
+    }
 }

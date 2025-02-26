@@ -1,9 +1,9 @@
 export interface GeneratedTypes {
-  baseTypes: string
-  queryTypes: string
+    baseTypes: string
+    queryTypes: string
 }
 
 export interface Analyzer {
-  analyze: () => Promise<GeneratedTypes>
-  close?: () => void
+    analyze: () => Promise<GeneratedTypes>
+    close?: () => void
 }

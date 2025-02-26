@@ -1,33 +1,51 @@
-import { defineEventHandler, getRouterParam, createError } from 'h3'
-import { useStorage } from 'nitropack/dist/runtime/storage'
-import type { ModelData } from '../../../types/contentrain'
-import { STORAGE_KEYS } from '../../../utils/storage'
+import type { ModelData } from '../../../../types';
+import { useStorage } from '#imports';
+import { createError, defineEventHandler, getRouterParam } from 'h3';
+import { STORAGE_KEYS, StorageManager } from '../../utils/storage';
 
 export default defineEventHandler(async (event) => {
-  try {
-    const modelId = getRouterParam(event, 'id')
+    try {
+        // 1. Storage durumunu kontrol et
+        const isReady = await StorageManager.isReady();
+        if (!isReady) {
+            console.warn('[Contentrain Model] Storage is not ready');
+            throw createError({
+                statusCode: 503,
+                statusMessage: 'Storage is not ready',
+            });
+        }
 
-    if (!modelId) {
-      throw createError({
-        statusCode: 400,
-        message: 'Model ID is required',
-      })
-    }
+        const modelId = getRouterParam(event, 'id');
+        console.debug('[Contentrain Model] Fetching model:', modelId);
 
-    const storage = useStorage('data')
-    const modelData = await storage.getItem(STORAGE_KEYS.MODEL_DATA(modelId)) as ModelData | null
-    if (!modelData) {
-      console.warn('[Model API] Model not found:', modelId)
-      throw createError({
-        statusCode: 404,
-        message: 'Model not found',
-      })
+        if (!modelId) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'Model ID is required',
+            });
+        }
+
+        // 2. Model verisini al
+        const storage = useStorage('data');
+        const modelData = await storage.getItem<ModelData>(STORAGE_KEYS.MODEL_DATA(modelId));
+
+        if (!modelData) {
+            console.warn(`[Contentrain Model] Model not found: ${modelId}`);
+            throw createError({
+                statusCode: 404,
+                statusMessage: `Model not found: ${modelId}`,
+            });
+        }
+
+        console.debug(`[Contentrain Model] Found model: ${modelId}`, {
+            contentLength: modelData.content.length,
+            hasLocalization: modelData.metadata.localization,
+        });
+
+        return modelData;
     }
-    event.node.res.setHeader('Content-Type', 'application/json')
-    return modelData
-  }
-  catch (err) {
-    console.error('[Model API] Error:', err)
-    throw err
-  }
-})
+    catch (error) {
+        console.error('[Contentrain Model] Error:', error);
+        throw error;
+    }
+});

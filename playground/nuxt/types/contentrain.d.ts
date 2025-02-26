@@ -4,171 +4,171 @@
 import type { BaseContentrainType, QueryConfig } from '@contentrain/query';
 
 export interface IFaqItems extends BaseContentrainType {
-  question: string
-  answer: string
-  order: number
+    question: string
+    answer: string
+    order: number
 }
 
 export interface IMetaTags extends BaseContentrainType {
-  name: string
-  content: string
-  description?: string
+    name: string
+    content: string
+    description?: string
 }
 
 export interface IProcessItems extends BaseContentrainType {
-  title: string
-  description: string
-  icon: string
+    title: string
+    description: string
+    icon: string
 }
 
 export interface IReferences extends BaseContentrainType {
-  logo: string
+    logo: string
 }
 
 export interface ISections extends BaseContentrainType {
-  title: string
-  description: string
-  buttontext?: string
-  buttonlink?: string
-  name: string
-  subtitle?: string
+    title: string
+    description: string
+    buttontext?: string
+    buttonlink?: string
+    name: string
+    subtitle?: string
 }
 
 export interface IServicesItems extends BaseContentrainType {
-  title: string
-  description?: string
-  image?: string
-  reference: string
+    title: string
+    description?: string
+    image?: string
+    reference: string
 
-  _relations?: {
-    reference: IReferences
-  }
+    _relations?: {
+        reference: IReferences
+    }
 }
 
 export interface ISocialLinks extends BaseContentrainType {
-  link: string
-  icon: string
-  service: string
+    link: string
+    icon: string
+    service: string
 
-  _relations?: {
-    service: IServicesItems
-  }
+    _relations?: {
+        service: IServicesItems
+    }
 }
 
 export interface ITabItems extends BaseContentrainType {
-  link: string
-  description: string
-  image: string
-  category: string[]
+    link: string
+    description: string
+    image: string
+    category: string[]
 
-  _relations?: {
-    category: IWorkCategories[]
-  }
+    _relations?: {
+        category: IWorkCategories[]
+    }
 }
 
 export interface ItestimonialItems extends BaseContentrainType {
-  'name': string
-  'description': string
-  'title': string
-  'image': string
-  'creative-work': string
+    'name': string
+    'description': string
+    'title': string
+    'image': string
+    'creative-work': string
 
-  '_relations'?: {
-    'creative-work': IWorkItems
-  }
+    '_relations'?: {
+        'creative-work': IWorkItems
+    }
 }
 
 export interface IWorkCategories extends BaseContentrainType {
-  category: string
-  order: number
+    category: string
+    order: number
 }
 
 export interface IWorkItems extends BaseContentrainType {
-  title: string
-  image?: string
-  description: string
-  category: string
-  link: string
-  order: number
+    title: string
+    image?: string
+    description: string
+    category: string
+    link: string
+    order: number
 
-  _relations?: {
-    category: IWorkCategories
-  }
+    _relations?: {
+        category: IWorkCategories
+    }
 }
 
 // Query Config Types
 export type IFaqItemsQuery = QueryConfig<
-  IFaqItems,
+    IFaqItems,
   'en' | 'tr',
   Record<string, never>
 >;
 
 export type IMetaTagsQuery = QueryConfig<
-  IMetaTags,
+    IMetaTags,
   'en' | 'tr',
   Record<string, never>
 >;
 
 export type IProcessItemsQuery = QueryConfig<
-  IProcessItems,
+    IProcessItems,
   'en' | 'tr',
   Record<string, never>
 >;
 
 export type IReferencesQuery = QueryConfig<
-  IReferences,
-  never,
-  Record<string, never>
+    IReferences,
+    never,
+    Record<string, never>
 >;
 
 export type ISectionsQuery = QueryConfig<
-  ISections,
+    ISections,
   'en' | 'tr',
   Record<string, never>
 >;
 
 export type IServicesItemsQuery = QueryConfig<
-  IServicesItems,
+    IServicesItems,
   'en' | 'tr',
   {
-    reference: IReferences
+      reference: IReferences
   }
 >;
 
 export type ISocialLinksQuery = QueryConfig<
-  ISocialLinks,
-  never,
-  {
-    service: IServicesItems
-  }
+    ISocialLinks,
+    never,
+    {
+        service: IServicesItems
+    }
 >;
 
 export type ITabItemsQuery = QueryConfig<
-  ITabItems,
+    ITabItems,
   'en' | 'tr',
   {
-    category: IWorkCategories
+      category: IWorkCategories
   }
 >;
 
 export type ItestimonialItemsQuery = QueryConfig<
-  ItestimonialItems,
+    ItestimonialItems,
   'en' | 'tr',
   {
-    'creative-work': IWorkItems
+      'creative-work': IWorkItems
   }
 >;
 
 export type IWorkCategoriesQuery = QueryConfig<
-  IWorkCategories,
+    IWorkCategories,
   'en' | 'tr',
   Record<string, never>
 >;
 
 export type IWorkItemsQuery = QueryConfig<
-  IWorkItems,
+    IWorkItems,
   'en' | 'tr',
   {
-    category: IWorkCategories
+      category: IWorkCategories
   }
 >;

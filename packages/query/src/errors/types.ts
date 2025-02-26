@@ -42,9 +42,9 @@ export type ErrorSeverity =
   | 'warning';
 
 export interface ErrorMetadata {
-  code: ErrorCode
-  operation: ErrorOperation
-  severity?: ErrorSeverity
-  context?: ErrorContext
-  timestamp?: number
+    code: ErrorCode
+    operation: ErrorOperation
+    severity?: ErrorSeverity
+    context?: ErrorContext
+    timestamp?: number
 }

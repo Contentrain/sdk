@@ -1,81 +1,81 @@
 <script setup lang="ts">
-import type { ContentrainStatus, IDBRecord } from '@contentrain/query';
+import type { IDBRecord } from '@contentrain/query';
 import { onMounted, ref } from 'vue';
 import { useContentrain } from '../../../.nuxt/imports';
 
 interface IWorkItem extends IDBRecord {
-  title: string
-  description: string
-  image: string
-  category_id: string
-  link: string
-  field_order: number
-  status: 'publish' | 'draft'
-  created_at: string
-  updated_at: string
-  _relations: {
-    category: IWorkCategory
-  }
+    title: string
+    description: string
+    image: string
+    category_id: string
+    link: string
+    field_order: number
+    status: 'publish' | 'draft'
+    created_at: string
+    updated_at: string
+    _relations: {
+        category: IWorkCategory
+    }
 }
 
 interface IWorkCategory extends IDBRecord {
-  category: string
-  field_order: number
-  status: 'publish' | 'draft'
-  created_at: string
-  updated_at: string
+    category: string
+    field_order: number
+    status: 'publish' | 'draft'
+    created_at: string
+    updated_at: string
 }
 
 interface ITabItem extends IDBRecord {
-  title: string
-  description: string
-  field_order: number
-  category_id: string
-  status: 'publish' | 'draft'
-  created_at: string
-  updated_at: string
-  _relations: {
-    category: IWorkCategory[]
-  }
+    title: string
+    description: string
+    field_order: number
+    category_id: string
+    status: 'publish' | 'draft'
+    created_at: string
+    updated_at: string
+    _relations: {
+        category: IWorkCategory[]
+    }
 }
 
 interface ITestimonialItem extends IDBRecord {
-  'name': string
-  'description': string
-  'title': string
-  'image': string
-  'creative-work_id': string
-  'status': 'publish' | 'draft'
-  'created_at': string
-  'updated_at': string
-  '_relations': {
-    'creative-work': IWorkItem
-  }
+    'name': string
+    'description': string
+    'title': string
+    'image': string
+    'creative-work_id': string
+    'status': 'publish' | 'draft'
+    'created_at': string
+    'updated_at': string
+    '_relations': {
+        'creative-work': IWorkItem
+    }
 }
 
 interface IFaqItem extends IDBRecord {
-  question: string
-  answer: string
-  field_order: number
-  status: 'publish' | 'draft'
-  created_at: string
-  updated_at: string
+    question: string
+    answer: string
+    field_order: number
+    status: 'publish' | 'draft'
+    created_at: string
+    updated_at: string
 }
 
 interface ISocialLink extends IDBRecord {
-  icon: string
-  link: string
-  service_id: string
-  status: 'publish' | 'draft'
-  created_at: string
-  updated_at: string
+    icon: string
+    link: string
+    service_id: string
+    status: 'publish' | 'draft'
+    created_at: string
+    updated_at: string
 }
 
 interface ISection extends IDBRecord {
-  title: string
-  description: string
-  field_order: number
-  status: 'publish' | 'draft'
+    title: string
+    description: string
+    field_order: number
+    status: 'publish' | 'draft'
 }
 
 // Temel Sorgular
@@ -101,82 +101,82 @@ const modelMetadata = ref<any>(null);
 const assetsCount = ref<number>(0);
 
 onMounted(async () => {
-  const { query } = useContentrain();
+    const { query } = useContentrain();
 
-  // 1. Temel Sorgular
-  // 1.1 Filtreleme ve Sıralama
-  const workItems = await query<IWorkItem>('workitems')
-    .where('status', 'eq', 'publish')
-    .where('field_order', 'lt', 5)
-    .orderBy('field_order', 'asc')
-    .get();
-  basicQueryItems.value = workItems.data;
+    // 1. Temel Sorgular
+    // 1.1 Filtreleme ve Sıralama
+    const workItems = await query<IWorkItem>('workitems')
+        .where('status', 'eq', 'publish')
+        .where('field_order', 'lt', 5)
+        .orderBy('field_order', 'asc')
+        .get();
+    basicQueryItems.value = workItems.data;
 
-  // 1.2 Sayfalama
-  const pagedItems = await query<IWorkItem>('workitems')
-    .limit(3)
-    .offset(1)
-    .get();
-  paginatedItems.value = pagedItems.data;
-  paginationInfo.value = {
-    total: pagedItems.total,
-    limit: pagedItems.pagination?.limit || 0,
-    offset: pagedItems.pagination?.offset || 0,
-  };
+    // 1.2 Sayfalama
+    const pagedItems = await query<IWorkItem>('workitems')
+        .limit(3)
+        .offset(1)
+        .get();
+    paginatedItems.value = pagedItems.data;
+    paginationInfo.value = {
+        total: pagedItems.total,
+        limit: pagedItems.pagination?.limit || 0,
+        offset: pagedItems.pagination?.offset || 0,
+    };
 
-  // 2. İlişki Sorguları
-  // 2.1 Bire-Bir İlişki
-  const testimonials = await query<ITestimonialItem>('testimonial-items')
-    .include({
-      relation: 'creative-work',
-      locale: 'tr',
-    })
-    .get();
-  testimonialItems.value = testimonials.data;
+    // 2. İlişki Sorguları
+    // 2.1 Bire-Bir İlişki
+    const testimonials = await query<ITestimonialItem>('testimonial-items')
+        .include({
+            relation: 'creative-work',
+            locale: 'tr',
+        })
+        .get();
+    testimonialItems.value = testimonials.data;
 
-  // 2.2 Bire-Çok İlişki
-  const tabs = await query<ITabItem>('tabitems')
-    .where('status', 'eq', 'publish')
-    .include({
-      relation: 'category',
-      locale: 'tr',
-    })
-    .orderBy('field_order', 'asc')
-    .get();
-  tabItems.value = tabs.data;
+    // 2.2 Bire-Çok İlişki
+    const tabs = await query<ITabItem>('tabitems')
+        .where('status', 'eq', 'publish')
+        .include({
+            relation: 'category',
+            locale: 'tr',
+        })
+        .orderBy('field_order', 'asc')
+        .get();
+    tabItems.value = tabs.data;
 
-  // 3. Gelişmiş Sorgular
-  // 3.1 Çoklu Filtreler
-  const services = await query<IWorkItem>('workitems')
-    .where('status', 'eq', 'publish')
-    .where('field_order', 'gt', 2)
-    .where('field_order', 'lt', 6)
-    .where('description', 'contains', 'platform')
-    .orderBy('field_order', 'asc')
-    .get();
-  filteredServices.value = services.data;
+    // 3. Gelişmiş Sorgular
+    // 3.1 Çoklu Filtreler
+    const services = await query<IWorkItem>('workitems')
+        .where('status', 'eq', 'publish')
+        .where('field_order', 'gt', 2)
+        .where('field_order', 'lt', 6)
+        .where('description', 'contains', 'platform')
+        .orderBy('field_order', 'asc')
+        .get();
+    filteredServices.value = services.data;
 
-  // 4. Çoklu Dil Desteği
-  // 4.1 Farklı Dillerde İçerik
-  trContent.value = await query<ISection>('sections')
-    .locale('tr')
-    .first();
-  enContent.value = await query<ISection>('sections')
-    .locale('en')
-    .first();
+    // 4. Çoklu Dil Desteği
+    // 4.1 Farklı Dillerde İçerik
+    trContent.value = await query<ISection>('sections')
+        .locale('tr')
+        .first();
+    enContent.value = await query<ISection>('sections')
+        .locale('en')
+        .first();
 
-  // 4.2 Lokalize Olmayan Model
-  const links = await query<ISocialLink>('sociallinks')
-    .where('status', 'eq', 'publish')
-    .orderBy('icon', 'asc')
-    .get();
-  socialLinks.value = links.data;
+    // 4.2 Lokalize Olmayan Model
+    const links = await query<ISocialLink>('sociallinks')
+        .where('status', 'eq', 'publish')
+        .orderBy('icon', 'asc')
+        .get();
+    socialLinks.value = links.data;
 
-  // 5. Önbellek Yönetimi
-  const bypassCache = await query<IFaqItem>('faqitems')
-    .noCache()
-    .get();
-  bypassCacheItems.value = bypassCache.data;
+    // 5. Önbellek Yönetimi
+    const bypassCache = await query<IFaqItem>('faqitems')
+        .noCache()
+        .get();
+    bypassCacheItems.value = bypassCache.data;
 });
 </script>
 

@@ -2,278 +2,278 @@
 import type { Content, LocalizedContent, QueryResult } from '../src/module';
 
 interface WorkItem extends LocalizedContent {
-  title: string
-  description: string
-  image: string
-  order: number
-  _lang: 'tr' | 'en'
-  category: string
-  _relations?: {
-    category?: WorkCategory
-  }
+    title: string
+    description: string
+    image: string
+    order: number
+    _lang: 'tr' | 'en'
+    category: string
+    _relations?: {
+        category?: WorkCategory
+    }
 }
 
 interface WorkCategory extends LocalizedContent {
-  category: string
-  order: number
+    category: string
+    order: number
 }
 
 interface TestimonialItem extends LocalizedContent {
-  name: string
-  title: string
-  description: string
-  image: string
-  creative_work: string
-  _relations?: {
-    'creative-work'?: WorkItem
-  }
+    name: string
+    title: string
+    description: string
+    image: string
+    creative_work: string
+    _relations?: {
+        'creative-work'?: WorkItem
+    }
 }
 
 interface TabItem extends LocalizedContent {
-  title: string
-  description: string
-  image: string
-  link: string
-  category: string[]
-  _relations?: {
-    category?: WorkCategory[]
-  }
+    title: string
+    description: string
+    image: string
+    link: string
+    category: string[]
+    _relations?: {
+        category?: WorkCategory[]
+    }
 }
 
 interface Service extends LocalizedContent {
-  title: string
-  description: string
-  image: string
-  reference: string
-  _relations?: {
-    reference?: Reference
-  }
+    title: string
+    description: string
+    image: string
+    reference: string
+    _relations?: {
+        reference?: Reference
+    }
 }
 
 interface SocialLink extends Content {
-  link: string
-  icon: string
-  service: string
-  _relations?: {
-    service?: Service
-  }
+    link: string
+    icon: string
+    service: string
+    _relations?: {
+        service?: Service
+    }
 }
 
 interface ProjectStat extends LocalizedContent {
-  view_count: number
-  work: string
-  reference: string
-  _relations?: {
-    work?: WorkItem
-    reference?: Reference
-  }
+    view_count: number
+    work: string
+    reference: string
+    _relations?: {
+        work?: WorkItem
+        reference?: Reference
+    }
 }
 
 interface Reference extends LocalizedContent {
-  logo: string
+    logo: string
 }
 
 interface FaqItem extends LocalizedContent {
-  question: string
-  answer: string
-  order: number
+    question: string
+    answer: string
+    order: number
 }
 
 // === 1. Temel Sorgular ===
 // 1.1 Filtreleme ve Sıralama
 const { data: workItems } = await useAsyncData<QueryResult<WorkItem>>('workitems', () => {
-  const query = useContentrainQuery<WorkItem>('workitems');
-  return query
-    .where('status', 'eq', 'publish')
-    .orderBy('title', 'desc')
-    .get();
+    const query = useContentrainQuery<WorkItem>('workitems');
+    return query
+        .where('status', 'eq', 'publish')
+        .orderBy('title', 'desc')
+        .get();
 });
 
 // 1.2 Sayfalama
 const { data: pagedWorkItems } = await useAsyncData<QueryResult<WorkItem>>('paged-work-items', () => {
-  const query = useContentrainQuery<WorkItem>('workitems');
-  return query
-    .locale('tr')
-    .limit(3)
-    .offset(1)
-    .get();
+    const query = useContentrainQuery<WorkItem>('workitems');
+    return query
+        .locale('tr')
+        .limit(3)
+        .offset(1)
+        .get();
 });
 
 // === 2. İlişki Sorguları ===
 // 2.1 Bire-Bir İlişkiler (Testimonial -> Work)
 const { data: testimonials } = await useAsyncData<QueryResult<TestimonialItem>>('testimonials', () => {
-  const query = useContentrainQuery<TestimonialItem>('testimonial-items');
-  return query
-    .include('creative-work')
-    .locale('tr')
-    .get();
+    const query = useContentrainQuery<TestimonialItem>('testimonial-items');
+    return query
+        .include('creative-work')
+        .locale('tr')
+        .get();
 });
 
 // 2.2 Bire-Çok İlişkiler (TabItems -> WorkCategories)
 const { data: tabItems } = await useAsyncData<QueryResult<TabItem>>('tab-items', () => {
-  const query = useContentrainQuery<TabItem>('tabitems');
-  return query
-    .locale('tr')
-    .where('status', 'eq', 'publish')
-    .include('category')
-    .get();
+    const query = useContentrainQuery<TabItem>('tabitems');
+    return query
+        .locale('tr')
+        .where('status', 'eq', 'publish')
+        .include('category')
+        .get();
 });
 
 // 2.3 Çoklu İlişkiler
 const { data: projectStats } = await useAsyncData<QueryResult<ProjectStat>>('project-stats', () => {
-  const query = useContentrainQuery<ProjectStat>('project-stats');
-  return query
-    .include('work')
-    .include('reference')
-    .where('status', 'eq', 'publish')
-    .get();
+    const query = useContentrainQuery<ProjectStat>('project-stats');
+    return query
+        .include('work')
+        .include('reference')
+        .where('status', 'eq', 'publish')
+        .get();
 });
 
 // 2.4 Servis ve Referans İlişkisi
 const { data: services } = await useAsyncData<QueryResult<Service>>('services', () => {
-  const query = useContentrainQuery<Service>('services');
-  return query
-    .locale('tr')
-    .include('reference')
-    .where('status', 'eq', 'publish')
-    .orderBy('title', 'asc')
-    .get();
+    const query = useContentrainQuery<Service>('services');
+    return query
+        .locale('tr')
+        .include('reference')
+        .where('status', 'eq', 'publish')
+        .orderBy('title', 'asc')
+        .get();
 });
 
 // 2.5 Sosyal Medya ve Servis İlişkisi
 const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('social-links', () => {
-  const query = useContentrainQuery<SocialLink>('sociallinks');
-  return query
-    .include('service')
-    .where('status', 'eq', 'publish')
-    .orderBy('icon', 'asc')
-    .get();
+    const query = useContentrainQuery<SocialLink>('sociallinks');
+    return query
+        .include('service')
+        .where('status', 'eq', 'publish')
+        .orderBy('icon', 'asc')
+        .get();
 });
 
 // === 3. Gelişmiş Sorgular ===
 // 3.1 Çoklu Filtreler
 const { data: advancedFilteredItems } = await useAsyncData<QueryResult<WorkItem>>('advanced-filtered-items', () => {
-  const query = useContentrainQuery<WorkItem>('workitems');
-  return query
-    .locale('tr')
-    .where('status', 'eq', 'publish')
-    .where('order', 'gt', 2)
-    .where('order', 'lt', 6)
-    .where('description', 'contains', 'platform')
-    .orderBy('order', 'asc')
-    .get();
+    const query = useContentrainQuery<WorkItem>('workitems');
+    return query
+        .locale('tr')
+        .where('status', 'eq', 'publish')
+        .where('order', 'gt', 2)
+        .where('order', 'lt', 6)
+        .where('description', 'contains', 'platform')
+        .orderBy('order', 'asc')
+        .get();
 });
 
 // 3.2 Dizi Operatörleri
 const { data: arrayFilteredItems } = await useAsyncData<QueryResult<WorkItem>>('array-filtered-items', async () => {
-  // Her sorgu için yeni bir query builder oluştur
-  const allItemsQuery = useContentrainQuery<WorkItem>('workitems');
-  const filteredQuery = useContentrainQuery<WorkItem>('workitems');
+    // Her sorgu için yeni bir query builder oluştur
+    const allItemsQuery = useContentrainQuery<WorkItem>('workitems');
+    const filteredQuery = useContentrainQuery<WorkItem>('workitems');
 
-  // Önce tüm workitems'ları alalım
-  const allItems = await allItemsQuery.get();
-  console.log('Tüm Work Items:', allItems);
+    // Önce tüm workitems'ları alalım
+    const allItems = await allItemsQuery.get();
+    console.log('Tüm Work Items:', allItems);
 
-  // Sonra filtrelenmiş sorguyu çalıştıralım
-  const result = await filteredQuery
-    .locale('tr')
-    .where('status', 'ne', 'draft')
-    .get();
+    // Sonra filtrelenmiş sorguyu çalıştıralım
+    const result = await filteredQuery
+        .locale('tr')
+        .where('status', 'ne', 'draft')
+        .get();
 
-  console.log('Dizi Operatörleri Sorgu Sonucu:', result);
+    console.log('Dizi Operatörleri Sorgu Sonucu:', result);
 
-  return result;
+    return result;
 });
 
 // 3.3 Array Operatörü Örneği
 const { data: specificSocialLinks } = await useAsyncData<QueryResult<SocialLink>>('specific-social-links', () => {
-  const query = useContentrainQuery<SocialLink>('sociallinks');
-  return query
-    .where('icon', 'in', ['ri-twitter-line', 'ri-instagram-line', 'ri-linkedin-line'] as unknown as string)
-    .where('status', 'eq', 'publish')
-    .orderBy('icon', 'asc')
-    .get();
+    const query = useContentrainQuery<SocialLink>('sociallinks');
+    return query
+        .where('icon', 'in', ['ri-twitter-line', 'ri-instagram-line', 'ri-linkedin-line'] as unknown as string)
+        .where('status', 'eq', 'publish')
+        .orderBy('icon', 'asc')
+        .get();
 });
 
 // === 4. Çoklu Dil Desteği ===
 // 4.1 Farklı Dillerde İçerik
 const { data: trContent } = await useAsyncData<WorkItem | null>('tr-content', async () => {
-  // TR sorguları için yeni query builder'lar
-  const allTrQuery = useContentrainQuery<WorkItem>('workitems');
-  const trFirstQuery = useContentrainQuery<WorkItem>('workitems');
+    // TR sorguları için yeni query builder'lar
+    const allTrQuery = useContentrainQuery<WorkItem>('workitems');
+    const trFirstQuery = useContentrainQuery<WorkItem>('workitems');
 
-  // Önce tüm TR içeriği alalım
-  const allTrItems = await allTrQuery.locale('tr').get();
-  console.log('Tüm TR İçerik:', allTrItems);
+    // Önce tüm TR içeriği alalım
+    const allTrItems = await allTrQuery.locale('tr').get();
+    console.log('Tüm TR İçerik:', allTrItems);
 
-  const result = await trFirstQuery
-    .locale('tr')
-    .first();
+    const result = await trFirstQuery
+        .locale('tr')
+        .first();
 
-  console.log('TR İçerik Sorgu Sonucu:', result);
+    console.log('TR İçerik Sorgu Sonucu:', result);
 
-  return result;
+    return result;
 });
 
 const { data: enContent } = await useAsyncData<WorkItem | null>('en-content', async () => {
-  // EN sorguları için yeni query builder'lar
-  const allEnQuery = useContentrainQuery<WorkItem>('workitems');
-  const enFirstQuery = useContentrainQuery<WorkItem>('workitems');
+    // EN sorguları için yeni query builder'lar
+    const allEnQuery = useContentrainQuery<WorkItem>('workitems');
+    const enFirstQuery = useContentrainQuery<WorkItem>('workitems');
 
-  // Önce tüm EN içeriği alalım
-  const allEnItems = await allEnQuery.locale('en').get();
-  console.log('Tüm EN İçerik:', allEnItems);
+    // Önce tüm EN içeriği alalım
+    const allEnItems = await allEnQuery.locale('en').get();
+    console.log('Tüm EN İçerik:', allEnItems);
 
-  const result = await enFirstQuery
-    .locale('en')
-    .first();
+    const result = await enFirstQuery
+        .locale('en')
+        .first();
 
-  console.log('EN İçerik Sorgu Sonucu:', result);
+    console.log('EN İçerik Sorgu Sonucu:', result);
 
-  return result;
+    return result;
 });
 
 // 4.2 Lokalize Olmayan Model
 const { data: socialLinks2 } = await useAsyncData<QueryResult<SocialLink>>('social-links-2', () => {
-  const query = useContentrainQuery<SocialLink>('sociallinks');
-  return query
-    .where('icon', 'eq', 'ri-instagram-line')
-    .orderBy('icon', 'asc')
-    .get();
+    const query = useContentrainQuery<SocialLink>('sociallinks');
+    return query
+        .where('icon', 'eq', 'ri-instagram-line')
+        .orderBy('icon', 'asc')
+        .get();
 });
 
 const { data: faqItems } = await useAsyncData<QueryResult<FaqItem>>('faq-items', () => {
-  const query = useContentrainQuery<FaqItem>('faqitems');
-  return query
-    .where('status', 'eq', 'publish')
-    .orderBy('order', 'asc')
-    .get();
+    const query = useContentrainQuery<FaqItem>('faqitems');
+    return query
+        .where('status', 'eq', 'publish')
+        .orderBy('order', 'asc')
+        .get();
 });
 
 // Debug için
 console.log('Tüm Sorgular ve Sonuçları:', {
-  'Temel Sorgular': {
-    'Filtreleme ve Sıralama': workItems.value,
-    'Sayfalama': pagedWorkItems.value,
-  },
-  'İlişki Sorguları': {
-    'Bire-Bir İlişki (Testimonials)': testimonials.value,
-    'Bire-Çok İlişki (Tab Items)': tabItems.value,
-  },
-  'Gelişmiş Sorgular': {
-    'Çoklu Filtreler': advancedFilteredItems.value,
-    'Dizi Operatörleri': arrayFilteredItems.value,
-    'Array Operatörü Örneği': specificSocialLinks.value,
-  },
-  'Çoklu Dil Desteği': {
-    'TR İçerik': trContent.value,
-    'EN İçerik': enContent.value,
-    'Lokalize Olmayan Model': {
-      'Social Links': socialLinks.value,
-      'Social Links 2': socialLinks2.value,
+    'Temel Sorgular': {
+        'Filtreleme ve Sıralama': workItems.value,
+        'Sayfalama': pagedWorkItems.value,
     },
-  },
-  'FAQ Items': faqItems.value,
+    'İlişki Sorguları': {
+        'Bire-Bir İlişki (Testimonials)': testimonials.value,
+        'Bire-Çok İlişki (Tab Items)': tabItems.value,
+    },
+    'Gelişmiş Sorgular': {
+        'Çoklu Filtreler': advancedFilteredItems.value,
+        'Dizi Operatörleri': arrayFilteredItems.value,
+        'Array Operatörü Örneği': specificSocialLinks.value,
+    },
+    'Çoklu Dil Desteği': {
+        'TR İçerik': trContent.value,
+        'EN İçerik': enContent.value,
+        'Lokalize Olmayan Model': {
+            'Social Links': socialLinks.value,
+            'Social Links 2': socialLinks2.value,
+        },
+    },
+    'FAQ Items': faqItems.value,
 });
 </script>
 

@@ -1,159 +1,129 @@
-import { join } from 'node:path'
-import { promises as fs } from 'node:fs'
-import { defineNitroPlugin } from 'nitropack/dist/runtime/plugin'
-import { useStorage } from 'nitropack/dist/runtime/storage'
-import { useRuntimeConfig } from 'nitropack/runtime/internal/config'
 import type {
-  ModelMetadata,
-  FieldMetadata,
-  Content,
-  LocalizedContent,
-  ModelData,
-} from '../../types/contentrain'
-import { STORAGE_KEYS } from '../../utils/storage'
+    Content,
+    LocalizedContent,
+    ModelData,
+    ModelMetadata,
+} from '../../../types';
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import { useRuntimeConfig, useStorage } from '#imports';
+import { defineNitroPlugin } from 'nitropack/dist/runtime/plugin';
+import { STORAGE_KEYS, StorageManager } from '../utils/storage';
 
-export default defineNitroPlugin(async (nitro) => {
-  const storage = useStorage('data')
-  const config = useRuntimeConfig()
-  const contentrainPath = config.public.contentrain.path
+export default defineNitroPlugin(async (nitroApp) => {
+    const storage = useStorage('data');
+    const config = useRuntimeConfig();
 
-  console.log('Loading Contentrain from:', contentrainPath)
-
-  // Find language files in a directory
-  const findLanguages = async (dirPath: string): Promise<string[]> => {
-    try {
-      const files = await fs.readdir(dirPath)
-      return files
-        .filter(file => file.endsWith('.json'))
-        .map(file => file.replace('.json', ''))
-        .filter(lang => /^[a-z]{2}(?:-[A-Z]{2})?$/.test(lang))
-    }
-    catch (error) {
-      console.warn('Error finding languages in:', dirPath, error)
-      return []
-    }
-  }
-
-  // Load model metadata and fields
-  const loadModelMetadata = async () => {
-    try {
-      // Check if models directory exists
-      const modelsDir = join(contentrainPath, 'models')
-      try {
-        await fs.access(modelsDir)
-        console.log('Models directory found:', modelsDir)
-      }
-      catch (error) {
-        console.error('Models directory not found:', modelsDir, error)
-        return
-      }
-
-      // Read metadata.json file
-      const metadataPath = join(modelsDir, 'metadata.json')
-      try {
-        await fs.access(metadataPath)
-        console.log('Metadata file found:', metadataPath)
-      }
-      catch (error) {
-        console.error('metadata.json file not found:', metadataPath, error)
-        return
-      }
-
-      const metadataContent = await fs.readFile(metadataPath, 'utf-8')
-      const metadata: ModelMetadata[] = JSON.parse(metadataContent)
-      console.log('Loaded metadata for models:', metadata.map(m => m.modelId).join(', '))
-
-      // Load all models in parallel and save to storage
-      const modelDataList = await Promise.all(metadata.map(async (model) => {
-        // Load field definitions
-        const fieldsPath = join(modelsDir, `${model.modelId}.json`)
-        let fields: FieldMetadata[] = []
-
+    // Model verilerini yükle
+    async function loadModelData() {
         try {
-          const fieldsContent = await fs.readFile(fieldsPath, 'utf-8')
-          fields = JSON.parse(fieldsContent)
-          console.log(`Loaded fields for model ${model.modelId}:`, fields.length)
+            // Cache kontrolü
+            if (await StorageManager.isCacheValid()) {
+                console.debug('[Contentrain] Using cached data');
+                return;
+            }
+
+            // Storage'ı hazırla
+            await StorageManager.prepare();
+
+            const modelsDir = join(config.public.contentrain.path, 'models');
+
+            // Models dizini kontrolü
+            try {
+                await fs.access(modelsDir);
+            }
+            catch (error) {
+                console.error('[Contentrain] Models directory not found:', modelsDir);
+                throw error;
+            }
+
+            // metadata.json kontrolü
+            const metadataPath = join(modelsDir, 'metadata.json');
+            let metadata;
+            try {
+                const metadataContent = await fs.readFile(metadataPath, 'utf-8');
+                metadata = JSON.parse(metadataContent);
+            }
+            catch (error) {
+                console.error('[Contentrain] metadata.json not found or invalid');
+                throw error;
+            }
+
+            // Modelleri paralel olarak yükle
+            const modelPromises = metadata.map(async (model: ModelMetadata) => {
+                try {
+                    // Model field tanımlarını yükle
+                    const fieldsPath = join(modelsDir, `${model.modelId}.json`);
+                    const fieldsContent = await fs.readFile(fieldsPath, 'utf-8');
+                    const fields = JSON.parse(fieldsContent);
+
+                    // Model içeriğini yükle
+                    const modelPath = join(config.public.contentrain.path, model.modelId);
+                    let content: (Content | LocalizedContent)[] = [];
+
+                    if (model.localization) {
+                        // Dil dosyalarını bul ve yükle
+                        const files = await fs.readdir(modelPath);
+                        const langFiles = files.filter(f => f.endsWith('.json'));
+
+                        const langContents = await Promise.all(
+                            langFiles.map(async (file) => {
+                                const lang = file.replace('.json', '');
+                                const content = await fs.readFile(join(modelPath, file), 'utf-8');
+                                return JSON.parse(content).map((item: Content) => ({
+                                    ...item,
+                                    _lang: lang,
+                                }));
+                            }),
+                        );
+
+                        content = langContents.flat();
+                    }
+                    else {
+                        // Tek dosyayı yükle
+                        const contentPath = join(modelPath, `${model.modelId}.json`);
+                        const contentData = await fs.readFile(contentPath, 'utf-8');
+                        content = JSON.parse(contentData);
+                    }
+
+                    // Model verisini oluştur
+                    const modelData: ModelData = {
+                        metadata: model,
+                        fields,
+                        content,
+                    };
+
+                    // Storage'a kaydet
+                    await storage.setItem(STORAGE_KEYS.MODEL_DATA(model.modelId), modelData);
+                    return modelData;
+                }
+                catch (error) {
+                    console.error(`[Contentrain] Error loading model ${model.modelId}:`, error);
+                    return null;
+                }
+            });
+
+            // Tüm modelleri bekle ve geçerli olanları kaydet
+            const models = (await Promise.all(modelPromises)).filter(Boolean);
+            await storage.setItem(STORAGE_KEYS.MODEL_LIST, models);
+
+            // Storage'ı tamamla
+            await StorageManager.complete();
+
+            console.info('[Contentrain] Storage initialized successfully');
         }
         catch (error) {
-          console.error(`Field definitions not found for model ${model.modelId}:`, fieldsPath, error)
-          return null
+            console.error('[Contentrain] Storage initialization failed:', error);
+            await StorageManager.setError();
+            throw error;
         }
-
-        // Load content
-        let content: (Content | LocalizedContent)[] = []
-        const modelPath = join(contentrainPath, model.modelId)
-
-        if (model.localization) {
-          // Find and load language files
-          const languages = await findLanguages(modelPath)
-          if (languages.length === 0) {
-            console.warn(`No language files found for model ${model.modelId}:`, modelPath)
-            return null
-          }
-
-          console.log(`Found languages for model ${model.modelId}:`, languages.join(', '))
-
-          // Load language files in parallel
-          const langContents = await Promise.all(
-            languages.map(async (lang) => {
-              const langPath = join(modelPath, `${lang}.json`)
-              try {
-                const contentData = await fs.readFile(langPath, 'utf-8')
-                const langContent = JSON.parse(contentData) as Content[]
-                console.log(`Loaded ${langContent.length} items for ${model.modelId} in ${lang}`)
-                return langContent.map(item => ({ ...item, _lang: lang })) as LocalizedContent[]
-              }
-              catch (error) {
-                console.error(`Error loading ${lang} content for ${model.modelId}:`, error)
-                return []
-              }
-            }),
-          )
-          content = langContents.flat()
-        }
-        else {
-          // Load single content file
-          const contentFilePath = join(modelPath, `${model.modelId}.json`)
-          try {
-            const contentData = await fs.readFile(contentFilePath, 'utf-8')
-            content = JSON.parse(contentData)
-            console.log(`Loaded ${content.length} items for ${model.modelId}`)
-          }
-          catch (error) {
-            console.error(`Error loading content for ${model.modelId}:`, error)
-            content = []
-          }
-        }
-
-        // Create and save model data
-        const modelData: ModelData = {
-          metadata: model,
-          fields,
-          content,
-        }
-
-        // Save individual model data
-        await storage.setItem(STORAGE_KEYS.MODEL_DATA(model.modelId), modelData)
-        console.log(`Saved model data for ${model.modelId}`)
-
-        return modelData
-      }))
-
-      // Filter out null values and save model list
-      const validModelList = modelDataList.filter((model): model is ModelData => model !== null)
-      await storage.setItem(STORAGE_KEYS.MODEL_LIST, validModelList)
-      console.log('Saved model list with', validModelList.length, 'models')
-
-      // Emit hook after loading
-      await nitro.hooks.callHook('contentrain:loaded', { models: metadata })
-      console.log('Contentrain loading completed')
     }
-    catch (error) {
-      console.error('Error loading Contentrain:', error)
-      throw error
-    }
-  }
 
-  // Initial load
-  await loadModelMetadata()
-})
+    // Nitro hooks
+    nitroApp.hooks.hook('request', async () => {
+        const isReady = await StorageManager.isReady();
+        if (!isReady) {
+            await loadModelData();
+        }
+    });
+});
