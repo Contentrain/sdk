@@ -11,11 +11,12 @@
 ## Features
 
 - 🚀 **High Performance**: Optimized query engine and caching system
-- 🔒 **Type Safety**: Full TypeScript integration and type support
+- 🔒 **Type Safety**: Full TypeScript integration and automatic type generation
 - 🔄 **Relational Data**: Easily manage relationships between models
 - 🌐 **Multilingual Support**: Complete support for localized content
 - 📊 **Advanced Querying**: Filtering, sorting, and pagination capabilities
 - 🧩 **Seamless Integration**: Effortless integration with Nuxt.js
+- 🔄 **Automatic Type Generation**: TypeScript interfaces generated from your content models
 
 ## Installation
 
@@ -56,7 +57,8 @@ Query content in your pages or components:
 
 ```vue
 <script setup>
-import type { WorkItem } from '~/types'
+// Automatically generated types from your content models
+import type { WorkItem } from '#build/types/contentrain'
 
 // Basic query
 const workQuery = useContentrainQuery<WorkItem>('work-items')
@@ -229,7 +231,27 @@ const hasMore = query.hasMore
 
 ## Type Safety
 
-For full TypeScript integration, define your content types:
+### Automatic Type Generation
+
+The module automatically generates TypeScript types from your content models during the build process. These types are available in your project via the `#build/types/contentrain` import path:
+
+```ts
+// Import automatically generated types
+import type { Post, Author, Category } from '#build/types/contentrain'
+
+// Use the types in your queries
+const query = useContentrainQuery<Post>('posts')
+```
+
+The generated types include:
+- All model properties with correct types
+- Relation properties with proper typing
+- Multilingual support with language-specific types
+- Full IntelliSense support in your IDE
+
+### Manual Type Definitions
+
+You can also define your content types manually if needed:
 
 ```ts
 // types/content.ts
@@ -266,12 +288,12 @@ The main composable for querying content.
 - `modelId`: Model ID
 
 **Methods:**
-- `where(field, operator, value)`: Adds a filter
-- `orderBy(field, direction)`: Adds a sort
+- `where(field, operator, value)`: Adds a filter with type-safe field and value checking
+- `orderBy(field, direction)`: Adds a sort with type-safe field checking
 - `limit(limit)`: Limits the number of results
 - `offset(offset)`: Sets the starting index
-- `include(relation)`: Includes a relation
-- `locale(locale)`: Sets the language
+- `include(relation)`: Includes a relation with type-safe relation checking
+- `locale(locale)`: Sets the language with type-safe locale checking (only accepts valid locales defined in your model)
 - `get()`: Executes the query and returns the results
 - `first()`: Returns the first result
 - `count()`: Returns the total count
@@ -592,6 +614,36 @@ The specified model was not found.
 Query parameters are invalid.
 
 **Solution:** Ensure that your query parameters are in the correct format.
+
+### TypeScript Errors
+
+#### `Argument of type 'string' is not assignable to parameter of type 'never'`
+
+This error occurs when using the `locale()` method with a locale that is not defined in your model.
+
+**Solution:** Make sure you're using a locale that is defined in your model's `_lang` property. For example, if your model only supports 'en' and 'tr', you can only use these values with the `locale()` method.
+
+```ts
+// Correct usage
+query.locale('en') // Works if 'en' is defined in your model
+query.locale('tr') // Works if 'tr' is defined in your model
+
+// Incorrect usage
+query.locale('fr') // TypeScript error if 'fr' is not defined in your model
+```
+
+#### `Property '_relations' does not exist on type...`
+
+This error occurs when trying to access relations on a model that doesn't have any defined relations.
+
+**Solution:** Make sure your model has relations defined in its schema, or check if the relation is properly included in your query using the `include()` method.
+
+```ts
+// Make sure to include the relation before accessing it
+const query = useContentrainQuery<Post>('posts')
+  .include('author')
+  .get()
+```
 
 ## Contributing
 

@@ -12,10 +12,7 @@
     "clean": "rm -rf .output && rm -rf node_modules && rm -rf .nuxt "
   },
   "dependencies": {
-    "@contentrain/nuxt": "workspace:*",
     "@contentrain/nuxt-json": "workspace:*",
-    "@contentrain/query": "workspace:*",
-    "@contentrain/types-generator": "workspace:*",
     "@nuxtjs/tailwindcss": "^6.13.1",
     "nuxt": "^3.15.4",
     "unstorage": "^1.15.0",

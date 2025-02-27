@@ -281,18 +281,9 @@ importers:
 
   playground/nuxt:
     dependencies:
-      '@contentrain/nuxt':
-        specifier: workspace:*
-        version: link:../../packages/nuxt
       '@contentrain/nuxt-json':
         specifier: workspace:*
         version: link:../../packages/nuxt-json
-      '@contentrain/query':
-        specifier: workspace:*
-        version: link:../../packages/query
-      '@contentrain/types-generator':
-        specifier: workspace:*
-        version: link:../../packages/types-generator
       '@nuxtjs/tailwindcss':
         specifier: ^6.13.1
         version: 6.13.1
