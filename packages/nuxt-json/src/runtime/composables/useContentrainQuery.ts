@@ -14,17 +14,8 @@ import { ref } from 'vue';
 // İlişki tiplerini çıkarmak için yardımcı tip
 type ExtractRelations<T> = T extends { _relations?: infer R } ? keyof R : never;
 
-// Locale tipini LocalizedContent'ten çıkaralım
-type ExtractLocale<T> = T extends LocalizedContent
-    ? T['_lang'] extends Array<infer L>
-        ? L
-        : T['_lang'] extends string
-            ? T['_lang']
-            : never
-    : never;
-
 export class ContentrainQuery<M extends Content | LocalizedContent> {
-    private _locale?: ExtractLocale<M>;
+    private _locale?: string;
     private _filters: QueryFilter<M>[] = [];
     private _sort: QuerySort<M>[] = [];
     private _limit?: number;
@@ -46,13 +37,13 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     }
 
     // Locale için dinamik tip güvenliği
-    locale(locale: M extends LocalizedContent ? ExtractLocale<M> : never): this {
+    locale<L extends string>(locale: M extends { _lang: infer Lang } ? Lang extends L ? L : never : never): this {
         console.debug('[Contentrain Query] Setting locale:', locale);
         if (!locale) {
             console.warn('[Contentrain Query] Invalid locale provided:', locale);
             return this;
         }
-        this._locale = locale as ExtractLocale<M>;
+        this._locale = locale;
         return this;
     }
 

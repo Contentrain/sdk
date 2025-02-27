@@ -1,88 +1,10 @@
 <script setup lang="ts">
-import type { Content, LocalizedContent, QueryResult } from '../src/module';
-
-interface WorkItem extends LocalizedContent {
-    title: string
-    description: string
-    image: string
-    order: number
-    _lang: 'tr' | 'en'
-    category: string
-    _relations?: {
-        category?: WorkCategory
-    }
-}
-
-interface WorkCategory extends LocalizedContent {
-    category: string
-    order: number
-}
-
-interface TestimonialItem extends LocalizedContent {
-    name: string
-    title: string
-    description: string
-    image: string
-    creative_work: string
-    _relations?: {
-        'creative-work'?: WorkItem
-    }
-}
-
-interface TabItem extends LocalizedContent {
-    title: string
-    description: string
-    image: string
-    link: string
-    category: string[]
-    _relations?: {
-        category?: WorkCategory[]
-    }
-}
-
-interface Service extends LocalizedContent {
-    title: string
-    description: string
-    image: string
-    reference: string
-    _relations?: {
-        reference?: Reference
-    }
-}
-
-interface SocialLink extends Content {
-    link: string
-    icon: string
-    service: string
-    _relations?: {
-        service?: Service
-    }
-}
-
-interface ProjectStat extends LocalizedContent {
-    view_count: number
-    work: string
-    reference: string
-    _relations?: {
-        work?: WorkItem
-        reference?: Reference
-    }
-}
-
-interface Reference extends LocalizedContent {
-    logo: string
-}
-
-interface FaqItem extends LocalizedContent {
-    question: string
-    answer: string
-    order: number
-}
+import type { FaqItems, ProjectStats, ServicesItems, SocialLinks, TabItems, TestimonialItems, WorkItems } from '#build/types/contentrain';
 
 // === 1. Temel Sorgular ===
 // 1.1 Filtreleme ve Sıralama
 const { data: workItems } = await useAsyncData('workitems', () => {
-    const query = useContentrainQuery<WorkItem>('workitems');
+    const query = useContentrainQuery<WorkItems>('workitems');
     return query
         .where('status', 'eq', 'publish')
         .orderBy('title', 'desc')
@@ -91,7 +13,7 @@ const { data: workItems } = await useAsyncData('workitems', () => {
 
 // 1.2 Sayfalama
 const { data: pagedWorkItems } = await useAsyncData('paged-work-items', () => {
-    const query = useContentrainQuery<WorkItem>('workitems');
+    const query = useContentrainQuery<WorkItems>('workitems');
     return query
         .locale('tr')
         .limit(3)
@@ -101,8 +23,8 @@ const { data: pagedWorkItems } = await useAsyncData('paged-work-items', () => {
 
 // === 2. İlişki Sorguları ===
 // 2.1 Bire-Bir İlişkiler (Testimonial -> Work)
-const { data: testimonials } = await useAsyncData<QueryResult<TestimonialItem>>('testimonials', () => {
-    const query = useContentrainQuery<TestimonialItem>('testimonial-items');
+const { data: testimonials } = await useAsyncData('testimonials', () => {
+    const query = useContentrainQuery<TestimonialItems>('testimonial-items');
     return query
         .include('creative-work')
         .locale('tr')
@@ -110,8 +32,8 @@ const { data: testimonials } = await useAsyncData<QueryResult<TestimonialItem>>(
 });
 
 // 2.2 Bire-Çok İlişkiler (TabItems -> WorkCategories)
-const { data: tabItems } = await useAsyncData<QueryResult<TabItem>>('tab-items', () => {
-    const query = useContentrainQuery<TabItem>('tabitems');
+const { data: tabItems } = await useAsyncData('tab-items', () => {
+    const query = useContentrainQuery<TabItems>('tabitems');
     return query
         .locale('tr')
         .where('status', 'eq', 'publish')
@@ -120,8 +42,8 @@ const { data: tabItems } = await useAsyncData<QueryResult<TabItem>>('tab-items',
 });
 
 // 2.3 Çoklu İlişkiler
-const { data: projectStats } = await useAsyncData<QueryResult<ProjectStat>>('project-stats', () => {
-    const query = useContentrainQuery<ProjectStat>('project-stats');
+const { data: projectStats } = await useAsyncData('project-stats', () => {
+    const query = useContentrainQuery<ProjectStats>('project-stats');
     return query
         .include('work')
         .include('reference')
@@ -130,19 +52,19 @@ const { data: projectStats } = await useAsyncData<QueryResult<ProjectStat>>('pro
 });
 
 // 2.4 Servis ve Referans İlişkisi
-const { data: services } = await useAsyncData<QueryResult<Service>>('services', () => {
-    const query = useContentrainQuery<Service>('services');
+const { data: services } = await useAsyncData('services', () => {
+    const query = useContentrainQuery<ServicesItems>('services');
     return query
-        .locale('tr')
         .include('reference')
-        .where('status', 'eq', 'publish')
+        .where('statsus', 'eq', 'publish')
         .orderBy('title', 'asc')
+        .locale('en')
         .get();
 });
 
 // 2.5 Sosyal Medya ve Servis İlişkisi
-const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('social-links', () => {
-    const query = useContentrainQuery<SocialLink>('sociallinks');
+const { data: socialLinks } = await useAsyncData('social-links', () => {
+    const query = useContentrainQuery<SocialLinks>('sociallinks');
     return query
         .include('service')
         .where('status', 'eq', 'publish')
@@ -153,7 +75,7 @@ const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('socia
 // === 3. Gelişmiş Sorgular ===
 // 3.1 Çoklu Filtreler
 const { data: advancedFilteredItems } = await useAsyncData('advanced-filtered-items', () => {
-    const query = useContentrainQuery<WorkItem>('workitems');
+    const query = useContentrainQuery<WorkItems>('workitems');
     return query
         .locale('tr')
         .where('status', 'eq', 'publish')
@@ -167,8 +89,8 @@ const { data: advancedFilteredItems } = await useAsyncData('advanced-filtered-it
 // 3.2 Dizi Operatörleri
 const { data: arrayFilteredItems } = await useAsyncData('array-filtered-items', async () => {
     // Her sorgu için yeni bir query builder oluştur
-    const allItemsQuery = useContentrainQuery<WorkItem>('workitems');
-    const filteredQuery = useContentrainQuery<WorkItem>('workitems');
+    const allItemsQuery = useContentrainQuery<WorkItems>('workitems');
+    const filteredQuery = useContentrainQuery<WorkItems>('workitems');
 
     // Önce tüm workitems'ları alalım
     const allItems = await allItemsQuery.get();
@@ -186,8 +108,8 @@ const { data: arrayFilteredItems } = await useAsyncData('array-filtered-items', 
 });
 
 // 3.3 Array Operatörü Örneği
-const { data: specificSocialLinks } = await useAsyncData<QueryResult<SocialLink>>('specific-social-links', () => {
-    const query = useContentrainQuery<SocialLink>('sociallinks');
+const { data: specificSocialLinks } = await useAsyncData('specific-social-links', () => {
+    const query = useContentrainQuery<SocialLinks>('sociallinks');
     return query
         .where('icon', 'in', ['ri-twitter-line', 'ri-instagram-line', 'ri-linkedin-line'] as unknown as string)
         .where('status', 'eq', 'publish')
@@ -199,8 +121,8 @@ const { data: specificSocialLinks } = await useAsyncData<QueryResult<SocialLink>
 // 4.1 Farklı Dillerde İçerik
 const { data: trContent } = await useAsyncData('tr-content', async () => {
     // TR sorguları için yeni query builder'lar
-    const allTrQuery = useContentrainQuery<WorkItem>('workitems');
-    const trFirstQuery = useContentrainQuery<WorkItem>('workitems');
+    const allTrQuery = useContentrainQuery<WorkItems>('workitems');
+    const trFirstQuery = useContentrainQuery<WorkItems>('workitems');
 
     // Önce tüm TR içeriği alalım
     const allTrItems = await allTrQuery.locale('tr').get();
@@ -217,8 +139,8 @@ const { data: trContent } = await useAsyncData('tr-content', async () => {
 
 const { data: enContent } = await useAsyncData('en-content', async () => {
     // EN sorguları için yeni query builder'lar
-    const allEnQuery = useContentrainQuery<WorkItem>('workitems');
-    const enFirstQuery = useContentrainQuery<WorkItem>('workitems');
+    const allEnQuery = useContentrainQuery<WorkItems>('workitems');
+    const enFirstQuery = useContentrainQuery<WorkItems>('workitems');
 
     // Önce tüm EN içeriği alalım
     const allEnItems = await allEnQuery.locale('en').get();
@@ -234,16 +156,16 @@ const { data: enContent } = await useAsyncData('en-content', async () => {
 });
 
 // 4.2 Lokalize Olmayan Model
-const { data: socialLinks2 } = await useAsyncData<QueryResult<SocialLink>>('social-links-2', () => {
-    const query = useContentrainQuery<SocialLink>('sociallinks');
+const { data: socialLinks2 } = await useAsyncData('social-links-2', () => {
+    const query = useContentrainQuery<SocialLinks>('sociallinks');
     return query
         .where('icon', 'eq', 'ri-instagram-line')
         .orderBy('icon', 'asc')
         .get();
 });
 
-const { data: faqItems } = await useAsyncData<QueryResult<FaqItem>>('faq-items', () => {
-    const query = useContentrainQuery<FaqItem>('faqitems');
+const { data: faqItems } = await useAsyncData('faq-items', () => {
+    const query = useContentrainQuery<FaqItems>('faqitems');
     return query
         .where('status', 'eq', 'publish')
         .orderBy('order', 'asc')

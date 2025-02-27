@@ -1,10 +1,12 @@
 import {
     addImportsDir,
     addServerHandler,
+    addTypeTemplate,
     createResolver,
     defineNuxtModule,
 } from '@nuxt/kit';
 import { defu } from 'defu';
+import { ContentrainTypeGenerator } from './runtime/server/services/type-generator';
 
 export interface ContentrainOptions {
     /**
@@ -129,18 +131,27 @@ export default defineNuxtModule<ContentrainOptions>({
         const composablePath = resolve('./runtime/composables');
         addImportsDir(composablePath);
 
-        // Types
-        nuxt.hooks.hook('prepare:types', (options) => {
-            options.references.push({
-                path: resolve('./runtime/types/index.d.ts'),
-            });
-        });
+        // Type generator
+        const typeGenerator = new ContentrainTypeGenerator(options);
 
-        // Build hooks
-        nuxt.hooks.hook('build:before', () => {
-            console.info('[Contentrain] Initializing module...');
+        // Types - Use addTypeTemplate to add type definitions
+        addTypeTemplate({
+            filename: 'types/contentrain.d.ts',
+            getContents: async () => {
+                try {
+                    // Generate types and get the content
+                    const typeDefinitions = await typeGenerator.generateTypes();
+                    return typeDefinitions;
+                }
+                catch (error) {
+                    console.error('[Contentrain] Error generating types:', error);
+                    return `// Error generating types
+// Please check your model schemas and try again
+import type { Content, LocalizedContent, QueryResult, SingleQueryResult, ApiResponse } from '@contentrain/nuxt-json';
+`;
+                }
+            },
         });
-
         // Error handling
         nuxt.hooks.hook('build:error', (error) => {
             console.error('[Contentrain] Build error:', error);
