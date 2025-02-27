@@ -8,6 +8,7 @@ import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import { useRuntimeConfig, useStorage } from '#imports';
 import { defineNitroPlugin } from 'nitropack/dist/runtime/plugin';
+import { ContentrainError, ERROR_CODES } from '../utils/errors';
 import { STORAGE_KEYS, StorageManager } from '../utils/storage';
 
 export default defineNitroPlugin(async (nitroApp) => {
@@ -34,7 +35,11 @@ export default defineNitroPlugin(async (nitroApp) => {
             }
             catch (error) {
                 console.error('[Contentrain] Models directory not found:', modelsDir);
-                throw error;
+                throw new ContentrainError({
+                    code: ERROR_CODES.MODELS_DIR_NOT_FOUND,
+                    message: `Models directory not found: ${modelsDir}`,
+                    details: error,
+                });
             }
 
             // metadata.json kontrolü
@@ -46,7 +51,11 @@ export default defineNitroPlugin(async (nitroApp) => {
             }
             catch (error) {
                 console.error('[Contentrain] metadata.json not found or invalid');
-                throw error;
+                throw new ContentrainError({
+                    code: ERROR_CODES.METADATA_NOT_FOUND,
+                    message: 'metadata.json not found or invalid',
+                    details: error,
+                });
             }
 
             // Modelleri paralel olarak yükle
@@ -99,12 +108,21 @@ export default defineNitroPlugin(async (nitroApp) => {
                 }
                 catch (error) {
                     console.error(`[Contentrain] Error loading model ${model.modelId}:`, error);
+                    // Hata durumunda null döndür, bu değer daha sonra filtrelenecek
                     return null;
                 }
             });
 
             // Tüm modelleri bekle ve geçerli olanları kaydet
             const models = (await Promise.all(modelPromises)).filter(Boolean);
+
+            if (models.length === 0) {
+                console.warn('[Contentrain] No valid models found');
+            }
+            else {
+                console.info(`[Contentrain] Loaded ${models.length} models successfully`);
+            }
+
             await storage.setItem(STORAGE_KEYS.MODEL_LIST, models);
 
             // Storage'ı tamamla
@@ -115,6 +133,15 @@ export default defineNitroPlugin(async (nitroApp) => {
         catch (error) {
             console.error('[Contentrain] Storage initialization failed:', error);
             await StorageManager.setError();
+
+            // Özel hata sınıfını kullan
+            if (!(error instanceof ContentrainError)) {
+                throw new ContentrainError({
+                    code: ERROR_CODES.STORAGE_NOT_READY,
+                    message: 'Storage initialization failed',
+                    details: error,
+                });
+            }
             throw error;
         }
     }

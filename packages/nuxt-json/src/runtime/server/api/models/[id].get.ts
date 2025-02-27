@@ -1,6 +1,7 @@
-import type { ModelData } from '../../../../types';
+import type { ApiResponse, ModelData } from '../../../../types';
 import { useStorage } from '#imports';
-import { createError, defineEventHandler, getRouterParam } from 'h3';
+import { defineEventHandler, getRouterParam } from 'h3';
+import { ContentrainError, ERROR_CODES } from '../../utils/errors';
 import { STORAGE_KEYS, StorageManager } from '../../utils/storage';
 
 export default defineEventHandler(async (event) => {
@@ -9,9 +10,9 @@ export default defineEventHandler(async (event) => {
         const isReady = await StorageManager.isReady();
         if (!isReady) {
             console.warn('[Contentrain Model] Storage is not ready');
-            throw createError({
-                statusCode: 503,
-                statusMessage: 'Storage is not ready',
+            throw new ContentrainError({
+                code: ERROR_CODES.STORAGE_NOT_READY,
+                message: 'Storage is not ready',
             });
         }
 
@@ -19,9 +20,9 @@ export default defineEventHandler(async (event) => {
         console.debug('[Contentrain Model] Fetching model:', modelId);
 
         if (!modelId) {
-            throw createError({
-                statusCode: 400,
-                statusMessage: 'Model ID is required',
+            throw new ContentrainError({
+                code: ERROR_CODES.INVALID_MODEL_ID,
+                message: 'Model ID is required',
             });
         }
 
@@ -31,9 +32,9 @@ export default defineEventHandler(async (event) => {
 
         if (!modelData) {
             console.warn(`[Contentrain Model] Model not found: ${modelId}`);
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Model not found: ${modelId}`,
+            throw new ContentrainError({
+                code: ERROR_CODES.MODEL_NOT_FOUND,
+                message: `Model not found: ${modelId}`,
             });
         }
 
@@ -42,10 +43,52 @@ export default defineEventHandler(async (event) => {
             hasLocalization: modelData.metadata.localization,
         });
 
-        return modelData;
+        // Standardize API yanıtı
+        const response: ApiResponse<ModelData> = {
+            success: true,
+            data: modelData,
+        };
+
+        return response;
     }
-    catch (error) {
+    catch (error: any) {
         console.error('[Contentrain Model] Error:', error);
-        throw error;
+
+        // Hata yanıtını standardize et
+        if (error instanceof ContentrainError) {
+            return {
+                success: false,
+                data: null,
+                error: {
+                    code: error.code,
+                    message: error.message,
+                    details: error.details,
+                },
+            };
+        }
+
+        // H3 hataları için
+        if (error.statusCode) {
+            return {
+                success: false,
+                data: null,
+                error: {
+                    code: `HTTP_${error.statusCode}`,
+                    message: error.statusMessage || 'Unknown error',
+                    details: error,
+                },
+            };
+        }
+
+        // Diğer hatalar için
+        return {
+            success: false,
+            data: null,
+            error: {
+                code: 'UNKNOWN_ERROR',
+                message: error.message || 'Unknown error',
+                details: error,
+            },
+        };
     }
 });

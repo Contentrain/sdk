@@ -156,10 +156,12 @@ export interface BaseContent {
 
 export interface LocalizedContent extends BaseContent {
     _lang: string
+    _relations?: Record<string, LocalizedContent | LocalizedContent[]>
     [key: string]: unknown
 }
 
 export interface Content extends BaseContent {
+    _relations?: Record<string, Content | Content[]>
     [key: string]: unknown
 }
 
@@ -195,26 +197,38 @@ export type Operator =
   | 'startsWith'
   | 'endsWith';
 
-export interface QueryFilter {
-    field: string
+export interface QueryFilter<T = any> {
+    field: keyof T & string
     operator: Operator
     value: unknown
 }
 
-export interface QuerySort {
-    field: string
+export interface QuerySort<T = any> {
+    field: keyof T & string
     direction: 'asc' | 'desc'
 }
 
-export interface QueryParams {
+export interface QueryParams<T = any> {
     locale?: string
-    filters?: QueryFilter[]
-    sort?: QuerySort[]
+    filters?: QueryFilter<T>[]
+    sort?: QuerySort<T>[]
     limit?: number
     offset?: number
     include?: string[]
 }
 
+// API yanıtları için ortak tip
+export interface ApiResponse<T> {
+    success: boolean
+    data: T
+    error?: {
+        code: string
+        message: string
+        details?: unknown
+    }
+}
+
+// Çoklu sonuçlar için QueryResult
 export interface QueryResult<T> {
     data: T[]
     total: number
@@ -225,9 +239,36 @@ export interface QueryResult<T> {
     }
 }
 
+// Tekli sonuçlar için SingleQueryResult
+export interface SingleQueryResult<T> {
+    data: T
+    total: number
+    pagination: {
+        limit: number
+        offset: number
+        total: number
+    }
+}
+
+// Model sonuçları için standart dönüş tipi
+export interface ModelResult<T> {
+    data: T
+    metadata: {
+        modelId: string
+        timestamp: number
+    }
+}
+
 // Model Data Type
 export interface ModelData {
     metadata: ModelMetadata
     fields: FieldMetadata[]
     content: (Content | LocalizedContent)[]
+}
+
+// Özel hata sınıfı için tip
+export interface ContentrainErrorDetails {
+    code: string
+    message: string
+    details?: unknown
 }

@@ -81,7 +81,7 @@ interface FaqItem extends LocalizedContent {
 
 // === 1. Temel Sorgular ===
 // 1.1 Filtreleme ve Sıralama
-const { data: workItems } = await useAsyncData<QueryResult<WorkItem>>('workitems', () => {
+const { data: workItems } = await useAsyncData('workitems', () => {
     const query = useContentrainQuery<WorkItem>('workitems');
     return query
         .where('status', 'eq', 'publish')
@@ -90,7 +90,7 @@ const { data: workItems } = await useAsyncData<QueryResult<WorkItem>>('workitems
 });
 
 // 1.2 Sayfalama
-const { data: pagedWorkItems } = await useAsyncData<QueryResult<WorkItem>>('paged-work-items', () => {
+const { data: pagedWorkItems } = await useAsyncData('paged-work-items', () => {
     const query = useContentrainQuery<WorkItem>('workitems');
     return query
         .locale('tr')
@@ -152,7 +152,7 @@ const { data: socialLinks } = await useAsyncData<QueryResult<SocialLink>>('socia
 
 // === 3. Gelişmiş Sorgular ===
 // 3.1 Çoklu Filtreler
-const { data: advancedFilteredItems } = await useAsyncData<QueryResult<WorkItem>>('advanced-filtered-items', () => {
+const { data: advancedFilteredItems } = await useAsyncData('advanced-filtered-items', () => {
     const query = useContentrainQuery<WorkItem>('workitems');
     return query
         .locale('tr')
@@ -165,7 +165,7 @@ const { data: advancedFilteredItems } = await useAsyncData<QueryResult<WorkItem>
 });
 
 // 3.2 Dizi Operatörleri
-const { data: arrayFilteredItems } = await useAsyncData<QueryResult<WorkItem>>('array-filtered-items', async () => {
+const { data: arrayFilteredItems } = await useAsyncData('array-filtered-items', async () => {
     // Her sorgu için yeni bir query builder oluştur
     const allItemsQuery = useContentrainQuery<WorkItem>('workitems');
     const filteredQuery = useContentrainQuery<WorkItem>('workitems');
@@ -197,7 +197,7 @@ const { data: specificSocialLinks } = await useAsyncData<QueryResult<SocialLink>
 
 // === 4. Çoklu Dil Desteği ===
 // 4.1 Farklı Dillerde İçerik
-const { data: trContent } = await useAsyncData<WorkItem | null>('tr-content', async () => {
+const { data: trContent } = await useAsyncData('tr-content', async () => {
     // TR sorguları için yeni query builder'lar
     const allTrQuery = useContentrainQuery<WorkItem>('workitems');
     const trFirstQuery = useContentrainQuery<WorkItem>('workitems');
@@ -215,7 +215,7 @@ const { data: trContent } = await useAsyncData<WorkItem | null>('tr-content', as
     return result;
 });
 
-const { data: enContent } = await useAsyncData<WorkItem | null>('en-content', async () => {
+const { data: enContent } = await useAsyncData('en-content', async () => {
     // EN sorguları için yeni query builder'lar
     const allEnQuery = useContentrainQuery<WorkItem>('workitems');
     const enFirstQuery = useContentrainQuery<WorkItem>('workitems');
@@ -533,15 +533,15 @@ console.log('Tüm Sorgular ve Sonuçları:', {
             <div class="border p-4 rounded-lg">
               <h4 class="font-medium text-red-600 mb-2">TR İçerik</h4>
               <div v-if="trContent">
-                <h5 class="font-medium">{{ trContent.title }}</h5>
-                <p class="text-gray-600 mt-2">{{ trContent.description }}</p>
+                <h5 class="font-medium">{{ trContent.data }}</h5>
+                <p class="text-gray-600 mt-2">{{ trContent.data.description }}</p>
               </div>
             </div>
             <div class="border p-4 rounded-lg">
               <h4 class="font-medium text-blue-600 mb-2">EN İçerik</h4>
               <div v-if="enContent">
-                <h5 class="font-medium">{{ enContent.title }}</h5>
-                <p class="text-gray-600 mt-2">{{ enContent.description }}</p>
+                  <h5 class="font-medium">{{ enContent.data }}</h5>
+                <p class="text-gray-600 mt-2">{{ enContent.data.description }}</p>
               </div>
             </div>
           </div>

@@ -1,10 +1,13 @@
 import type { Ref } from 'vue';
 import type {
+    ApiResponse,
     Content,
     LocalizedContent,
+    Operator,
     QueryFilter,
     QueryResult,
     QuerySort,
+    SingleQueryResult,
 } from '../../types';
 import { ref } from 'vue';
 
@@ -22,8 +25,8 @@ type ExtractLocale<T> = T extends LocalizedContent
 
 export class ContentrainQuery<M extends Content | LocalizedContent> {
     private _locale?: ExtractLocale<M>;
-    private _filters: QueryFilter[] = [];
-    private _sort: QuerySort[] = [];
+    private _filters: QueryFilter<M>[] = [];
+    private _sort: QuerySort<M>[] = [];
     private _limit?: number;
     private _offset?: number;
     private _includes: Array<ExtractRelations<M>> = [];
@@ -31,6 +34,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     private readonly _total: Ref<number>;
     private readonly _loading: Ref<boolean>;
     private readonly _error: Ref<Error | null>;
+    private _page: number = 1;
+    private _hasMore: boolean = true;
 
     constructor(private modelId: string) {
         console.info('[Contentrain Query] Initializing query for model:', modelId);
@@ -52,9 +57,9 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     }
 
     // Field'lar için tip güvenliği
-    where<K extends keyof M>(
-        field: keyof M,
-        operator: QueryFilter['operator'],
+    where<K extends keyof M & string>(
+        field: K,
+        operator: Operator,
         value: M[K] extends Array<infer U> ? U | U[] : M[K],
     ): this {
         console.debug('[Contentrain Query] Adding filter:', { field, operator, value });
@@ -62,18 +67,18 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
             console.warn('[Contentrain Query] Invalid field provided for filter');
             return this;
         }
-        this._filters.push({ field: field as string, operator, value });
+        this._filters.push({ field, operator, value } as QueryFilter<M>);
         return this;
     }
 
     // Sıralama için tip güvenliği
-    orderBy<K extends keyof M>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
+    orderBy<K extends keyof M & string>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
         console.debug('[Contentrain Query] Adding sort:', { field, direction });
         if (!field) {
             console.warn('[Contentrain Query] Invalid field provided for sorting');
             return this;
         }
-        this._sort.push({ field: field as string, direction });
+        this._sort.push({ field, direction } as QuerySort<M>);
         return this;
     }
 
@@ -156,18 +161,18 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
             this._loading.value = true;
             console.time(`[Contentrain Query] Fetch time for ${this.modelId}`);
 
-            const response = await $fetch<QueryResult<M>>(apiUrl);
+            const response = await $fetch<ApiResponse<QueryResult<M>>>(apiUrl);
             console.timeEnd(`[Contentrain Query] Fetch time for ${this.modelId}`);
 
             console.info('[Contentrain Query] Query results:', {
-                total: response.total,
-                dataLength: response.data.length,
-                pagination: response.pagination,
+                total: response.data.total,
+                dataLength: response.data.data.length,
+                pagination: response.data.pagination,
             });
 
-            this._data.value = response.data;
-            this._total.value = response.total;
-            return response;
+            this._data.value = response.data.data;
+            this._total.value = response.data.total;
+            return response.data;
         }
         catch (error) {
             console.error('[Contentrain Query] Error executing query:', {
@@ -179,7 +184,7 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
             this._data.value = [];
             this._total.value = 0;
             return {
-                data: [],
+                data: [] as M[],
                 total: 0,
                 pagination: {
                     limit: this._limit || 10,
@@ -193,22 +198,82 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         }
     }
 
-    async first(): Promise<M | null> {
+    async first(): Promise<SingleQueryResult<M>> {
         console.debug('[Contentrain Query] Fetching first record for model:', this.modelId);
         this._limit = 1;
         const result = await this.get();
         if (!result.data.length) {
             console.warn('[Contentrain Query] No records found for first() query');
-            return null;
+            return {
+                data: null as unknown as M,
+                total: result.total,
+                pagination: {
+                    limit: this._limit || 10,
+                    offset: this._offset || 0,
+                    total: result.total,
+                },
+            };
         }
-        return result.data[0] || null;
+        return {
+            data: result.data[0],
+            total: result.total,
+            pagination: {
+                limit: this._limit || 10,
+                offset: this._offset || 0,
+                total: result.total,
+            },
+        };
     }
 
-    async count(): Promise<number> {
+    async count(): Promise<QueryResult<M>> {
         console.debug('[Contentrain Query] Counting records for model:', this.modelId);
-        await this.get();
-        console.info('[Contentrain Query] Total records:', this._total.value);
-        return this._total.value;
+        const result = await this.get();
+        console.info('[Contentrain Query] Total records:', result.total);
+        return {
+            data: [] as M[],
+            total: result.total,
+            pagination: {
+                limit: this._limit || 10,
+                offset: this._offset || 0,
+                total: result.total,
+            },
+        };
+    }
+
+    // Lazy loading için yeni metod
+    async loadMore(): Promise<QueryResult<M>> {
+        console.debug('[Contentrain Query] Loading more records for model:', this.modelId);
+
+        if (!this._hasMore) {
+            console.info('[Contentrain Query] No more records to load');
+            return {
+                data: this._data.value,
+                total: this._total.value,
+                pagination: {
+                    limit: this._limit || 10,
+                    offset: this._offset || 0,
+                    total: this._total.value,
+                },
+            };
+        }
+
+        const currentLimit = this._limit || 10;
+        this._offset = (this._page - 1) * currentLimit;
+
+        const result = await this.get();
+
+        // Mevcut verilere yeni verileri ekle
+        if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+            this._data.value = [...this._data.value, ...result.data];
+            this._page++;
+        }
+
+        // Daha fazla veri olup olmadığını kontrol et
+        this._hasMore = Array.isArray(result.data)
+          && result.data.length === currentLimit
+          && (this._offset + result.data.length) < result.total;
+
+        return result;
     }
 
     get data(): Ref<M[]> {
@@ -227,6 +292,10 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         return this._error;
     }
 
+    get hasMore(): Ref<boolean> {
+        return ref(this._hasMore);
+    }
+
     // Query durumunu sıfırlamak için yardımcı metod
     reset(): this {
         console.info('[Contentrain Query] Resetting query state');
@@ -237,6 +306,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         this._includes = [];
         this._locale = undefined;
         this._error.value = null;
+        this._page = 1;
+        this._hasMore = true;
         return this;
     }
 }

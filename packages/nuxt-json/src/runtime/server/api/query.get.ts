@@ -1,7 +1,8 @@
-import type { ModelData, QueryFilter, QueryResult, QuerySort } from '../../../types';
+import type { ApiResponse, ModelData, QueryFilter, QueryResult, QuerySort } from '../../../types';
 import { useStorage } from '#imports';
-import { createError, defineEventHandler, getQuery } from 'h3';
+import { defineEventHandler, getQuery } from 'h3';
 import { RelationResolver } from '../services/relation-resolver';
+import { ContentrainError, ERROR_CODES } from '../utils/errors';
 import { STORAGE_KEYS, StorageManager } from '../utils/storage';
 
 export default defineEventHandler(async (event) => {
@@ -10,9 +11,9 @@ export default defineEventHandler(async (event) => {
         const isReady = await StorageManager.isReady();
         if (!isReady) {
             console.warn('[Contentrain Query] Storage is not ready');
-            throw createError({
-                statusCode: 503,
-                statusMessage: 'Storage is not ready',
+            throw new ContentrainError({
+                code: ERROR_CODES.STORAGE_NOT_READY,
+                message: 'Storage is not ready',
             });
         }
 
@@ -38,9 +39,9 @@ export default defineEventHandler(async (event) => {
         });
 
         if (!modelId || typeof modelId !== 'string') {
-            throw createError({
-                statusCode: 400,
-                statusMessage: 'Model ID is required',
+            throw new ContentrainError({
+                code: ERROR_CODES.INVALID_MODEL_ID,
+                message: 'Model ID is required',
             });
         }
 
@@ -50,9 +51,9 @@ export default defineEventHandler(async (event) => {
 
         if (!model) {
             console.warn(`[Contentrain Query] Model not found: ${modelId}`);
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Model not found: ${modelId}`,
+            throw new ContentrainError({
+                code: ERROR_CODES.MODEL_NOT_FOUND,
+                message: `Model not found: ${modelId}`,
             });
         }
 
@@ -102,8 +103,13 @@ export default defineEventHandler(async (event) => {
                     }),
                 );
             }
-            catch (error) {
+            catch (error: any) {
                 console.error('Error parsing filters:', error);
+                throw new ContentrainError({
+                    code: ERROR_CODES.INVALID_QUERY_PARAMS,
+                    message: 'Invalid filters format',
+                    details: error,
+                });
             }
         }
 
@@ -133,8 +139,13 @@ export default defineEventHandler(async (event) => {
                     return 0;
                 });
             }
-            catch (error) {
+            catch (error: any) {
                 console.error('Error parsing sort:', error);
+                throw new ContentrainError({
+                    code: ERROR_CODES.INVALID_QUERY_PARAMS,
+                    message: 'Invalid sort format',
+                    details: error,
+                });
             }
         }
 
@@ -154,12 +165,17 @@ export default defineEventHandler(async (event) => {
                 const resolver = new RelationResolver(modelList);
                 content = await resolver.resolveRelations(model, content, includes, locale as string | undefined);
             }
-            catch (error) {
+            catch (error: any) {
                 console.error('Error resolving relations:', error);
+                throw new ContentrainError({
+                    code: ERROR_CODES.INVALID_QUERY_PARAMS,
+                    message: 'Error resolving relations',
+                    details: error,
+                });
             }
         }
 
-        const response: QueryResult<typeof content[0]> = {
+        const queryResult: QueryResult<typeof content[0]> = {
             data: content,
             total,
             pagination: {
@@ -169,10 +185,76 @@ export default defineEventHandler(async (event) => {
             },
         };
 
+        // Standardize API yanıtı
+        const response: ApiResponse<QueryResult<typeof content[0]>> = {
+            success: true,
+            data: queryResult,
+        };
+
         return response;
     }
-    catch (error) {
+    catch (error: any) {
         console.error('[Contentrain Query] Error:', error);
-        throw error;
+
+        // Hata yanıtını standardize et
+        if (error instanceof ContentrainError) {
+            return {
+                success: false,
+                data: {
+                    data: [],
+                    total: 0,
+                    pagination: {
+                        limit: 10,
+                        offset: 0,
+                        total: 0,
+                    },
+                },
+                error: {
+                    code: error.code,
+                    message: error.message,
+                    details: error.details,
+                },
+            };
+        }
+
+        // H3 hataları için
+        if (error.statusCode) {
+            return {
+                success: false,
+                data: {
+                    data: [],
+                    total: 0,
+                    pagination: {
+                        limit: 10,
+                        offset: 0,
+                        total: 0,
+                    },
+                },
+                error: {
+                    code: `HTTP_${error.statusCode}`,
+                    message: error.statusMessage || 'Unknown error',
+                    details: error,
+                },
+            };
+        }
+
+        // Diğer hatalar için
+        return {
+            success: false,
+            data: {
+                data: [],
+                total: 0,
+                pagination: {
+                    limit: 10,
+                    offset: 0,
+                    total: 0,
+                },
+            },
+            error: {
+                code: 'UNKNOWN_ERROR',
+                message: error.message || 'Unknown error',
+                details: error,
+            },
+        };
     }
 });
