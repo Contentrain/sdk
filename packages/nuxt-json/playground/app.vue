@@ -52,14 +52,23 @@ const { data: projectStats } = await useAsyncData('project-stats', () => {
 });
 
 // 2.4 Servis ve Referans İlişkisi
-const { data: services } = await useAsyncData('services', () => {
+const { data: services } = await useAsyncData('services', async () => {
     const query = useContentrainQuery<ServicesItems>('services');
-    return query
+    console.info('[Contentrain] Querying services with reference relation');
+
+    const result = await query
         .include('reference')
-        .where('statsus', 'eq', 'publish')
+        .where('status', 'eq', 'publish')
         .orderBy('title', 'asc')
         .locale('en')
         .get();
+
+    console.info('[Contentrain] Services query result:', {
+        total: result.total,
+        hasRelations: result.data.some(item => item._relations?.reference),
+    });
+
+    return result;
 });
 
 // 2.5 Sosyal Medya ve Servis İlişkisi

@@ -1,127 +1,136 @@
-import type { Ref } from 'vue';
-import type { ApiResponse, ModelData, ModelResult } from '../../types';
-import { ref } from 'vue';
+import type { ModelData } from '../../types';
+import { computed, onMounted, ref } from 'vue';
+import { ContentrainError, createError, ERROR_CODES } from '../server/utils/errors';
+import { useContentrainClient } from './useContentrainClient';
 
-export class ContentrainModels {
-    private models: Ref<ModelData[]>;
-    private model: Ref<ModelData | null>;
-    private loading: Ref<boolean>;
-    private error: Ref<Error | null>;
-
-    constructor() {
-        this.models = ref<ModelData[]>([]);
-        this.model = ref<ModelData | null>(null);
-        this.loading = ref<boolean>(false);
-        this.error = ref<Error | null>(null);
-    }
-
-    async get(modelId: string): Promise<ModelResult<ModelData | null>> {
-        try {
-            this.loading.value = true;
-            const response = await $fetch<ApiResponse<ModelData>>(`/_contentrain/api/models/${modelId}`);
-
-            if (response.success && response.data) {
-                this.model.value = response.data;
-                return {
-                    data: response.data,
-                    metadata: {
-                        modelId,
-                        timestamp: Date.now(),
-                    },
-                };
-            }
-            else {
-                console.error('[Contentrain] Error fetching model:', response.error);
-                this.error.value = new Error(response.error?.message || 'Unknown error');
-                this.model.value = null;
-                return {
-                    data: null,
-                    metadata: {
-                        modelId,
-                        timestamp: Date.now(),
-                    },
-                };
-            }
-        }
-        catch (error) {
-            console.error('[Contentrain] Error fetching model:', error);
-            this.error.value = error as Error;
-            this.model.value = null;
-            return {
-                data: null,
-                metadata: {
-                    modelId,
-                    timestamp: Date.now(),
-                },
-            };
-        }
-        finally {
-            this.loading.value = false;
-        }
-    }
-
-    async getAll(): Promise<ModelResult<ModelData[]>> {
-        try {
-            this.loading.value = true;
-            const response = await $fetch<ApiResponse<ModelData[]>>('/_contentrain/api/models');
-
-            if (response.success && response.data) {
-                this.models.value = response.data;
-                return {
-                    data: response.data,
-                    metadata: {
-                        modelId: 'all',
-                        timestamp: Date.now(),
-                    },
-                };
-            }
-            else {
-                console.error('[Contentrain] Error fetching models:', response.error);
-                this.error.value = new Error(response.error?.message || 'Unknown error');
-                this.models.value = [];
-                return {
-                    data: [],
-                    metadata: {
-                        modelId: 'all',
-                        timestamp: Date.now(),
-                    },
-                };
-            }
-        }
-        catch (error) {
-            console.error('[Contentrain] Error fetching models:', error);
-            this.error.value = error as Error;
-            this.models.value = [];
-            return {
-                data: [],
-                metadata: {
-                    modelId: 'all',
-                    timestamp: Date.now(),
-                },
-            };
-        }
-        finally {
-            this.loading.value = false;
-        }
-    }
-
-    useModel(): Ref<ModelData | null> {
-        return this.model;
-    }
-
-    useModels(): Ref<ModelData[]> {
-        return this.models;
-    }
-
-    useLoading(): Ref<boolean> {
-        return this.loading;
-    }
-
-    useError(): Ref<Error | null> {
-        return this.error;
-    }
+export interface UseContentrainModelsOptions {
+    autoLoad?: boolean
+    retryCount?: number
+    retryDelay?: number
 }
 
-export function useContentrainModels(): ContentrainModels {
-    return new ContentrainModels();
+export function useContentrainModels(options: UseContentrainModelsOptions = {}) {
+    const {
+        autoLoad = true,
+        retryCount = 3,
+        retryDelay = 1000,
+    } = options;
+
+    const client = useContentrainClient();
+    const pending = ref(false);
+    const error = ref<Error | null>(null);
+    const retries = ref(0);
+
+    // Client'dan modelleri al
+    const models = computed(() => client.models.value);
+    const isLoaded = computed(() => client.isLoaded.value);
+    const isLoading = computed(() => client.isLoading.value || pending.value);
+
+    /**
+     * Tüm modelleri yükle
+     */
+    async function loadModels(): Promise<ModelData[]> {
+        if (isLoaded.value || isLoading.value) {
+            return models.value;
+        }
+
+        pending.value = true;
+        error.value = null;
+
+        try {
+            await client.loadModels();
+            retries.value = 0;
+            return models.value;
+        }
+        catch (err) {
+            error.value = err instanceof ContentrainError ? err : createError(ERROR_CODES.MODEL_LOAD_ERROR, err);
+
+            // Yeniden deneme mantığı
+            if (retries.value < retryCount) {
+                retries.value++;
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                return await loadModels();
+            }
+
+            throw error.value;
+        }
+        finally {
+            pending.value = false;
+        }
+    }
+
+    /**
+     * Belirli bir modeli yükle
+     */
+    async function loadModel(modelId: string): Promise<ModelData | null> {
+        if (!modelId) {
+            throw createError(ERROR_CODES.INVALID_MODEL_ID);
+        }
+
+        pending.value = true;
+        error.value = null;
+
+        try {
+            const result = await client.loadModel(modelId);
+            if (!result) {
+                throw createError(ERROR_CODES.MODEL_NOT_FOUND, { modelId });
+            }
+            return result;
+        }
+        catch (err) {
+            error.value = err instanceof ContentrainError ? err : createError(ERROR_CODES.MODEL_LOAD_ERROR, err);
+
+            // Yeniden deneme mantığı
+            if (retries.value < retryCount) {
+                retries.value++;
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                return await loadModel(modelId);
+            }
+
+            throw error.value;
+        }
+        finally {
+            pending.value = false;
+        }
+    }
+
+    /**
+     * Model var mı kontrol et
+     */
+    function hasModel(modelId: string): boolean {
+        return models.value.some(model => model.metadata.modelId === modelId);
+    }
+
+    /**
+     * Model getir
+     */
+    function getModel(modelId: string): ModelData | undefined {
+        return models.value.find(model => model.metadata.modelId === modelId);
+    }
+
+    // Otomatik yükleme
+    if (autoLoad) {
+        onMounted(async () => {
+            if (!isLoaded.value && !isLoading.value) {
+                try {
+                    await loadModels();
+                }
+                catch (err) {
+                    error.value = err instanceof ContentrainError ? err : createError(ERROR_CODES.MODEL_LOAD_ERROR, err);
+                }
+            }
+        });
+    }
+
+    return {
+        models,
+        isLoaded,
+        isLoading,
+        error,
+        retries,
+        loadModels,
+        loadModel,
+        hasModel,
+        getModel,
+    };
 }

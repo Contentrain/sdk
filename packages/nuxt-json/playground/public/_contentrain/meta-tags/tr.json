@@ -1,0 +1,132 @@
+[
+  {
+    "ID": "02135e680b44",
+    "createdAt": "Mon Apr 29 2024 14:35:46 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-29T11:37:31.204Z",
+    "name": "ogType",
+    "content": "website",
+    "description": "default",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "196caf507337",
+    "createdAt": "2024-04-29T11:37:02.000Z",
+    "updatedAt": "2024-10-18T09:02:07.738Z",
+    "status": "changed",
+    "name": "ogTitle",
+    "content": "Lanista | Web ve Mobile uygulama geliştirme partneriniz",
+    "description": "defalt",
+    "scheduled": false
+  },
+  {
+    "ID": "38eb812efbfe",
+    "createdAt": "Fri Oct 18 2024 10:31:40 GMT+0300 (GMT+03:00)",
+    "updatedAt": "Fri Oct 18 2024 10:31:40 GMT+0300 (GMT+03:00)",
+    "name": "ogImage",
+    "content": "url gelecek",
+    "description": "website ogimage",
+    "status": "draft",
+    "scheduled": false
+  },
+  {
+    "ID": "4a02e38c9389",
+    "createdAt": "2024-05-16T11:32:09.000Z",
+    "updatedAt": "2024-10-18T09:02:34.526Z",
+    "status": "changed",
+    "name": "twitter:title",
+    "content": "Lanista | Web ve Mobile uygulama geliştirme partneriniz",
+    "description": "Lanista twitter ogtitle",
+    "scheduled": false
+  },
+  {
+    "ID": "66a7106a5d6a",
+    "createdAt": "Mon Apr 29 2024 14:39:20 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-29T11:39:52.021Z",
+    "name": "twitterSiteId",
+    "content": "twitter-site-id",
+    "description": "default",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "6dcd400f4763",
+    "createdAt": "2024-04-29T11:38:59.000Z",
+    "updatedAt": "2024-10-18T09:01:09.158Z",
+    "status": "changed",
+    "name": "twitterDescription",
+    "content": "İşletmenizin günümüz dijital dünyasında büyümesini sağlamak için uçtan uca dış kaynaklı web ve mobil uygulama geliştirme hizmetleri sağlıyoruz.",
+    "description": "default",
+    "scheduled": false
+  },
+  {
+    "ID": "6ea95fa81d7f",
+    "createdAt": "Mon Apr 29 2024 14:38:15 GMT+0300 (GMT+03:00)",
+    "updatedAt": "2024-04-29T11:39:52.053Z",
+    "name": "twitterCard",
+    "content": "summary",
+    "description": "default",
+    "status": "publish",
+    "scheduled": false
+  },
+  {
+    "ID": "9f3fb78abf01",
+    "createdAt": "2024-04-29T11:38:01.000Z",
+    "updatedAt": "2024-10-18T09:26:50.708Z",
+    "status": "changed",
+    "name": "ogSiteName",
+    "content": "Lanista | Web ve Mobile uygulama geliştirme partneriniz",
+    "description": "default",
+    "scheduled": false
+  },
+  {
+    "ID": "a756a05f093e",
+    "createdAt": "2024-08-16T11:38:53.000Z",
+    "updatedAt": "2024-10-18T09:27:42.792Z",
+    "status": "changed",
+    "name": "title",
+    "content": "Lanista | Web ve Mobile uygulama geliştirme partneriniz",
+    "description": "Lanista website ogtitle",
+    "scheduled": false
+  },
+  {
+    "ID": "ba01e958b444",
+    "createdAt": "2024-04-25T09:37:26.000Z",
+    "updatedAt": "2024-10-18T09:00:34.866Z",
+    "status": "changed",
+    "name": "description",
+    "content": "İşletmenizin günümüz dijital dünyasında büyümesini sağlamak için uçtan uca dış kaynaklı web ve mobil uygulama geliştirme hizmetleri sağlıyoruz.",
+    "description": "website ogdescription",
+    "scheduled": false
+  },
+  {
+    "ID": "ce993b69b8ff",
+    "createdAt": "2024-04-29T11:38:28.000Z",
+    "updatedAt": "2024-10-18T09:06:05.245Z",
+    "status": "changed",
+    "name": "twitterTitle",
+    "content": "Lanista | Web ve Mobile uygulama geliştirme partneriniz",
+    "description": "default",
+    "scheduled": false
+  },
+  {
+    "ID": "dc2539d45a50",
+    "createdAt": "2024-04-29T11:36:05.000Z",
+    "updatedAt": "2024-10-18T09:18:48.377Z",
+    "status": "publish",
+    "name": "ogImage",
+    "content": "https://res.cloudinary.com/dmywgn45o/image/upload/v1729243091/lanista_og_chgpop.jpg",
+    "description": "default",
+    "scheduled": false
+  },
+  {
+    "ID": "de2b9bd58b75",
+    "createdAt": "2024-04-29T11:36:39.000Z",
+    "updatedAt": "2024-10-18T09:06:47.362Z",
+    "status": "changed",
+    "name": "ogDescription",
+    "content": "İşletmenizin günümüz dijital dünyasında büyümesini sağlamak için uçtan uca dış kaynaklı web ve mobil uygulama geliştirme hizmetleri sağlıyoruz.",
+    "description": "default",
+    "scheduled": false
+  }
+]

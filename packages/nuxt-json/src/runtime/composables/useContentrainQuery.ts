@@ -1,6 +1,5 @@
-import type { Ref } from 'vue';
+import type { MaybeRef, Ref } from 'vue';
 import type {
-    ApiResponse,
     Content,
     LocalizedContent,
     Operator,
@@ -9,11 +8,27 @@ import type {
     QuerySort,
     SingleQueryResult,
 } from '../../types';
-import { ref } from 'vue';
+import { ref, unref } from 'vue';
+import { ContentrainError, createError, ERROR_CODES } from '../server/utils/errors';
+import { useContentrainClient } from './useContentrainClient';
 
 // İlişki tiplerini çıkarmak için yardımcı tip
 type ExtractRelations<T> = T extends { _relations?: infer R } ? keyof R : never;
 
+export interface ContentrainQueryOptions<T extends Content | LocalizedContent> {
+    modelId: string
+    locale?: MaybeRef<string>
+    filters?: MaybeRef<QueryFilter<T>[]>
+    sort?: MaybeRef<QuerySort<T>[]>
+    limit?: MaybeRef<number>
+    offset?: MaybeRef<number>
+    include?: MaybeRef<string[]>
+    immediate?: boolean
+}
+
+/**
+ * Sınıf tabanlı sorgu oluşturucu - Builder pattern
+ */
 export class ContentrainQuery<M extends Content | LocalizedContent> {
     private _locale?: string;
     private _filters: QueryFilter<M>[] = [];
@@ -27,8 +42,14 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
     private readonly _error: Ref<Error | null>;
     private _page: number = 1;
     private _hasMore: boolean = true;
+    private _lastFetch: number = 0;
+    private readonly _cacheTimeout: number = 5000; // 5 saniye cache
 
     constructor(private modelId: string) {
+        if (!modelId) {
+            throw createError(ERROR_CODES.INVALID_MODEL_ID);
+        }
+
         console.info('[Contentrain Query] Initializing query for model:', modelId);
         this._data = ref([]) as Ref<M[]>;
         this._total = ref(0);
@@ -38,10 +59,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
 
     // Locale için dinamik tip güvenliği
     locale<L extends string>(locale: M extends { _lang: infer Lang } ? Lang extends L ? L : never : never): this {
-        console.debug('[Contentrain Query] Setting locale:', locale);
         if (!locale) {
-            console.warn('[Contentrain Query] Invalid locale provided:', locale);
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid locale provided');
         }
         this._locale = locale;
         return this;
@@ -53,10 +72,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         operator: Operator,
         value: M[K] extends Array<infer U> ? U | U[] : M[K],
     ): this {
-        console.debug('[Contentrain Query] Adding filter:', { field, operator, value });
         if (!field) {
-            console.warn('[Contentrain Query] Invalid field provided for filter');
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid field provided for filter');
         }
         this._filters.push({ field, operator, value } as QueryFilter<M>);
         return this;
@@ -64,30 +81,24 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
 
     // Sıralama için tip güvenliği
     orderBy<K extends keyof M & string>(field: K, direction: 'asc' | 'desc' = 'asc'): this {
-        console.debug('[Contentrain Query] Adding sort:', { field, direction });
         if (!field) {
-            console.warn('[Contentrain Query] Invalid field provided for sorting');
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid field provided for sorting');
         }
         this._sort.push({ field, direction } as QuerySort<M>);
         return this;
     }
 
     limit(limit: number): this {
-        console.debug('[Contentrain Query] Setting limit:', limit);
         if (limit < 0) {
-            console.warn('[Contentrain Query] Invalid limit value:', limit);
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid limit value');
         }
         this._limit = limit;
         return this;
     }
 
     offset(offset: number): this {
-        console.debug('[Contentrain Query] Setting offset:', offset);
         if (offset < 0) {
-            console.warn('[Contentrain Query] Invalid offset value:', offset);
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid offset value');
         }
         this._offset = offset;
         return this;
@@ -95,10 +106,8 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
 
     // İlişkiler için tip güvenliği
     include<R extends ExtractRelations<M>>(relation: R): this {
-        console.debug('[Contentrain Query] Including relation:', relation);
         if (!relation) {
-            console.warn('[Contentrain Query] Invalid relation provided');
-            return this;
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid relation provided');
         }
         if (!this._includes.includes(relation)) {
             this._includes.push(relation);
@@ -106,137 +115,13 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         return this;
     }
 
+    private shouldRefetch(): boolean {
+        return Date.now() - this._lastFetch > this._cacheTimeout;
+    }
+
     async get(): Promise<QueryResult<M>> {
-        console.info('[Contentrain Query] Executing query with params:', {
-            modelId: this.modelId,
-            locale: this._locale,
-            filters: this._filters,
-            sort: this._sort,
-            limit: this._limit,
-            offset: this._offset,
-            includes: this._includes,
-        });
-
-        const params = new URLSearchParams();
-
-        if (this._locale) {
-            params.append('locale', this._locale);
-        }
-
-        if (this._filters.length) {
-            params.append('filters', JSON.stringify(this._filters));
-        }
-
-        if (this._sort.length) {
-            params.append('sort', JSON.stringify(this._sort));
-        }
-
-        if (this._limit) {
-            params.append('limit', this._limit.toString());
-        }
-
-        if (this._offset) {
-            params.append('offset', this._offset.toString());
-        }
-
-        if (this._includes.length) {
-            params.append('include', JSON.stringify(this._includes));
-        }
-
-        params.append('modelId', this.modelId);
-
-        const apiUrl = `/_contentrain/api/query?${params.toString()}`;
-        console.debug('[Contentrain Query] API URL:', apiUrl);
-
-        try {
-            this._loading.value = true;
-            console.time(`[Contentrain Query] Fetch time for ${this.modelId}`);
-
-            const response = await $fetch<ApiResponse<QueryResult<M>>>(apiUrl);
-            console.timeEnd(`[Contentrain Query] Fetch time for ${this.modelId}`);
-
-            console.info('[Contentrain Query] Query results:', {
-                total: response.data.total,
-                dataLength: response.data.data.length,
-                pagination: response.data.pagination,
-            });
-
-            this._data.value = response.data.data;
-            this._total.value = response.data.total;
-            return response.data;
-        }
-        catch (error) {
-            console.error('[Contentrain Query] Error executing query:', {
-                error,
-                modelId: this.modelId,
-                params: Object.fromEntries(params.entries()),
-            });
-            this._error.value = error as Error;
-            this._data.value = [];
-            this._total.value = 0;
-            return {
-                data: [] as M[],
-                total: 0,
-                pagination: {
-                    limit: this._limit || 10,
-                    offset: this._offset || 0,
-                    total: 0,
-                },
-            };
-        }
-        finally {
-            this._loading.value = false;
-        }
-    }
-
-    async first(): Promise<SingleQueryResult<M>> {
-        console.debug('[Contentrain Query] Fetching first record for model:', this.modelId);
-        this._limit = 1;
-        const result = await this.get();
-        if (!result.data.length) {
-            console.warn('[Contentrain Query] No records found for first() query');
-            return {
-                data: null as unknown as M,
-                total: result.total,
-                pagination: {
-                    limit: this._limit || 10,
-                    offset: this._offset || 0,
-                    total: result.total,
-                },
-            };
-        }
-        return {
-            data: result.data[0],
-            total: result.total,
-            pagination: {
-                limit: this._limit || 10,
-                offset: this._offset || 0,
-                total: result.total,
-            },
-        };
-    }
-
-    async count(): Promise<QueryResult<M>> {
-        console.debug('[Contentrain Query] Counting records for model:', this.modelId);
-        const result = await this.get();
-        console.info('[Contentrain Query] Total records:', result.total);
-        return {
-            data: [] as M[],
-            total: result.total,
-            pagination: {
-                limit: this._limit || 10,
-                offset: this._offset || 0,
-                total: result.total,
-            },
-        };
-    }
-
-    // Lazy loading için yeni metod
-    async loadMore(): Promise<QueryResult<M>> {
-        console.debug('[Contentrain Query] Loading more records for model:', this.modelId);
-
-        if (!this._hasMore) {
-            console.info('[Contentrain Query] No more records to load');
+        // Cache kontrolü
+        if (!this.shouldRefetch() && this._data.value.length > 0) {
             return {
                 data: this._data.value,
                 total: this._total.value,
@@ -248,23 +133,96 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
             };
         }
 
-        const currentLimit = this._limit || 10;
-        this._offset = (this._page - 1) * currentLimit;
+        this._loading.value = true;
+        this._error.value = null;
 
-        const result = await this.get();
+        try {
+            const client = useContentrainClient();
 
-        // Mevcut verilere yeni verileri ekle
-        if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-            this._data.value = [...this._data.value, ...result.data];
-            this._page++;
+            // Model yükleme kontrolü
+            if (!client.isLoaded.value) {
+                await client.loadModels();
+            }
+
+            const result = await client.query<M>(this.modelId, {
+                locale: this._locale,
+                filters: this._filters,
+                sort: this._sort,
+                limit: this._limit,
+                offset: this._offset,
+                include: this._includes as string[],
+            });
+
+            // Sonuçları önbellekleme
+            this._data.value = result.data;
+            this._total.value = result.total;
+            this._hasMore = result.data.length === (this._limit || 10);
+            this._lastFetch = Date.now();
+
+            return result;
+        }
+        catch (error) {
+            this._error.value = error instanceof ContentrainError ? error : createError(ERROR_CODES.QUERY_EXECUTION_ERROR, error);
+            throw this._error.value;
+        }
+        finally {
+            this._loading.value = false;
+        }
+    }
+
+    async first(): Promise<SingleQueryResult<M>> {
+        const originalLimit = this._limit;
+        this._limit = 1;
+
+        try {
+            const result = await this.get();
+            return {
+                data: result.data[0] || null,
+                total: result.total,
+                pagination: {
+                    limit: this._limit || 10,
+                    offset: this._offset || 0,
+                    total: result.total,
+                },
+            };
+        }
+        finally {
+            this._limit = originalLimit;
+        }
+    }
+
+    async paginate(page: number = 1, perPage: number = 10): Promise<QueryResult<M>> {
+        if (page < 1) {
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid page number');
         }
 
-        // Daha fazla veri olup olmadığını kontrol et
-        this._hasMore = Array.isArray(result.data)
-          && result.data.length === currentLimit
-          && (this._offset + result.data.length) < result.total;
+        if (perPage < 1) {
+            throw createError(ERROR_CODES.INVALID_QUERY_PARAMS, 'Invalid perPage value');
+        }
 
-        return result;
+        this._page = page;
+        this._limit = perPage;
+        this._offset = (page - 1) * perPage;
+
+        return this.get();
+    }
+
+    async next(): Promise<QueryResult<M>> {
+        if (!this._hasMore) {
+            return {
+                data: [],
+                total: this._total.value,
+                pagination: {
+                    limit: this._limit || 10,
+                    offset: this._offset || 0,
+                    total: this._total.value,
+                },
+            };
+        }
+
+        this._page++;
+        this._offset = (this._page - 1) * (this._limit || 10);
+        return this.get();
     }
 
     get data(): Ref<M[]> {
@@ -283,30 +241,71 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         return this._error;
     }
 
-    get hasMore(): Ref<boolean> {
-        return ref(this._hasMore);
+    get hasMore(): boolean {
+        return this._hasMore;
     }
 
-    // Query durumunu sıfırlamak için yardımcı metod
-    reset(): this {
-        console.info('[Contentrain Query] Resetting query state');
-        this._filters = [];
-        this._sort = [];
-        this._limit = undefined;
-        this._offset = undefined;
-        this._includes = [];
-        this._locale = undefined;
-        this._error.value = null;
-        this._page = 1;
-        this._hasMore = true;
-        return this;
+    get currentPage(): number {
+        return this._page;
     }
 }
 
-export function useContentrainQuery<M extends Content | LocalizedContent>(modelId: string): ContentrainQuery<M> {
+/**
+ * Sınıf tabanlı sorgu oluşturucu için factory fonksiyonu
+ * Hem string hem de ContentrainQueryOptions parametresi destekler
+ */
+export function useContentrainQuery<M extends Content | LocalizedContent>(
+    modelIdOrOptions: string | ContentrainQueryOptions<M>,
+): ContentrainQuery<M> {
+    // String parametresi veya options nesnesi kontrolü
+    const modelId = typeof modelIdOrOptions === 'string'
+        ? modelIdOrOptions
+        : modelIdOrOptions.modelId;
+
     if (!modelId) {
         console.error('[Contentrain Query] Model ID is required');
-        throw new Error('Model ID is required');
+        throw createError(ERROR_CODES.INVALID_MODEL_ID);
     }
-    return new ContentrainQuery<M>(modelId);
+
+    const query = new ContentrainQuery<M>(modelId);
+
+    // Eğer options nesnesi verilmişse, parametreleri ayarla
+    if (typeof modelIdOrOptions !== 'string') {
+        const options = modelIdOrOptions;
+
+        if (options.locale) {
+            query.locale(unref(options.locale) as any);
+        }
+
+        if (options.filters) {
+            const filters = unref(options.filters);
+            filters.forEach((filter) => {
+                query.where(filter.field, filter.operator, filter.value as any);
+            });
+        }
+
+        if (options.sort) {
+            const sorts = unref(options.sort);
+            sorts.forEach((sort) => {
+                query.orderBy(sort.field, sort.direction);
+            });
+        }
+
+        if (options.limit) {
+            query.limit(unref(options.limit));
+        }
+
+        if (options.offset) {
+            query.offset(unref(options.offset));
+        }
+
+        if (options.include) {
+            const includes = unref(options.include);
+            includes.forEach((include) => {
+                query.include(include as any);
+            });
+        }
+    }
+
+    return query;
 }

@@ -1,4 +1,5 @@
-import type { ContentrainOptions, FieldMetadata, ModelMetadata } from '../../../module';
+import type { ContentrainOptions } from '../../../module';
+import type { FieldMetadata, ModelMetadata } from '../../../types';
 import fs from 'node:fs';
 import path, { join } from 'node:path';
 import { ContentrainError, ERROR_CODES } from '../utils/errors';
@@ -8,7 +9,7 @@ export class ContentrainTypeGenerator {
     async generateTypes(): Promise<string> {
         try {
             console.log('[Contentrain] Generating TypeScript types from models...');
-            const modelsDir = join(this.options.path, 'models');
+            const modelsDir = join(this.options.path || 'contentrain', 'models');
 
             // Get model files
             const modelFiles = this.getModelFiles(modelsDir);
@@ -54,7 +55,7 @@ export class ContentrainTypeGenerator {
         }
 
         const languages = new Set<string>();
-        const modelPath = join(contentPath, modelMetadata.modelId);
+        const modelPath = join(contentPath || 'contentrain', modelMetadata.modelId);
 
         try {
             if (fs.existsSync(modelPath)) {
@@ -240,7 +241,7 @@ interface SingleQueryResultBase<T> {
                 }
 
                 // Her model için dil tipini belirle
-                const modelLanguages = this.detectModelLanguages(this.options.path, modelMetadata);
+                const modelLanguages = this.detectModelLanguages(this.options.path || 'contentrain', modelMetadata);
 
                 // Base Type Generation
                 const interfaceName = this.formatInterfaceName(modelMetadata);
