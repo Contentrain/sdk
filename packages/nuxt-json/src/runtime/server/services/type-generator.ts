@@ -8,13 +8,11 @@ export class ContentrainTypeGenerator {
     constructor(private options: ContentrainOptions) {}
     async generateTypes(): Promise<string> {
         try {
-            console.log('[Contentrain] Generating TypeScript types from models...');
             const modelsDir = join(this.options.path || 'contentrain', 'models');
 
             // Get model files
             const modelFiles = this.getModelFiles(modelsDir);
             if (modelFiles.length === 0) {
-                console.warn('[Contentrain] No model files found. Skipping type generation.');
                 return this.getEmptyTypeDefinition();
             }
 
@@ -33,7 +31,7 @@ export class ContentrainTypeGenerator {
             // Create type definitions
             const typeDefinitions = this.initializeTypeDefinitions() + baseTypes + queryTypes;
 
-            console.log('[Contentrain] Successfully generated type definitions.');
+            console.info('[Contentrain] Successfully generated type definitions.');
 
             // Return the generated type definitions
             return typeDefinitions;
@@ -60,8 +58,6 @@ export class ContentrainTypeGenerator {
         try {
             if (fs.existsSync(modelPath)) {
                 const files = fs.readdirSync(modelPath);
-
-                // .json uzantılı dosyaları bul ve dil kodlarını çıkar
                 files.forEach((file) => {
                     if (file.endsWith('.json')) {
                         const lang = file.replace('.json', '');
@@ -69,8 +65,6 @@ export class ContentrainTypeGenerator {
                     }
                 });
             }
-
-            // Eğer hiç dil bulunamazsa, varsayılan dili ekle
             if (languages.size === 0) {
                 languages.add(this.options.defaultLocale || 'en');
             }

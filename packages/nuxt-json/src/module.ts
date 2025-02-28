@@ -333,7 +333,6 @@ import type { Content, LocalizedContent, QueryResult, SingleQueryResult } from '
         // Bu, build işlemi başlamadan önce prerender işleminin tamamlanmasını sağlar
         if (options.outputDir) {
             nuxt.hooks.hook('build:before', async () => {
-                console.info('[Contentrain] Starting prerendering before build...');
                 await prerenderModelData();
             });
         }
@@ -341,19 +340,8 @@ import type { Content, LocalizedContent, QueryResult, SingleQueryResult } from '
         // Development modunda da prerender işlemini çalıştır
         if (options.outputDir && nuxt.options.dev) {
             nuxt.hooks.hook('ready', async () => {
-                console.info('[Contentrain] Starting prerendering in development mode...');
                 await prerenderModelData();
             });
         }
-
-        // Error handling
-        nuxt.hooks.hook('build:error', (error) => {
-            console.error('[Contentrain] Build error:', error);
-        });
-
-        // Close hooks
-        nuxt.hooks.hook('close', async () => {
-            console.info('[Contentrain] Cleaning up...');
-        });
     },
 });

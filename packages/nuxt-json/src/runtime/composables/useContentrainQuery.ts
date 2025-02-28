@@ -49,8 +49,6 @@ export class ContentrainQuery<M extends Content | LocalizedContent> {
         if (!modelId) {
             throw createError(ERROR_CODES.INVALID_MODEL_ID);
         }
-
-        console.info('[Contentrain Query] Initializing query for model:', modelId);
         this._data = ref([]) as Ref<M[]>;
         this._total = ref(0);
         this._loading = ref(false);

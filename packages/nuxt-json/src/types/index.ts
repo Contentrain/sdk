@@ -217,17 +217,6 @@ export interface QueryParams<T = any> {
     include?: string[]
 }
 
-// API yanıtları için ortak tip
-export interface ApiResponse<T> {
-    success: boolean
-    data: T
-    error?: {
-        code: string
-        message: string
-        details?: unknown
-    }
-}
-
 // Çoklu sonuçlar için QueryResult
 export interface QueryResult<T> {
     data: T[]

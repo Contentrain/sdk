@@ -144,7 +144,6 @@ export class ContentrainClient {
                 const config = useRuntimeConfig();
                 const contentrain = config.public.contentrain as ContentrainOptions;
                 if (contentrain.outputDir) {
-                    console.info('[Contentrain] Auto-loading models...');
                     await this.loadModels();
                 }
             }
@@ -347,7 +346,6 @@ export class ContentrainClient {
 
         // Tüm modellerin yüklü olduğundan emin ol
         if (!this._isLoaded.value) {
-            console.info('[Contentrain Client] Loading all models for relations...');
             await this.loadModels();
         }
 
@@ -355,9 +353,6 @@ export class ContentrainClient {
             const resolvedItem = { ...item, _relations: {} } as T & { _relations: Record<string, unknown> };
 
             for (const relation of relations) {
-                console.debug(`[Contentrain Client] Resolving relation "${relation}" for model "${sourceModel.metadata.modelId}"`);
-
-                // İlişki alanını bul
                 const field = sourceModel.fields.find(f =>
                     f.name === relation
                     || f.fieldId === relation,
@@ -389,12 +384,9 @@ export class ContentrainClient {
                     });
                 }
 
-                console.debug(`[Contentrain Client] Target model for relation "${relation}": "${targetModelId}"`);
-
                 // Hedef modeli yükle
                 let targetModel = this._modelsMap.get(targetModelId);
                 if (!targetModel) {
-                    console.info(`[Contentrain Client] Loading target model "${targetModelId}" for relation "${relation}"`);
                     const loadedModel = await this.loadModel(targetModelId);
                     if (!loadedModel) {
                         console.error(`[Contentrain Client] Target model "${targetModelId}" not found for relation "${relation}"`);
@@ -466,8 +458,6 @@ export class ContentrainClient {
                 resolvedItem._relations[relation] = field.componentId === 'one-to-many'
                     ? resolvedRelations
                     : resolvedRelations[0];
-
-                console.debug(`[Contentrain Client] Successfully resolved relation "${relation}" for item ${item.ID}`);
             }
 
             return resolvedItem;
