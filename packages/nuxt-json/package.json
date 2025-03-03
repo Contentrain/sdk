@@ -1,6 +1,6 @@
 {
   "name": "@contentrain/nuxt-json",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Contentrain JSON Module for Nuxt",
   "repository": {
     "type": "git",

@@ -1,0 +1,93 @@
+[
+  {
+    "ID": "1a01328952b4",
+    "createdAt": "2024-10-16T10:27:21.000Z",
+    "updatedAt": "2024-10-25T17:03:30.451Z",
+    "status": "publish",
+    "title": "Pazardan",
+    "image": "public/1729875780702_pazardan.svg",
+    "description": "Pazardan, yerel marketlerden sebze ve meyve siparişi vermek için bir çevrimiçi pazar yeridir.\n\nMobil uygulamayı React Native ile geliştirdik ve iOS ve Android için çapraz platform haline getirdik. Web platformu ise React.js ve Next.js ile geliştirildi.",
+    "category": "cab37361e7e6",
+    "link": "https://pazardan.app/",
+    "order": 7,
+    "scheduled": false
+  },
+  {
+    "ID": "51bf2dbbed29",
+    "createdAt": "2024-10-16T10:45:44.000Z",
+    "updatedAt": "2024-10-25T16:45:21.859Z",
+    "status": "publish",
+    "title": "Popile",
+    "image": "public/1729874670881_popile.svg",
+    "description": "Popile, influencer pazarlamasında veri ve yaratıcılığın buluşma noktasıdır. Frontend tarafında Vue.js ile iyileştirmeler yaptık, ödeme sistemi entegrasyonlarında destek sağladık ve backend tarafında performans optimizasyonları gerçekleştirdik.",
+    "category": "8ac7d8c79484",
+    "link": "https://www.popile.com/",
+    "order": 4,
+    "scheduled": false
+  },
+  {
+    "ID": "8a8044e883e8",
+    "createdAt": "2024-09-26T18:08:38.000Z",
+    "updatedAt": "2024-10-25T16:49:44.612Z",
+    "status": "publish",
+    "title": "Contentrain",
+    "image": "public/1729065603135_denemecontentrain.svg",
+    "description": "Contentrain, Git ve serverless platformları birleştiren, ölçeklenebilir bir içerik yönetim platformudur.\n\nTüm proje iş akışını planladık, yazılım mimarisini tasarladık, frontend ve backend geliştirmelerini yaptık, veritabanını yapılandırdık ve tüm bileşenleri dağıtımdan önce entegre ettik.",
+    "category": "bcc834108adc",
+    "link": "https://contentrain.io/",
+    "order": 1,
+    "scheduled": false
+  },
+  {
+    "ID": "8a8044e883e9",
+    "createdAt": "2024-09-26T18:08:38.000Z",
+    "updatedAt": "2024-10-25T16:38:01.211Z",
+    "status": "publish",
+    "title": "Bloom and Fresh",
+    "image": "public/1729874043253_Bloomandfresh.svg",
+    "description": "Bloom & Fresh, çiçek aranjmanları ve hediyeler konusunda uzmanlaşmış bir e-ticaret platformudur.\n\nFrontend kısmını Vue.js ve Nuxt.js ile modernize ettik ve bunu müşterinin mevcut Backend sistemiyle entegre ettik.",
+    "category": "cab37361e7e6",
+    "link": "https://bloomandfresh.com",
+    "order": 2,
+    "scheduled": false
+  },
+  {
+    "ID": "8a8044e883ea",
+    "createdAt": "2024-09-26T18:08:38.000Z",
+    "updatedAt": "2024-10-16T08:13:12.451Z",
+    "status": "publish",
+    "title": "Wordify",
+    "image": "public/1729066309718_wordify.svg",
+    "description": "Wordify'ın Squarespace tabanlı web sitesini Jamstack mimarisini kullanarak özel bir siteye dönüştürdük. Bu yükseltme Wordify'a pürüzsüz bir görünüm, gelişmiş performans, ölçeklenebilirlik ve iyileştirilmiş kullanıcı deneyimi sağladı.",
+    "category": "59cbdac46c1e",
+    "link": "https://www.wordify.co/",
+    "scheduled": false,
+    "order": 3
+  },
+  {
+    "ID": "8a8044e883eb",
+    "createdAt": "2024-09-26T18:08:38.000Z",
+    "updatedAt": "2024-10-16T10:22:34.815Z",
+    "status": "publish",
+    "title": "Visivi",
+    "image": "public/1729074133746_visivi.svg",
+    "description": "Visivi, hem mobil hem de web portalları olan bir İK platformudur.\n\nMobil uygulamayı React Native ile geliştirdik ve hem iOS hem de Android için çapraz platform haline getirdik. Web portalı için Nuxt.js ve Vue.js kullandık.",
+    "category": "bcc834108adc",
+    "link": "https://visivi.co/",
+    "scheduled": false,
+    "order": 5
+  },
+  {
+    "ID": "8a8044e883ec",
+    "createdAt": "2024-09-26T18:08:38.000Z",
+    "updatedAt": "2024-10-16T10:27:04.245Z",
+    "status": "publish",
+    "title": "DXP 360",
+    "image": "public/1729074312031_dxp360.svg",
+    "description": "DXP360, çeşitli kaynaklardan gelen RFP'leri bir araya getiren ve işletmeler ve ajanslar için teklif keşfi ve gönderim sürecini basitleştiren bir RFP (Teklif Talebi) portalıdır.\n\nProje planını müşteri brifinglerine göre tasarladık, ön ucu ve arka ucu geliştirdik, veritabanını yapılandırdık ve projeyi dağıttık.",
+    "category": "bcc834108adc",
+    "link": "https://dxp360.com/",
+    "scheduled": false,
+    "order": 6
+  }
+]

@@ -56,7 +56,7 @@ const { data: services } = await useAsyncData('services', () => {
     const query = useContentrainQuery<ServicesItems>('services');
     return query
         .include('reference')
-        .where('statsus', 'eq', 'publish')
+        .where('status', 'eq', 'publish')
         .orderBy('title', 'asc')
         .locale('en')
         .get();

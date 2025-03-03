@@ -1,0 +1,75 @@
+[
+  {
+    "ID": "50d81f2a3baf",
+    "createdAt": "2024-10-14T10:32:18.000Z",
+    "updatedAt": "2024-10-25T15:00:08.323Z",
+    "status": "publish",
+    "title": "Web Uygulama Geliştirme",
+    "description": "Konseptten lansmana kadar güvenli, ölçeklenebilir ve iş ihtiyaçlarınızı karşılayacak şekilde tasarlanmış özel web uygulamaları geliştiriyoruz.",
+    "image": "public/1729868379116_Webapp.svg",
+    "scheduled": false,
+    "reference": "34e63b4829f0"
+  },
+  {
+    "ID": "9450777bee2f",
+    "createdAt": "2024-10-14T10:33:10.000Z",
+    "updatedAt": "2024-10-24T10:27:13.551Z",
+    "status": "publish",
+    "title": "Mobil Uygulama Geliştirme",
+    "description": "Müşterilerimizin fikirlerini gerçek mobil deneyimlere dönüştürebilmek için özel IOS ve Android uygulamalar geliştiriyoruz.",
+    "image": "public/1729765510539_Mobileapp.svg",
+    "scheduled": false,
+    "reference": "5c5955d57da8"
+  },
+  {
+    "ID": "d00761480436",
+    "createdAt": "2024-09-26T18:04:41.000Z",
+    "updatedAt": "2024-10-24T10:59:32.684Z",
+    "status": "publish",
+    "title": "MVP Geliştirme",
+    "description": "Startuplara, fikirlerini hayata geçirebilmeleri için deneyimli bir ekiple birlikte MVP geliştirme hizmeti sunuyoruz.",
+    "image": "public/1729767526420_MVP.svg",
+    "scheduled": false,
+    "reference": "7fa159ae4aaf"
+  },
+  {
+    "ID": "d00761480437",
+    "createdAt": "2024-09-26T18:04:41.000Z",
+    "updatedAt": "2024-10-25T08:24:14.431Z",
+    "status": "publish",
+    "title": "SaaS Platform Geliştirme",
+    "description": "Startuplara ve kurumsal firmalara ihtiyaç duydukları uçtan uca SaaS platform geliştirme çözümleri sağlıyoruz.",
+    "image": "public/1729844595854_SaaS.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "d00761480438",
+    "createdAt": "2024-09-26T18:04:41.000Z",
+    "updatedAt": "2024-10-25T09:52:10.991Z",
+    "status": "publish",
+    "title": "Ürün Tasarımı",
+    "description": "İşlevselliği modern estetikle harmanlayan ürün tasarımları üretiyoruz.",
+    "image": "public/1729849903212_ProductDesign.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "d00761480439",
+    "createdAt": "2024-09-26T18:04:41.000Z",
+    "updatedAt": "2024-10-25T11:38:08.325Z",
+    "status": "publish",
+    "title": "Web Tasarımı & Geliştirme",
+    "description": "Ziyaretçilerinizi çekecek web sitelerine mi ihtiyacınız var? İşiniz için ölçeklenebilir ve responsive web siteleri geliştiriyoruz.",
+    "image": "public/1729856262454_Webdesign.svg",
+    "scheduled": false
+  },
+  {
+    "ID": "d00761480440",
+    "createdAt": "2024-09-26T18:04:41.000Z",
+    "updatedAt": "2024-10-25T14:45:24.232Z",
+    "status": "publish",
+    "title": "Headless CMS Çözümleri",
+    "description": "Projeleriniz için CMS çözümleri geliştiriyor veya kendi ürünümüz olan Git tabanlı Contentrain'i projenize entegre ediyoruz.",
+    "image": "public/1729867496804_Headless.svg",
+    "scheduled": false
+  }
+]

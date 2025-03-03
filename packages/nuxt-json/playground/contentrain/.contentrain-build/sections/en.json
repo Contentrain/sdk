@@ -1,0 +1,111 @@
+[
+  {
+    "ID": "2aa54f9e7eaf",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-23T08:12:32.375Z",
+    "status": "publish",
+    "title": "Explore our expertise in outsourced Development Services",
+    "description": "We offer a wide range of software development services, guiding our clients through every step from concept to final product.",
+    "buttontext": "See our latest works",
+    "buttonlink": "#works",
+    "name": "services",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7eb0",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.151Z",
+    "status": "publish",
+    "title": "Building Success: Our product development approach",
+    "description": "We follow a structured approach to ensure each project is delivered on time, with secure architecture, and within budget.",
+    "buttontext": "View all works",
+    "buttonlink": "#works",
+    "name": "process",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7eb1",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.159Z",
+    "status": "publish",
+    "title": "Trusted by Industry Professionals",
+    "description": "Our focus on quality has earned the trust of industry professionals over time. We deliver tailored solutions that meet the highest standards for our clients.\n",
+    "buttontext": "View all testimonials",
+    "buttonlink": "#testimonials",
+    "name": "testimonials",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7eb2",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.185Z",
+    "status": "publish",
+    "title": "Our recent client works",
+    "description": "Explore some of our recent projects where we’ve partnered with clients to turn their ideas into successful products.",
+    "buttontext": "View all works",
+    "buttonlink": "#works",
+    "name": "works",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7eb3",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.199Z",
+    "status": "publish",
+    "title": "Our technology and tool stack",
+    "description": "We love to use Javascript frameworks and the latest technologies to deliver great products.",
+    "buttontext": "View all testimonials",
+    "buttonlink": "#testimonials",
+    "name": "tabs",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7x90",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.204Z",
+    "status": "publish",
+    "title": "Let's build together!",
+    "description": "We help companies and startups bring their ideas to life with our experience.",
+    "buttontext": "Contact us",
+    "buttonlink": "#contact",
+    "name": "banner",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7xb3",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.207Z",
+    "status": "publish",
+    "title": "Web & Mobile Application development services",
+    "description": "We provide outsourced Frontend, Backend, and Mobile Application development services to craft custom digital projects that drive results.\n",
+    "buttontext": "Let's discuss your project",
+    "buttonlink": "#contact",
+    "name": "hero",
+    "scheduled": false,
+    "subtitle": "Software Development Company"
+  },
+  {
+    "ID": "2aa54f9e7xb4",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.210Z",
+    "status": "publish",
+    "title": "FAQ's",
+    "description": "Find quick answers to common questions about Lanista’s services. Need more help? Contact our team anytime.",
+    "buttontext": "Let's discuss your project",
+    "buttonlink": "#contact",
+    "name": "faq",
+    "scheduled": false
+  },
+  {
+    "ID": "2aa54f9e7xb5",
+    "createdAt": "2024-09-26T18:05:14.000Z",
+    "updatedAt": "2024-10-18T09:43:28.215Z",
+    "status": "publish",
+    "title": "Reach out for more information",
+    "description": "Can’t find what you’re looking for in the FAQs? Feel free to reach out to us directly for more information.",
+    "buttontext": "Send",
+    "buttonlink": "#testimonials",
+    "name": "contact",
+    "scheduled": false
+  }
+]

@@ -1,22 +1,11 @@
-import type { ApiResponse, ModelData, QueryFilter, QueryResult, QuerySort } from '../../../types';
-import { useStorage } from '#imports';
+import type { ApiResponse, QueryFilter, QueryResult, QuerySort } from '../../../types';
 import { defineEventHandler, getQuery } from 'h3';
 import { RelationResolver } from '../services/relation-resolver';
+import { StorageService } from '../services/storage.service';
 import { ContentrainError, ERROR_CODES } from '../utils/errors';
-import { STORAGE_KEYS, StorageManager } from '../utils/storage';
 
 export default defineEventHandler(async (event) => {
     try {
-        // 1. Storage durumunu kontrol et
-        const isReady = await StorageManager.isReady();
-        if (!isReady) {
-            console.warn('[Contentrain Query] Storage is not ready');
-            throw new ContentrainError({
-                code: ERROR_CODES.STORAGE_NOT_READY,
-                message: 'Storage is not ready',
-            });
-        }
-
         const query = getQuery(event);
         const {
             modelId,
@@ -27,17 +16,6 @@ export default defineEventHandler(async (event) => {
             offset: offsetStr,
             include: includeStr,
         } = query;
-
-        console.debug('[Contentrain Query] Processing query:', {
-            modelId,
-            locale,
-            hasFilters: !!filtersStr,
-            hasSort: !!sortStr,
-            limit: limitStr,
-            offset: offsetStr,
-            include: includeStr,
-        });
-
         if (!modelId || typeof modelId !== 'string') {
             throw new ContentrainError({
                 code: ERROR_CODES.INVALID_MODEL_ID,
@@ -46,11 +24,10 @@ export default defineEventHandler(async (event) => {
         }
 
         // 2. Model verisini al
-        const storage = useStorage('data');
-        const model = await storage.getItem<ModelData>(STORAGE_KEYS.MODEL_DATA(modelId));
+        const storageService = StorageService.getInstance();
+        const model = await storageService.getModelData(modelId);
 
         if (!model) {
-            console.warn(`[Contentrain Query] Model not found: ${modelId}`);
             throw new ContentrainError({
                 code: ERROR_CODES.MODEL_NOT_FOUND,
                 message: `Model not found: ${modelId}`,
@@ -58,8 +35,6 @@ export default defineEventHandler(async (event) => {
         }
 
         let content = [...model.content];
-        console.debug(`[Contentrain Query] Initial content length: ${content.length}`);
-
         // Apply locale filter
         if (locale && typeof locale === 'string' && model.metadata.localization) {
             content = content.filter(item => '_lang' in item && item._lang === locale);
@@ -161,7 +136,7 @@ export default defineEventHandler(async (event) => {
         if (includeStr && typeof includeStr === 'string') {
             try {
                 const includes = JSON.parse(includeStr) as string[];
-                const modelList = await storage.getItem<ModelData[]>(STORAGE_KEYS.MODEL_LIST) || [];
+                const modelList = await storageService.getAllModels() || [];
                 const resolver = new RelationResolver(modelList);
                 content = await resolver.resolveRelations(model, content, includes, locale as string | undefined);
             }

@@ -7,13 +7,11 @@ export class ContentrainTypeGenerator {
     constructor(private options: ContentrainOptions) {}
     async generateTypes(): Promise<string> {
         try {
-            console.log('[Contentrain] Generating TypeScript types from models...');
             const modelsDir = join(this.options.path, 'models');
 
             // Get model files
             const modelFiles = this.getModelFiles(modelsDir);
             if (modelFiles.length === 0) {
-                console.warn('[Contentrain] No model files found. Skipping type generation.');
                 return this.getEmptyTypeDefinition();
             }
 
@@ -31,8 +29,6 @@ export class ContentrainTypeGenerator {
 
             // Create type definitions
             const typeDefinitions = this.initializeTypeDefinitions() + baseTypes + queryTypes;
-
-            console.log('[Contentrain] Successfully generated type definitions.');
 
             // Return the generated type definitions
             return typeDefinitions;
@@ -76,8 +72,7 @@ export class ContentrainTypeGenerator {
 
             return Array.from(languages);
         }
-        catch (error) {
-            console.warn(`[Contentrain] Error detecting languages for model ${modelMetadata.modelId}:`, error);
+        catch {
             return [this.options.defaultLocale || 'en'];
         }
     }
@@ -235,7 +230,6 @@ interface SingleQueryResultBase<T> {
                 const modelMetadata = metadata.find(m => m.modelId === modelId);
 
                 if (!modelMetadata) {
-                    console.warn(`[Contentrain] Model metadata not found: ${modelId}`);
                     return;
                 }
 

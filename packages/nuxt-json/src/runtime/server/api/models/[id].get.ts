@@ -1,23 +1,11 @@
 import type { ApiResponse, ModelData } from '../../../../types';
-import { useStorage } from '#imports';
 import { defineEventHandler, getRouterParam } from 'h3';
+import { StorageService } from '../../services/storage.service';
 import { ContentrainError, ERROR_CODES } from '../../utils/errors';
-import { STORAGE_KEYS, StorageManager } from '../../utils/storage';
 
 export default defineEventHandler(async (event) => {
     try {
-        // 1. Storage durumunu kontrol et
-        const isReady = await StorageManager.isReady();
-        if (!isReady) {
-            console.warn('[Contentrain Model] Storage is not ready');
-            throw new ContentrainError({
-                code: ERROR_CODES.STORAGE_NOT_READY,
-                message: 'Storage is not ready',
-            });
-        }
-
         const modelId = getRouterParam(event, 'id');
-        console.debug('[Contentrain Model] Fetching model:', modelId);
 
         if (!modelId) {
             throw new ContentrainError({
@@ -26,24 +14,10 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        // 2. Model verisini al
-        const storage = useStorage('data');
-        const modelData = await storage.getItem<ModelData>(STORAGE_KEYS.MODEL_DATA(modelId));
+        // StorageService ile model verisini al
+        const storageService = StorageService.getInstance();
+        const modelData = await storageService.getModelData(modelId);
 
-        if (!modelData) {
-            console.warn(`[Contentrain Model] Model not found: ${modelId}`);
-            throw new ContentrainError({
-                code: ERROR_CODES.MODEL_NOT_FOUND,
-                message: `Model not found: ${modelId}`,
-            });
-        }
-
-        console.debug(`[Contentrain Model] Found model: ${modelId}`, {
-            contentLength: modelData.content.length,
-            hasLocalization: modelData.metadata.localization,
-        });
-
-        // Standardize API yanıtı
         const response: ApiResponse<ModelData> = {
             success: true,
             data: modelData,
@@ -67,26 +41,13 @@ export default defineEventHandler(async (event) => {
             };
         }
 
-        // H3 hataları için
-        if (error.statusCode) {
-            return {
-                success: false,
-                data: null,
-                error: {
-                    code: `HTTP_${error.statusCode}`,
-                    message: error.statusMessage || 'Unknown error',
-                    details: error,
-                },
-            };
-        }
-
-        // Diğer hatalar için
+        // Genel hata durumu
         return {
             success: false,
             data: null,
             error: {
-                code: 'UNKNOWN_ERROR',
-                message: error.message || 'Unknown error',
+                code: ERROR_CODES.UNKNOWN_ERROR,
+                message: error.message || 'An unknown error occurred',
                 details: error,
             },
         };
