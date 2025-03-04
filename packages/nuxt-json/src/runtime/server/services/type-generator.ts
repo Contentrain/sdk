@@ -1,5 +1,4 @@
-import type { ContentrainOptions } from '../../../module';
-import type { FieldMetadata, ModelMetadata } from '../../../types';
+import type { ContentrainOptions, FieldMetadata, ModelMetadata } from '../../../module';
 import fs from 'node:fs';
 import path, { join } from 'node:path';
 import { ContentrainError, ERROR_CODES } from '../utils/errors';
@@ -8,7 +7,7 @@ export class ContentrainTypeGenerator {
     constructor(private options: ContentrainOptions) {}
     async generateTypes(): Promise<string> {
         try {
-            const modelsDir = join(this.options.path || 'contentrain', 'models');
+            const modelsDir = join(this.options.path, 'models');
 
             // Get model files
             const modelFiles = this.getModelFiles(modelsDir);
@@ -31,8 +30,6 @@ export class ContentrainTypeGenerator {
             // Create type definitions
             const typeDefinitions = this.initializeTypeDefinitions() + baseTypes + queryTypes;
 
-            console.info('[Contentrain] Successfully generated type definitions.');
-
             // Return the generated type definitions
             return typeDefinitions;
         }
@@ -53,11 +50,13 @@ export class ContentrainTypeGenerator {
         }
 
         const languages = new Set<string>();
-        const modelPath = join(contentPath || 'contentrain', modelMetadata.modelId);
+        const modelPath = join(contentPath, modelMetadata.modelId);
 
         try {
             if (fs.existsSync(modelPath)) {
                 const files = fs.readdirSync(modelPath);
+
+                // .json uzantılı dosyaları bul ve dil kodlarını çıkar
                 files.forEach((file) => {
                     if (file.endsWith('.json')) {
                         const lang = file.replace('.json', '');
@@ -65,14 +64,15 @@ export class ContentrainTypeGenerator {
                     }
                 });
             }
+
+            // Eğer hiç dil bulunamazsa, varsayılan dili ekle
             if (languages.size === 0) {
                 languages.add(this.options.defaultLocale || 'en');
             }
 
             return Array.from(languages);
         }
-        catch (error) {
-            console.warn(`[Contentrain] Error detecting languages for model ${modelMetadata.modelId}:`, error);
+        catch {
             return [this.options.defaultLocale || 'en'];
         }
     }
@@ -230,12 +230,11 @@ interface SingleQueryResultBase<T> {
                 const modelMetadata = metadata.find(m => m.modelId === modelId);
 
                 if (!modelMetadata) {
-                    console.warn(`[Contentrain] Model metadata not found: ${modelId}`);
                     return;
                 }
 
                 // Her model için dil tipini belirle
-                const modelLanguages = this.detectModelLanguages(this.options.path || 'contentrain', modelMetadata);
+                const modelLanguages = this.detectModelLanguages(this.options.path, modelMetadata);
 
                 // Base Type Generation
                 const interfaceName = this.formatInterfaceName(modelMetadata);
