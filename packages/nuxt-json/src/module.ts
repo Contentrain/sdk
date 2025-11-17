@@ -16,15 +16,23 @@ async function buildContentrainAssets(
     buildDir: string,
     options: ContentrainOptions,
 ) {
+    if (!contentDir) {
+        console.warn('[Contentrain Module] Content directory is not configured; skipping asset build');
+        return [];
+    }
+
     await fs.mkdir(buildDir, { recursive: true });
 
     try {
         const metadataPath = join(contentDir, 'models', 'metadata.json');
-        const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
-        await fs.copyFile(
-            metadataPath,
-            join(buildDir, 'metadata.json'),
-        );
+        const metadataExists = await fs.stat(metadataPath).then(() => true).catch(() => false);
+
+        if (!metadataExists) {
+            console.warn('[Contentrain Module] Metadata file not found; skipping asset build');
+            return [];
+        }
+
+        const metadata: ModelMetadata[] = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
         await Promise.all(metadata.map(async (model: ModelMetadata) => {
             const modelDir = join(buildDir, model.modelId);
             await fs.mkdir(modelDir, { recursive: true });
@@ -47,6 +55,9 @@ async function buildContentrainAssets(
                 catch {
                     langFiles = [options.defaultLocale || 'en'];
                 }
+
+                // locales alanını doldur
+                model.locales = langFiles.length ? langFiles : [options.defaultLocale || 'en'];
 
                 await Promise.all(langFiles.map(async (lang) => {
                     const sourcePath = join(contentDir, model.modelId, `${lang}.json`);
@@ -74,6 +85,9 @@ async function buildContentrainAssets(
                 }
             }
         }));
+
+        // Yazılmış (mutated) metadata'yı build dizinine kaydet
+        await fs.writeFile(join(buildDir, 'metadata.json'), JSON.stringify(metadata, null, 2), 'utf-8');
 
         const assetsPath = join(contentDir, 'assets.json');
         if (await fs.stat(assetsPath).catch(() => false)) {
@@ -124,7 +138,7 @@ export default defineNuxtModule<ContentrainOptions>({
         name: '@contentrain/nuxt-json',
         configKey: 'contentrain',
         compatibility: {
-            nuxt: '^3.0.0',
+            nuxt: '^3.0.0 || ^4.0.0',
         },
     },
 
@@ -140,6 +154,7 @@ export default defineNuxtModule<ContentrainOptions>({
     setup(options, nuxt) {
         const resolver = createResolver(import.meta.url);
         const resolve = resolver.resolve.bind(resolver);
+        const hasContentDir = Boolean(options.path && options.path.trim().length > 0);
 
         console.info('[Contentrain Module] Initializing module', {
             path: options.path,
@@ -175,8 +190,13 @@ export default defineNuxtModule<ContentrainOptions>({
         nuxt.hooks.hook('nitro:config', async (nitroConfig) => {
             console.info('[Contentrain Module] Configuring Nitro');
 
-            const buildDir = join(options.path, '.contentrain-build');
-            await buildContentrainAssets(options.path, buildDir, options);
+            let metadata: ModelMetadata[] = [];
+            let buildDir: string | undefined;
+
+            if (hasContentDir) {
+                buildDir = join(options.path, '.contentrain-build');
+                metadata = await buildContentrainAssets(options.path, buildDir, options);
+            }
 
             nitroConfig.storage = nitroConfig.storage || {};
             nitroConfig.storage.data = {
@@ -184,13 +204,15 @@ export default defineNuxtModule<ContentrainOptions>({
                 base: options.storage?.base || '.contentrain',
             };
 
-            nitroConfig.serverAssets = nitroConfig.serverAssets || [];
-            nitroConfig.serverAssets.push({
-                baseName: 'contentrain',
-                dir: buildDir,
-            });
+            if (buildDir) {
+                nitroConfig.serverAssets = nitroConfig.serverAssets || [];
+                nitroConfig.serverAssets.push({
+                    baseName: 'contentrain',
+                    dir: buildDir,
+                });
+            }
 
-            if (options.path) {
+            if (hasContentDir) {
                 const publicAssetsDir = join(options.path, 'public');
                 nitroConfig.publicAssets = nitroConfig.publicAssets || [];
                 nitroConfig.publicAssets.push({
@@ -202,21 +224,21 @@ export default defineNuxtModule<ContentrainOptions>({
             nitroConfig.prerender = nitroConfig.prerender || {};
             nitroConfig.prerender.routes = nitroConfig.prerender.routes || [];
 
-            try {
-                const metadataPath = join(options.path, 'models', 'metadata.json');
-                const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
+            if (hasContentDir && metadata.length) {
                 for (const model of metadata) {
                     const route = `/_contentrain/api/query?modelId=${model.modelId}`;
                     nitroConfig.prerender.routes.push(route);
                 }
             }
-            catch (error) {
-                console.warn('[Contentrain Module] Error during prerender configuration:', error);
+            else if (!hasContentDir) {
+                console.warn('[Contentrain Module] Skipping prerender configuration because content path is missing');
             }
 
             nitroConfig.externals = nitroConfig.externals || {};
             nitroConfig.externals.inline = nitroConfig.externals.inline || [];
-            nitroConfig.externals.inline.push(options.path);
+            if (hasContentDir) {
+                nitroConfig.externals.inline.push(options.path);
+            }
 
             nitroConfig.imports = {
                 ...nitroConfig.imports,
@@ -255,6 +277,12 @@ export default defineNuxtModule<ContentrainOptions>({
         addTypeTemplate({
             filename: 'types/contentrain.d.ts',
             getContents: async () => {
+                if (!hasContentDir) {
+                    return `// Contentrain types are unavailable because the content directory is not configured.
+export {};
+`;
+                }
+
                 try {
                     const typeDefinitions = await typeGenerator.generateTypes();
                     console.info('[Contentrain Module] Type definitions generated successfully');

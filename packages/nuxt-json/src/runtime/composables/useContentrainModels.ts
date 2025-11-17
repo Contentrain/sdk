@@ -1,7 +1,6 @@
-import type { ModelData } from '../../types';
+import type { ApiResponse, ModelData } from '../../types';
 import { computed, onMounted, ref } from 'vue';
 import { ContentrainError, createError, ERROR_CODES } from '../server/utils/errors';
-import { useContentrainClient } from './useContentrainClient';
 
 export interface UseContentrainModelsOptions {
     autoLoad?: boolean
@@ -16,15 +15,15 @@ export function useContentrainModels(options: UseContentrainModelsOptions = {}) 
         retryDelay = 1000,
     } = options;
 
-    const client = useContentrainClient();
     const pending = ref(false);
     const error = ref<Error | null>(null);
     const retries = ref(0);
+    const _models = ref<ModelData[]>([]);
+    const _loaded = ref(false);
 
-    // Client'dan modelleri al
-    const models = computed(() => client.models.value);
-    const isLoaded = computed(() => client.isLoaded.value);
-    const isLoading = computed(() => client.isLoading.value || pending.value);
+    const models = computed(() => _models.value);
+    const isLoaded = computed(() => _loaded.value);
+    const isLoading = computed(() => pending.value);
 
     /**
      * Tüm modelleri yükle
@@ -38,7 +37,18 @@ export function useContentrainModels(options: UseContentrainModelsOptions = {}) 
         error.value = null;
 
         try {
-            await client.loadModels();
+            const res = await fetch('/_contentrain/api/models');
+            const response = await res.json() as ApiResponse<ModelData[]>;
+            if (!response.success || !response.data) {
+                const payload = response.error;
+                throw createError(
+                    (payload?.code as typeof ERROR_CODES[keyof typeof ERROR_CODES]) || ERROR_CODES.MODEL_LOAD_ERROR,
+                    payload,
+                    payload?.message,
+                );
+            }
+            _models.value = response.data;
+            _loaded.value = true;
             retries.value = 0;
             return models.value;
         }
@@ -71,10 +81,28 @@ export function useContentrainModels(options: UseContentrainModelsOptions = {}) 
         error.value = null;
 
         try {
-            const result = await client.loadModel(modelId);
+            // Önce cache'de var mı?
+            const cached = _models.value.find(m => m.metadata.modelId === modelId);
+            if (cached) {
+                return cached;
+            }
+
+            const res = await fetch(`/_contentrain/api/models/${modelId}`);
+            const response = await res.json() as ApiResponse<ModelData | null>;
+            if (!response.success) {
+                const payload = response.error;
+                throw createError(
+                    (payload?.code as typeof ERROR_CODES[keyof typeof ERROR_CODES]) || ERROR_CODES.MODEL_LOAD_ERROR,
+                    payload,
+                    payload?.message,
+                );
+            }
+            const result = response.data;
             if (!result) {
                 throw createError(ERROR_CODES.MODEL_NOT_FOUND, { modelId });
             }
+            _models.value = [..._models.value, result];
+            retries.value = 0;
             return result;
         }
         catch (err) {
@@ -98,14 +126,14 @@ export function useContentrainModels(options: UseContentrainModelsOptions = {}) 
      * Model var mı kontrol et
      */
     function hasModel(modelId: string): boolean {
-        return models.value.some(model => model.metadata.modelId === modelId);
+        return models.value.some((model: ModelData) => model.metadata.modelId === modelId);
     }
 
     /**
      * Model getir
      */
     function getModel(modelId: string): ModelData | undefined {
-        return models.value.find(model => model.metadata.modelId === modelId);
+        return models.value.find((model: ModelData) => model.metadata.modelId === modelId);
     }
 
     // Otomatik yükleme

@@ -1,5 +1,11 @@
 # @contentrain/nuxt-json
 
+## 1.1.0
+
+- Add Nuxt 4 compatibility metadata
+- Update development dependencies to Nuxt 4.2.1 and tooling requirements
+- Skip asset build when the content directory is not configured to avoid runtime errors
+
 ## 1.0.4
 
 - Clean unnececary logs
@@ -22,6 +28,12 @@
 
 ## 1.0.0
 
-### Major Changes
+## 1.2.0
+
+- Locale dizisi build aşamasında metadata'ya ekleniyor (`model.locales`) – lokalizasyon mevcut dillerin tespiti.
+- Sunucu sorgu endpointinde filtre ve sıralama mantığı ortak utility'e taşındı (`runtime/utils/query.ts`).
+- `useContentrainClient` composable kaldırıldı; `useContentrainModels` doğrudan API çağrıları ve kendi cache yapısı ile sadeleştirildi.
+- Yeni hata kodları eklendi: `INVALID_URL_ERROR`, `INVALID_DATA_ERROR`, `INVALID_RELATION`, `RELATION_NOT_FOUND`.
+- Nuxt 4 uyumluluk refactor'ü sonrası iç mimari temizlik.
 
 - Relase Nuxt Json query builder module.

@@ -3,6 +3,7 @@ import { defineEventHandler, getQuery } from 'h3';
 import { RelationResolver } from '../services/relation-resolver';
 import { StorageService } from '../services/storage.service';
 import { ContentrainError, ERROR_CODES } from '../utils/errors';
+import { applyFilters, sortItems } from '../../utils/query';
 
 export default defineEventHandler(async (event) => {
     try {
@@ -40,43 +41,10 @@ export default defineEventHandler(async (event) => {
             content = content.filter(item => '_lang' in item && item._lang === locale);
         }
 
-        // Apply filters
         if (filtersStr && typeof filtersStr === 'string') {
             try {
                 const filters = JSON.parse(filtersStr) as QueryFilter[];
-                content = content.filter(item =>
-                    filters.every((filter) => {
-                        const value = item[filter.field];
-                        const compareValue = filter.value;
-
-                        switch (filter.operator) {
-                            case 'eq':
-                                return value === compareValue;
-                            case 'ne':
-                                return value !== compareValue;
-                            case 'gt':
-                                return typeof value === 'number' && typeof compareValue === 'number' && value > compareValue;
-                            case 'gte':
-                                return typeof value === 'number' && typeof compareValue === 'number' && value >= compareValue;
-                            case 'lt':
-                                return typeof value === 'number' && typeof compareValue === 'number' && value < compareValue;
-                            case 'lte':
-                                return typeof value === 'number' && typeof compareValue === 'number' && value <= compareValue;
-                            case 'in':
-                                return Array.isArray(compareValue) && compareValue.includes(value);
-                            case 'nin':
-                                return Array.isArray(compareValue) && !compareValue.includes(value);
-                            case 'contains':
-                                return typeof value === 'string' && typeof compareValue === 'string' && value.includes(compareValue);
-                            case 'startsWith':
-                                return typeof value === 'string' && typeof compareValue === 'string' && value.startsWith(compareValue);
-                            case 'endsWith':
-                                return typeof value === 'string' && typeof compareValue === 'string' && value.endsWith(compareValue);
-                            default:
-                                return true;
-                        }
-                    }),
-                );
+                content = applyFilters(content as any, filters as any) as typeof content;
             }
             catch (error: any) {
                 console.error('Error parsing filters:', error);
@@ -88,31 +56,10 @@ export default defineEventHandler(async (event) => {
             }
         }
 
-        // Apply sorting
         if (sortStr && typeof sortStr === 'string') {
             try {
                 const sort = JSON.parse(sortStr) as QuerySort[];
-                content.sort((a, b) => {
-                    for (const { field, direction } of sort) {
-                        const aValue = a[field];
-                        const bValue = b[field];
-
-                        if (aValue === bValue)
-                            continue;
-
-                        if (typeof aValue === 'number' && typeof bValue === 'number') {
-                            const modifier = direction === 'asc' ? 1 : -1;
-                            return aValue > bValue ? modifier : -modifier;
-                        }
-
-                        if (typeof aValue === 'string' && typeof bValue === 'string') {
-                            return direction === 'asc'
-                                ? aValue.localeCompare(bValue)
-                                : bValue.localeCompare(aValue);
-                        }
-                    }
-                    return 0;
-                });
+                content = sortItems(content as any, sort as any) as typeof content;
             }
             catch (error: any) {
                 console.error('Error parsing sort:', error);
