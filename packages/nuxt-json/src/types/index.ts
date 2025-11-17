@@ -6,6 +6,7 @@ export interface ModelMetadata {
     type: 'JSON'
     createdBy: string
     isServerless: boolean
+    locales?: string[]
 }
 
 // Field Types

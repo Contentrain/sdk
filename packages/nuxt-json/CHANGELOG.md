@@ -1,5 +1,11 @@
 # @contentrain/nuxt-json
 
+## 2.0.0
+
+### Major Changes
+
+- feat(nuxt-json): locale metadata, query utils refactor, error codes and removal of deprecated client composable
+
 ## 1.1.0
 
 - Add Nuxt 4 compatibility metadata

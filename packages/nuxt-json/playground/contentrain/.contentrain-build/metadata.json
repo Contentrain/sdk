@@ -5,7 +5,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "ProcessItems",
@@ -13,7 +17,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "TabItems",
@@ -21,7 +29,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "WorkItems",
@@ -29,7 +41,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "WorkCategories",
@@ -37,7 +53,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "FaqItems",
@@ -45,7 +65,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "Sections",
@@ -53,7 +77,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "SocialLinks",
@@ -77,7 +105,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "Testimonial Items",
@@ -85,7 +117,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "Project Details",
@@ -93,7 +129,11 @@
     "localization": true,
     "type": "JSON",
     "createdBy": "user",
-    "isServerless": false
+    "isServerless": false,
+    "locales": [
+      "en",
+      "tr"
+    ]
   },
   {
     "name": "Project Stats",
