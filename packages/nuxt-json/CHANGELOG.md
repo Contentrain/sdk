@@ -4,7 +4,11 @@
 
 ### Major Changes
 
-- feat(nuxt-json): locale metadata, query utils refactor, error codes and removal of deprecated client composable
+- Breaking: `useContentrainClient` composable removed (simplified to API + `useContentrainModels`).
+- Feature: Locale list injected into metadata during build (`model.locales`).
+- Refactor: Shared filter & sort utilities (`runtime/utils/query.ts`).
+- Feature: New error codes (`INVALID_URL_ERROR`, `INVALID_DATA_ERROR`, `INVALID_RELATION`, `RELATION_NOT_FOUND`).
+- Internal: Nuxt 4 compatibility adjustments, type generation stability improvements.
 
 ## 1.1.0
 
@@ -34,12 +38,6 @@
 
 ## 1.0.0
 
-## 1.2.0
+### Initial Release
 
-- Locale dizisi build aşamasında metadata'ya ekleniyor (`model.locales`) – lokalizasyon mevcut dillerin tespiti.
-- Sunucu sorgu endpointinde filtre ve sıralama mantığı ortak utility'e taşındı (`runtime/utils/query.ts`).
-- `useContentrainClient` composable kaldırıldı; `useContentrainModels` doğrudan API çağrıları ve kendi cache yapısı ile sadeleştirildi.
-- Yeni hata kodları eklendi: `INVALID_URL_ERROR`, `INVALID_DATA_ERROR`, `INVALID_RELATION`, `RELATION_NOT_FOUND`.
-- Nuxt 4 uyumluluk refactor'ü sonrası iç mimari temizlik.
-
-- Relase Nuxt Json query builder module.
+- Release Nuxt JSON query builder module.

@@ -133,6 +133,7 @@ export interface ContentrainOptions {
     }
 }
 export type * from './types';
+// Export module with relaxed any annotation to avoid TS2742 d.ts portability issues across multiple Nuxt schema versions.
 export default defineNuxtModule<ContentrainOptions>({
     meta: {
         name: '@contentrain/nuxt-json',
@@ -298,4 +299,4 @@ import type { Content, LocalizedContent, QueryResult, SingleQueryResult, ApiResp
             },
         });
     },
-});
+}) as any;
