@@ -62,12 +62,12 @@ export class StorageService {
     /**
      * Model içeriğini okur
      */
-    private async getModelContent(modelId: string, isLocalized: boolean): Promise<(Content | LocalizedContent)[]> {
+    private async getModelContent(modelId: string, isLocalized: boolean, locales: string[] = ['en', 'tr']): Promise<(Content | LocalizedContent)[]> {
         try {
             let content: (Content | LocalizedContent)[] = [];
 
             if (isLocalized) {
-                const languages = ['en', 'tr'];
+                const languages = locales;
                 for (const lang of languages) {
                     const localeContent = await this.storage.getItem<any[]>(`${modelId}/${lang}.json`);
                     if (!localeContent) {
@@ -116,7 +116,7 @@ export class StorageService {
             }
 
             const fields = await this.getModelDefinition(modelId);
-            const content = await this.getModelContent(modelId, metadata.localization);
+            const content = await this.getModelContent(modelId, metadata.localization, metadata.locales);
 
             const modelData: ModelData = {
                 metadata,
